@@ -1,0 +1,22 @@
+{
+  "name": "Travellers 1969",
+  "short_name": "T1969",
+  "description": "Serge & Els road trip planner",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D1B2E",
+  "theme_color": "#0D1B2E",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

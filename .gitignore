@@ -1,0 +1,5 @@
+*.bak*
+node_modules/
+.firebase/
+functions/service-account-key.json
+functions/.env
