@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v118  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v120  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -534,7 +534,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v118: Firestore preview mode ===== */
+/* ===== F0 v120: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -955,7 +955,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v118 ===== */
+/* ===== end F0 v120 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -966,12 +966,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v118</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v120</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v118</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v120</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1267,7 +1267,11 @@ function signIn(){
       <div class="form-row"><label class="form-label">Name</label><input class="form-input" id="addName" placeholder="Location name"></div>
       <div id="addMeta" style="display:none;font-size:11px;color:#7EAAC8;margin:-4px 0 8px;line-height:1.6"><span id="addCoordsLine"></span><span id="addGrLine"></span></div>
       <div class="form-row-2">
-        <div><label class="form-label">State / Province</label><select class="form-input" id="addState" style="color:var(--accent)" onchange="t69AddStateChange(this)"></select></div>
+        <div><label class="form-label">Country</label><select class="form-input" id="addCountry" style="color:var(--accent)" onchange="t69AddCountryChange()"></select></div>
+        <div><label class="form-label">Region</label><select class="form-input" id="addState" style="color:var(--accent)"></select></div>
+      </div>
+      <div style="margin:-4px 0 8px"><button type="button" onclick="openCountryModal()" style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;padding:0">➕ New country / region…</button></div>
+      <div class="form-row">
         <div><label class="form-label">Category</label>
           <select class="form-input" id="addCategory">
             <option>Bizarre</option><option>Nature</option><option>Restaurant</option><option>Museum</option>
@@ -1279,7 +1283,7 @@ function signIn(){
         </div>
       </div>
       </div>
-      <div class="form-row" style="margin-top:8px"><label class="form-label">Ratings (optional)</label><div id="addRatings" style="display:flex;gap:10px;flex-wrap:wrap"></div></div>
+      <div class="form-row" style="margin-top:8px"><label class="form-label">Ratings (optional)</label><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><div id="addRatings" style="display:flex;gap:10px;flex-wrap:wrap"></div><div id="addAvg" style="font-size:12px;color:var(--accent);font-weight:700"></div></div></div>
       <div class="form-row" style="margin-top:8px"><label class="form-label">Notes (optional)</label><textarea class="form-input" id="addNotes" rows="3" placeholder="Anything worth knowing..."></textarea></div>
       <div class="form-row-2">
         <div><label class="form-label">Budget ($/pp)</label><input class="form-input" id="addBudget" type="number" min="0" placeholder="0 = free" value="0"></div>
@@ -1322,6 +1326,7 @@ function signIn(){
       <button class="btn-secondary" onclick="closeCountryModal()">Cancel</button>
       <button class="btn-primary" onclick="createCountry()">✚ Create</button>
     </div>
+    <div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.12);padding-top:10px"><div style="font-size:11px;color:#7EAAC8;font-weight:700;margin-bottom:6px">EXISTING REGIONS</div><div id="regionMgr" style="max-height:210px;overflow:auto;font-size:12px"></div></div>
   </div>
 </div>
 
@@ -1366,7 +1371,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v118</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v120</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -1520,6 +1525,7 @@ try{localStorage.setItem('t69_layer',type);}catch(e){}}
 
 function onStatesLoaded(states){
   setProgress(50,'Loading map...');
+  t69LoadTree();
   availableUS = states.filter(function(s){ return US_STATES.indexOf(s)>=0; });
   availableCA = states.filter(function(s){ return CA_PROVINCES.indexOf(s)>=0; });
   loadLeaflet(function(){
@@ -1593,8 +1599,12 @@ function onStatesLoaded(states){
         if(!tabs||!tabs.length)return;
         var sel=document.getElementById('countrySelect');
         var oth=sel.querySelector('option[value="OTHER"]');if(oth)oth.remove();
-        tabs.sort().forEach(function(t){
-          var o=document.createElement('option');o.value=t;o.textContent=t;sel.appendChild(o);
+        t69LoadTree(function(){
+          var have={};for(var i=0;i<sel.options.length;i++)have[sel.options[i].value]=1;
+          var list=t69Countries().filter(function(c){return c!=='United States'&&c!=='Canada';});
+          if(!list.length)list=tabs.slice().sort();
+          list.forEach(function(t){if(have[t])return;
+            var o=document.createElement('option');o.value=t;o.textContent=t;sel.appendChild(o);});
         });
       })
       .getOtherCountryTabs();
@@ -1605,9 +1615,16 @@ function onCountryChange(country){
   if(!country)return;
   if(country!=='US'&&country!=='CA'){
     var stSel=document.getElementById('stateSelect');
-    stSel.innerHTML='<option value="'+country+'">'+country+'</option>';
     currentCountry=country;
-    onStateSelectChange(country);
+    var regs=t69RegionsOf(country);
+    if(regs.length<=1){
+      var only=regs.length?regs[0]:country;
+      stSel.innerHTML='<option value="'+only+'">'+only+'</option>';
+      onStateSelectChange(only);
+      return;
+    }
+    stSel.innerHTML='<option value="">\u2014 Select region \u2014</option>';
+    regs.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;stSel.appendChild(o);});
     return;
   }
   var sel=document.getElementById('stateSelect');
@@ -2407,7 +2424,7 @@ function updateMobListBadge(count){
 }
 
 // ── Add modal ────────────────────────────────────────────────
-function openAddModal(){window.addAdres='';window.addGR=null;addLat=null;addLng=null;addMapsUrl='';t69FillRegionList();t69BuildAddRatings();var _m=document.getElementById('addMeta');if(_m){_m.style.display='none';}document.getElementById('addUrl').value='';document.getElementById('addForm').style.display='none';document.getElementById('lookupStatus').style.display='none';document.getElementById('addStatus2').style.display='none';document.getElementById('addModal').classList.add('open');setTimeout(function(){document.getElementById('addUrl').focus();},100);}
+function openAddModal(){window.addAdres='';window.addGR=null;addLat=null;addLng=null;addMapsUrl='';window._t69NewRegion=null;t69LoadTree(function(){t69FillAddCountries('');});t69BuildAddRatings();var _av=document.getElementById('addAvg');if(_av)_av.textContent='';var _m=document.getElementById('addMeta');if(_m){_m.style.display='none';}document.getElementById('addUrl').value='';document.getElementById('addForm').style.display='none';document.getElementById('lookupStatus').style.display='none';document.getElementById('addStatus2').style.display='none';document.getElementById('addModal').classList.add('open');setTimeout(function(){document.getElementById('addUrl').focus();},100);}
 function closeAddModal(){document.getElementById('addModal').classList.remove('open');}
 function lookupUrl(){
   var url=document.getElementById('addUrl').value.trim();
@@ -2428,7 +2445,7 @@ function lookupUrl(){
         t69ShowAddMeta(r.lat,r.lng);
         t69FetchAddGoogleRating(r.suggestedName||'',r.address||'',r.lat,r.lng);
         document.getElementById('addName').value=r.suggestedName||'';
-        t69FillRegionList(r.state||r.stateRaw||'');
+        var _sel=t69SelectDetected(r.region||r.state||'',r.country||'');if(!_sel.ok){window._t69NewRegion={country:_sel.country||'',region:_sel.region||''};st.innerHTML+='<br><b>\u26A0 '+(_sel.region||'?')+((_sel.country)?(' ('+_sel.country+')'):'')+' is not in your list yet</b> \u2014 click \u2795 New country / region to add it.';}else if(_sel.note){st.innerHTML+='<br>'+_sel.note;}
         var _cat=document.getElementById('addCategory');
         if(_cat&&r.category){for(var _i=0;_i<_cat.options.length;_i++){if(_cat.options[_i].value===r.category){_cat.value=r.category;break;}}}
         document.getElementById('addForm').style.display='block';
@@ -2455,28 +2472,59 @@ function lookupUrl(){
 function t69AllRegions(){var out=[];try{out=out.concat(availableUS||[],availableCA||[]);}catch(e){}
   try{var cs=document.getElementById('countrySelect');if(cs){for(var i=0;i<cs.options.length;i++){var v=cs.options[i].value;if(v&&v!=='US'&&v!=='CA'&&v!=='OTHER'&&out.indexOf(v)<0)out.push(v);}}}catch(e){}
   return out.sort();}
-function t69FillRegionList(preselect){var sel=document.getElementById('addState');if(!sel)return;
-  var keep=preselect||sel.value||'';sel.innerHTML='';
-  var o0=document.createElement('option');o0.value='';o0.textContent='\u2014 Select region \u2014';sel.appendChild(o0);
-  var list=t69AllRegions();
-  if(keep&&keep!=='__NEW__'&&list.indexOf(keep)<0)list.push(keep);
-  list.sort().forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});
-  var on=document.createElement('option');on.value='__NEW__';on.textContent='\u2795 New country / region\u2026';sel.appendChild(on);
-  if(keep&&keep!=='__NEW__')sel.value=keep;}
-function t69AddStateChange(sel){if(!sel||sel.value!=='__NEW__')return;
-  var n=prompt('Name of the new country or region:');n=(n||'').trim();
-  if(!n){sel.value='';return;}
-  sel.value='';
-  callFn('fsCreateCountry',{country:n,regions:[n]}).then(function(r){
-    t69RegisterRegion(n);t69FillRegionList(n);toast('\u2705 "'+n+'" created');
-  }).catch(function(e){toast('\u274C '+(e.message||e));});}
+var T69_TREE=null;
+function t69LoadTree(cb){callFn('fsGetRegionTree',null).then(function(r){
+  if(r&&r.success&&r.regions)T69_TREE=r.regions;
+  if(cb)cb();}).catch(function(e){console.warn('tree',e);if(cb)cb();});}
+function t69Countries(){var out=[];(T69_TREE||[]).forEach(function(r){if(out.indexOf(r.country)<0)out.push(r.country);});
+  if(out.indexOf('United States')<0)out.push('United States');if(out.indexOf('Canada')<0)out.push('Canada');
+  return out.sort();}
+function t69RegionsOf(country){var out=[];(T69_TREE||[]).forEach(function(r){if(r.country===country&&out.indexOf(r.name)<0)out.push(r.name);});
+  if(!out.length){if(country==='United States')out=(availableUS||[]).slice();else if(country==='Canada')out=(availableCA||[]).slice();}
+  return out.sort();}
+function t69CountryOfRegion(region){var hit=null;(T69_TREE||[]).forEach(function(r){if(r.name===region)hit=r.country;});
+  if(hit)return hit;
+  if((US_STATES||[]).indexOf(region)>=0)return 'United States';
+  if((CA_PROVINCES||[]).indexOf(region)>=0)return 'Canada';
+  return null;}
+function t69OtherTabs(){var out=[];try{var cs=document.getElementById('countrySelect');if(cs){for(var i=0;i<cs.options.length;i++){var v=cs.options[i].value;if(v&&v!=='US'&&v!=='CA'&&v!=='OTHER')out.push(v);}}}catch(e){}
+  return out.sort();}
+function t69FillAddCountries(pre){var sel=document.getElementById('addCountry');if(!sel)return;
+  var keep=(typeof pre==='string')?pre:(sel.value||'');sel.innerHTML='';
+  var o0=document.createElement('option');o0.value='';o0.textContent='\u2014 Select country \u2014';sel.appendChild(o0);
+  t69Countries().forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+  sel.value=keep||'';
+  t69AddCountryChange();}
+function t69AddCountryChange(preRegion){var c=(document.getElementById('addCountry')||{}).value||'';
+  var sel=document.getElementById('addState');if(!sel)return;sel.innerHTML='';
+  if(!c){var oh=document.createElement('option');oh.value='';oh.textContent='\u2014 pick a country first \u2014';sel.appendChild(oh);return;}
+  var list=t69RegionsOf(c);
+  if(list.length!==1){var o1=document.createElement('option');o1.value='';o1.textContent='\u2014 Select region \u2014';sel.appendChild(o1);}
+  list.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});
+  if(typeof preRegion==='string'&&list.indexOf(preRegion)>=0)sel.value=preRegion;}
+function t69SelectDetected(region,country){
+  var c=t69CountryOfRegion(region)||(country||'');
+  if(c&&t69Countries().indexOf(c)>=0){t69FillAddCountries(c);
+    var list=t69RegionsOf(c);
+    if(list.indexOf(region)>=0){t69AddCountryChange(region);return {ok:true};}
+    if(list.length===1){t69AddCountryChange(list[0]);return {ok:true,note:'Region "'+region+'" not stored yet \u2014 using '+list[0]+'.'};}
+    t69AddCountryChange('');return {ok:false,country:c,region:region};}
+  t69FillAddCountries('');return {ok:false,country:country||'',region:region};}
+
 function t69BuildAddRatings(){var box=document.getElementById('addRatings');if(!box)return;box.innerHTML='';
   (T69_TRAVELLERS||[]).forEach(function(n){
     var w=document.createElement('div');w.style.cssText='display:flex;align-items:center;gap:5px';
     var l=document.createElement('span');l.textContent=n;l.style.cssText='font-size:12px;color:#7EAAC8';
     var sel=document.createElement('select');sel.className='form-input';sel.style.cssText='width:64px;padding:5px';sel.setAttribute('data-trav',n);
     ['-','1','2','3','4','5'].forEach(function(v){var o=document.createElement('option');o.value=(v==='-'?'':v);o.textContent=v;sel.appendChild(o);});
-    w.appendChild(l);w.appendChild(sel);box.appendChild(w);});}
+    sel.onchange=t69UpdateAddAvg;
+    w.appendChild(l);w.appendChild(sel);box.appendChild(w);});t69UpdateAddAvg();}
+function t69UpdateAddAvg(){var el=document.getElementById('addAvg');if(!el)return;var sum=0,n=0;
+  var sels=document.querySelectorAll('#addRatings select');
+  for(var i=0;i<sels.length;i++){var v=parseFloat(sels[i].value);if(!isNaN(v)&&v>0){sum+=v;n++;}}
+  if(!n){el.textContent='';return;}var a=Math.round((sum/n)*10)/10;
+  var stars='';for(var k=0;k<Math.floor(a);k++)stars+='\u2B50';if(a-Math.floor(a)>=0.5)stars+='\u00BD';
+  el.textContent='Avg '+a+' '+stars;}
 function t69ShowAddMeta(lat,lng){var m=document.getElementById('addMeta'),c=document.getElementById('addCoordsLine');if(!m||!c)return;
   c.textContent=(lat!=null&&lng!=null)?('\u{1F4CD} '+Number(lat).toFixed(5)+', '+Number(lng).toFixed(5)):'';m.style.display='block';}
 function t69FetchAddGoogleRating(name,address,lat,lng){var g=document.getElementById('addGrLine');if(!g)return;window.addGR=null;g.textContent='  \u2022  \u2B50 checking\u2026';
@@ -2489,7 +2537,7 @@ function t69RegisterRegion(name){if(!name)return;
     else{var cs=document.getElementById('countrySelect');if(cs){var found=false;for(var i=0;i<cs.options.length;i++){if(cs.options[i].value===name)found=true;}
       if(!found){var o=document.createElement('option');o.value=name;o.textContent=name;cs.appendChild(o);}}}
     if(typeof currentCountry!=='undefined'&&(currentCountry==='US'||currentCountry==='CA'))onCountryChange(currentCountry);
-    t69FillRegionList();}catch(e){console.warn('registerRegion',e);}}
+    t69LoadTree(function(){t69FillAddCountries(document.getElementById('addCountry')?document.getElementById('addCountry').value:'');});}catch(e){console.warn('registerRegion',e);}}
 function submitAdd(){
   var naam=document.getElementById('addName').value.trim(),state=document.getElementById('addState').value.trim();
   if(!naam){alert('Enter a name');return;}
@@ -3830,10 +3878,11 @@ function confirmDupDelete() {
 // ── ADD COUNTRY ──────────────────────────────────────────────
 function openCountryModal(){
   closeSettings();
-  document.getElementById('newCountryName').value='';
-  document.getElementById('newCountryRegions').value='';
+  var pre=window._t69NewRegion||null;
+  document.getElementById('newCountryName').value=(pre&&pre.country)?pre.country:'';
+  document.getElementById('newCountryRegions').value=(pre&&pre.region&&pre.region!==pre.country)?pre.region:'';
   document.getElementById('countryLookupStatus').style.display='none';
-  document.getElementById('countryModal').classList.add('open');
+  document.getElementById('countryModal').classList.add('open');t69RenderRegionMgr();
   setTimeout(function(){document.getElementById('newCountryName').focus();},120);
 }
 function closeCountryModal(){
@@ -3877,30 +3926,53 @@ function cca2ToFlag(cca2){
     return String.fromCodePoint(c.charCodeAt(0)+127397);
   }).join('');
 }
+
+function t69RenderRegionMgr(){var box=document.getElementById('regionMgr');if(!box)return;
+  box.innerHTML='<div style="color:#7EAAC8">Loading\u2026</div>';
+  t69LoadTree(function(){
+    box.innerHTML='';
+    var by={};(T69_TREE||[]).forEach(function(r){(by[r.country]=by[r.country]||[]).push(r.name);});
+    Object.keys(by).sort().forEach(function(c){
+      var h=document.createElement('div');h.textContent=c;
+      h.style.cssText='color:var(--accent);font-weight:700;margin:8px 0 3px';box.appendChild(h);
+      by[c].sort().forEach(function(n){
+        var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;padding:3px 0';
+        var nm=document.createElement('span');nm.textContent=n;nm.style.cssText='flex:1;color:#cfe3f5';
+        var b1=document.createElement('button');b1.textContent='rename';b1.style.cssText='background:none;border:none;color:#7EAAC8;cursor:pointer;font-size:11px';
+        b1.onclick=function(){t69RenameRegion(n);};
+        var b2=document.createElement('button');b2.textContent='move';b2.style.cssText='background:none;border:none;color:#7EAAC8;cursor:pointer;font-size:11px';
+        b2.onclick=function(){t69MoveRegion(n,c);};
+        row.appendChild(nm);row.appendChild(b1);row.appendChild(b2);box.appendChild(row);});});
+    if(!Object.keys(by).length)box.innerHTML='<div style="color:#7EAAC8">No regions yet</div>';});}
+function t69RenameRegion(n){var to=prompt('Rename region "'+n+'" to:',n);if(!to)return;to=to.trim();if(!to||to===n)return;
+  toast('\u23F3 Renaming\u2026');
+  callFn('fsRenameRegion',{from:n,to:to}).then(function(r){
+    if(!r||!r.success){toast('\u274C '+((r&&r.message)||'Failed'));return;}
+    toast('\u2705 Renamed \u2014 '+(r.moved||0)+' location(s) moved');
+    t69RenderRegionMgr();t69RegisterRegion(to);
+  }).catch(function(e){toast('\u274C '+(e.message||e));});}
+function t69MoveRegion(n,cur){var to=prompt('Which country does "'+n+'" belong to?',cur||'');if(!to)return;to=to.trim();if(!to||to===cur)return;
+  callFn('fsSetRegionCountry',{region:n,country:to}).then(function(r){
+    if(!r||!r.success){toast('\u274C '+((r&&r.message)||'Failed'));return;}
+    toast('\u2705 '+n+' \u2192 '+to);t69RenderRegionMgr();t69RegisterRegion(n);
+  }).catch(function(e){toast('\u274C '+(e.message||e));});}
 function createCountry(){
   var name=document.getElementById('newCountryName').value.trim();
-  var color=document.getElementById('newCountryColor').value;
   var regionsRaw=document.getElementById('newCountryRegions').value.trim();
   if(!name){toast('Enter a country name');return;}
   var regions=regionsRaw?regionsRaw.split(',').map(function(r){return r.trim();}).filter(Boolean):[];
-  var tabCount=regions.length||1;
+  var made=regions.length?regions:[name];
   var status=document.getElementById('countryLookupStatus');
-  status.style.display='block';status.textContent='⏳ Creating '+tabCount+' tab(s)...';
-  google.script.run
-    .withSuccessHandler(function(r){
-      if(r.success){
-        status.textContent='✅ Created: '+(regions.length?regions.join(', '):name);
-        toast('✅ Tab(s) created! Reload to see them.');
-        document.getElementById('newCountryName').value='';
-              document.getElementById('newCountryRegions').value='';
-      } else {
-        status.textContent='❌ '+r.message;
-      }
-    })
-    .catch(function(e){
-      status.textContent='❌ '+(e.message||e);
-    })
-    .createCountryTabs({country:name,flag:'',regions:regions,color:color});
+  status.style.display='block';status.textContent='\u23F3 Creating '+made.length+' region(s)\u2026';
+  callFn('fsCreateCountry',{country:name,regions:regions}).then(function(r){
+    if(!r||!r.success){status.textContent='\u274C '+((r&&r.message)||'Failed');return;}
+    status.textContent='\u2705 Created: '+made.join(', ');
+    made.forEach(function(n){t69RegisterRegion(n);});
+    toast('\u2705 '+made.join(', ')+' added');
+    document.getElementById('newCountryName').value='';
+    document.getElementById('newCountryRegions').value='';
+    t69RenderRegionMgr();
+  }).catch(function(e){status.textContent='\u274C '+(e.message||e);});
 }
 
 </script><script>
@@ -4981,7 +5053,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v118: ready');
+  console.log('T1969 v120: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
