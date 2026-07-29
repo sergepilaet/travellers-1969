@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v120  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v121  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -534,7 +534,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v120: Firestore preview mode ===== */
+/* ===== F0 v121: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -955,7 +955,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v120 ===== */
+/* ===== end F0 v121 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -966,12 +966,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v120</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v121</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v120</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v121</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1371,7 +1371,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v120</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v121</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -3930,32 +3930,43 @@ function cca2ToFlag(cca2){
 function t69RenderRegionMgr(){var box=document.getElementById('regionMgr');if(!box)return;
   box.innerHTML='<div style="color:#7EAAC8">Loading\u2026</div>';
   t69LoadTree(function(){
-    box.innerHTML='';
-    var by={};(T69_TREE||[]).forEach(function(r){(by[r.country]=by[r.country]||[]).push(r.name);});
-    Object.keys(by).sort().forEach(function(c){
-      var h=document.createElement('div');h.textContent=c;
-      h.style.cssText='color:var(--accent);font-weight:700;margin:8px 0 3px';box.appendChild(h);
-      by[c].sort().forEach(function(n){
-        var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;padding:3px 0';
-        var nm=document.createElement('span');nm.textContent=n;nm.style.cssText='flex:1;color:#cfe3f5';
-        var b1=document.createElement('button');b1.textContent='rename';b1.style.cssText='background:none;border:none;color:#7EAAC8;cursor:pointer;font-size:11px';
-        b1.onclick=function(){t69RenameRegion(n);};
-        var b2=document.createElement('button');b2.textContent='move';b2.style.cssText='background:none;border:none;color:#7EAAC8;cursor:pointer;font-size:11px';
-        b2.onclick=function(){t69MoveRegion(n,c);};
-        row.appendChild(nm);row.appendChild(b1);row.appendChild(b2);box.appendChild(row);});});
-    if(!Object.keys(by).length)box.innerHTML='<div style="color:#7EAAC8">No regions yet</div>';});}
-function t69RenameRegion(n){var to=prompt('Rename region "'+n+'" to:',n);if(!to)return;to=to.trim();if(!to||to===n)return;
-  toast('\u23F3 Renaming\u2026');
-  callFn('fsRenameRegion',{from:n,to:to}).then(function(r){
-    if(!r||!r.success){toast('\u274C '+((r&&r.message)||'Failed'));return;}
-    toast('\u2705 Renamed \u2014 '+(r.moved||0)+' location(s) moved');
-    t69RenderRegionMgr();t69RegisterRegion(to);
-  }).catch(function(e){toast('\u274C '+(e.message||e));});}
-function t69MoveRegion(n,cur){var to=prompt('Which country does "'+n+'" belong to?',cur||'');if(!to)return;to=to.trim();if(!to||to===cur)return;
-  callFn('fsSetRegionCountry',{region:n,country:to}).then(function(r){
-    if(!r||!r.success){toast('\u274C '+((r&&r.message)||'Failed'));return;}
-    toast('\u2705 '+n+' \u2192 '+to);t69RenderRegionMgr();t69RegisterRegion(n);
-  }).catch(function(e){toast('\u274C '+(e.message||e));});}
+    var regs=(T69_TREE||[]).slice();
+    if(!regs.length){box.innerHTML='<div style="color:#7EAAC8">No regions yet</div>';return;}
+    var countries=t69Countries();
+    var t=document.createElement('table');t.style.cssText='width:100%;border-collapse:collapse;font-size:12px';
+    var th=document.createElement('tr');th.innerHTML='<th style="text-align:left;color:#7EAAC8;font-size:10px;padding:2px 4px">REGION</th>'
+      +'<th style="text-align:left;color:#7EAAC8;font-size:10px;padding:2px 4px">BELONGS TO</th><th></th>';
+    t.appendChild(th);
+    regs.sort(function(a,b){return a.country===b.country?a.name.localeCompare(b.name):a.country.localeCompare(b.country);});
+    regs.forEach(function(r){
+      var tr=document.createElement('tr');tr.style.cssText='border-top:1px solid rgba(255,255,255,.07)';
+      var td1=document.createElement('td');td1.style.padding='3px 4px';
+      var inp=document.createElement('input');inp.value=r.name;inp.className='form-input';
+      inp.style.cssText='padding:4px 6px;font-size:12px;width:100%';
+      td1.appendChild(inp);
+      var td2=document.createElement('td');td2.style.padding='3px 4px';
+      var sel=document.createElement('select');sel.className='form-input';sel.style.cssText='padding:4px 6px;font-size:12px;width:100%';
+      countries.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+      if(countries.indexOf(r.country)<0){var o2=document.createElement('option');o2.value=r.country;o2.textContent=r.country;sel.appendChild(o2);}
+      sel.value=r.country;td2.appendChild(sel);
+      var td3=document.createElement('td');td3.style.cssText='padding:3px 4px;white-space:nowrap';
+      var b=document.createElement('button');b.textContent='save';b.disabled=true;
+      b.style.cssText='background:none;border:none;color:#44506a;cursor:default;font-size:11px;font-weight:700';
+      function dirty(){var d=(inp.value.trim()&&inp.value.trim()!==r.name)||sel.value!==r.country;
+        b.disabled=!d;b.style.color=d?'var(--accent)':'#44506a';b.style.cursor=d?'pointer':'default';}
+      inp.oninput=dirty;sel.onchange=dirty;
+      b.onclick=function(){if(b.disabled)return;b.disabled=true;b.textContent='\u2026';
+        var newName=inp.value.trim(),newCountry=sel.value,chain=Promise.resolve();
+        if(newName&&newName!==r.name)chain=chain.then(function(){return callFn('fsRenameRegion',{from:r.name,to:newName});})
+          .then(function(x){if(x&&x.success===false)throw new Error(x.message||'rename failed');});
+        if(newCountry!==r.country)chain=chain.then(function(){return callFn('fsSetRegionCountry',{region:newName||r.name,country:newCountry});})
+          .then(function(x){if(x&&x.success===false)throw new Error(x.message||'move failed');});
+        chain.then(function(){toast('\u2705 Saved');t69RenderRegionMgr();t69RegisterRegion(newName||r.name);})
+          .catch(function(e){toast('\u274C '+(e.message||e));b.textContent='save';b.disabled=false;});};
+      td3.appendChild(b);
+      tr.appendChild(td1);tr.appendChild(td2);tr.appendChild(td3);t.appendChild(tr);});
+    box.innerHTML='';box.appendChild(t);});}
+
 function createCountry(){
   var name=document.getElementById('newCountryName').value.trim();
   var regionsRaw=document.getElementById('newCountryRegions').value.trim();
@@ -5053,7 +5064,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v120: ready');
+  console.log('T1969 v121: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
