@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v121  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v122  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -534,7 +534,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v121: Firestore preview mode ===== */
+/* ===== F0 v122: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -955,7 +955,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v121 ===== */
+/* ===== end F0 v122 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -966,12 +966,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v121</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v122</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v121</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v122</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1311,7 +1311,7 @@ function signIn(){
     <div class="form-row">
       <label class="form-label">Country name</label>
       <div style="display:flex;gap:6px">
-        <input class="form-input" id="newCountryName" placeholder="e.g. Malta" style="flex:1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" >
+        <input class="form-input" id="newCountryName" placeholder="e.g. Malta" oninput="clearTimeout(window._t69sug);window._t69sug=setTimeout(t69SuggestRegions,500)" style="flex:1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" >
         <button class="btn-primary" onclick="lookupCountry()" style="flex:0 0 80px;padding:8px;font-size:12px">🔍 Lookup</button>
       </div>
     </div>
@@ -1320,6 +1320,7 @@ function signIn(){
     <div class="form-row" style="margin-top:8px">
       <label class="form-label">Regions / islands (optional, comma separated)</label>
       <input class="form-input" id="newCountryRegions" placeholder="Leave empty for single country tab" autocomplete="off">
+      <div id="regionSuggest" style="display:none;margin-top:6px;max-height:130px;overflow:auto;background:rgba(255,255,255,.04);border-radius:7px;padding:7px"></div>
     </div>
     <input type="hidden" id="newCountryColor" value="#1a3a5c">
     <div class="btn-row" style="margin-top:12px">
@@ -1371,7 +1372,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v121</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v122</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -3882,7 +3883,7 @@ function openCountryModal(){
   document.getElementById('newCountryName').value=(pre&&pre.country)?pre.country:'';
   document.getElementById('newCountryRegions').value=(pre&&pre.region&&pre.region!==pre.country)?pre.region:'';
   document.getElementById('countryLookupStatus').style.display='none';
-  document.getElementById('countryModal').classList.add('open');t69RenderRegionMgr();
+  document.getElementById('countryModal').classList.add('open');t69RenderRegionMgr();var _rs=document.getElementById('regionSuggest');if(_rs){_rs.style.display='none';_rs.innerHTML='';}if(pre&&pre.country)setTimeout(t69SuggestRegions,300);
   setTimeout(function(){document.getElementById('newCountryName').focus();},120);
 }
 function closeCountryModal(){
@@ -3927,22 +3928,76 @@ function cca2ToFlag(cca2){
   }).join('');
 }
 
+var T69_MGR_SORT={col:'country',dir:1};
+function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').value||'').trim();
+  var box=document.getElementById('regionSuggest');if(!box)return;
+  if(!nm){box.style.display='none';return;}
+  box.style.display='block';box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Looking up regions\u2026</span>';
+  callFn('fsSuggestRegions',{country:nm}).then(function(r){
+    if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions found \u2014 leave empty or type your own.</span>';return;}
+    box.innerHTML='';
+    var head=document.createElement('div');head.style.cssText='font-size:10px;color:#7EAAC8;font-weight:700;margin-bottom:5px';
+    head.textContent='OFFICIAL REGIONS OF '+(r.country||nm).toUpperCase()+' \u2014 tick what you want';
+    box.appendChild(head);
+    var acts=document.createElement('div');acts.style.cssText='margin-bottom:5px';
+    ['all','none'].forEach(function(w){var b=document.createElement('button');b.textContent=w;
+      b.style.cssText='background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;margin-right:8px;font-weight:700';
+      b.onclick=function(){box.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=(w==='all');});t69SyncRegionField();};
+      acts.appendChild(b);});
+    box.appendChild(acts);
+    r.regions.forEach(function(n){
+      var l=document.createElement('label');l.style.cssText='display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#cfe3f5;margin:0 10px 4px 0';
+      var c=document.createElement('input');c.type='checkbox';c.value=n;c.onchange=t69SyncRegionField;
+      l.appendChild(c);l.appendChild(document.createTextNode(n));box.appendChild(l);});
+  }).catch(function(){box.style.display='none';});}
+function t69SyncRegionField(){var box=document.getElementById('regionSuggest');var f=document.getElementById('newCountryRegions');
+  if(!box||!f)return;var picked=[];box.querySelectorAll('input[type=checkbox]').forEach(function(c){if(c.checked)picked.push(c.value);});
+  f.value=picked.join(', ');}
+function t69MgrSort(col){if(T69_MGR_SORT.col===col)T69_MGR_SORT.dir*=-1;else{T69_MGR_SORT.col=col;T69_MGR_SORT.dir=1;}t69RenderRegionMgr();}
 function t69RenderRegionMgr(){var box=document.getElementById('regionMgr');if(!box)return;
   box.innerHTML='<div style="color:#7EAAC8">Loading\u2026</div>';
   t69LoadTree(function(){
     var regs=(T69_TREE||[]).slice();
     if(!regs.length){box.innerHTML='<div style="color:#7EAAC8">No regions yet</div>';return;}
     var countries=t69Countries();
+    box.innerHTML='';
+    /* ---- countries table ---- */
+    var ch=document.createElement('div');ch.textContent='COUNTRIES \u2014 rename applies to all their regions';
+    ch.style.cssText='font-size:10px;color:#7EAAC8;font-weight:700;margin:2px 0 4px';box.appendChild(ch);
+    var ct=document.createElement('table');ct.style.cssText='width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px';
+    countries.forEach(function(c){
+      var n=regs.filter(function(r){return r.country===c;}).length;
+      var tr=document.createElement('tr');tr.style.cssText='border-top:1px solid rgba(255,255,255,.07)';
+      var t1=document.createElement('td');t1.style.padding='3px 4px';
+      var inp=document.createElement('input');inp.value=c;inp.className='form-input';inp.style.cssText='padding:4px 6px;font-size:12px;width:100%';
+      t1.appendChild(inp);
+      var t2=document.createElement('td');t2.style.cssText='padding:3px 4px;color:#7EAAC8;white-space:nowrap';t2.textContent=n+' region'+(n===1?'':'s');
+      var t3=document.createElement('td');t3.style.cssText='padding:3px 4px;white-space:nowrap';
+      var b=document.createElement('button');b.textContent='save';b.disabled=true;
+      b.style.cssText='background:none;border:none;color:#44506a;font-size:11px;font-weight:700;cursor:default';
+      inp.oninput=function(){var d=inp.value.trim()&&inp.value.trim()!==c;b.disabled=!d;b.style.color=d?'var(--accent)':'#44506a';b.style.cursor=d?'pointer':'default';};
+      b.onclick=function(){if(b.disabled)return;b.disabled=true;b.textContent='\u2026';
+        callFn('fsRenameCountry',{from:c,to:inp.value.trim()}).then(function(r){
+          if(!r||!r.success)throw new Error((r&&r.message)||'Failed');
+          toast('\u2705 '+(r.updated||0)+' region(s) updated');t69RenderRegionMgr();t69LoadTree();
+        }).catch(function(e){toast('\u274C '+(e.message||e));b.textContent='save';b.disabled=false;});};
+      t3.appendChild(b);tr.appendChild(t1);tr.appendChild(t2);tr.appendChild(t3);ct.appendChild(tr);});
+    box.appendChild(ct);
+    /* ---- regions table ---- */
     var t=document.createElement('table');t.style.cssText='width:100%;border-collapse:collapse;font-size:12px';
-    var th=document.createElement('tr');th.innerHTML='<th style="text-align:left;color:#7EAAC8;font-size:10px;padding:2px 4px">REGION</th>'
-      +'<th style="text-align:left;color:#7EAAC8;font-size:10px;padding:2px 4px">BELONGS TO</th><th></th>';
+    var th=document.createElement('tr');
+    function hcell(label,col){var e=document.createElement('th');
+      e.style.cssText='text-align:left;color:#7EAAC8;font-size:10px;padding:2px 4px;cursor:pointer;user-select:none';
+      e.textContent=label+(T69_MGR_SORT.col===col?(T69_MGR_SORT.dir>0?' \u25B2':' \u25BC'):'');
+      e.onclick=function(){t69MgrSort(col);};return e;}
+    th.appendChild(hcell('REGION','name'));th.appendChild(hcell('BELONGS TO','country'));th.appendChild(document.createElement('th'));
     t.appendChild(th);
-    regs.sort(function(a,b){return a.country===b.country?a.name.localeCompare(b.name):a.country.localeCompare(b.country);});
+    var sc=T69_MGR_SORT.col,sd=T69_MGR_SORT.dir;
+    regs.sort(function(a,b){var x=(a[sc]||'').localeCompare(b[sc]||'');if(x===0)x=(a.name||'').localeCompare(b.name||'');return x*sd;});
     regs.forEach(function(r){
       var tr=document.createElement('tr');tr.style.cssText='border-top:1px solid rgba(255,255,255,.07)';
       var td1=document.createElement('td');td1.style.padding='3px 4px';
-      var inp=document.createElement('input');inp.value=r.name;inp.className='form-input';
-      inp.style.cssText='padding:4px 6px;font-size:12px;width:100%';
+      var inp=document.createElement('input');inp.value=r.name;inp.className='form-input';inp.style.cssText='padding:4px 6px;font-size:12px;width:100%';
       td1.appendChild(inp);
       var td2=document.createElement('td');td2.style.padding='3px 4px';
       var sel=document.createElement('select');sel.className='form-input';sel.style.cssText='padding:4px 6px;font-size:12px;width:100%';
@@ -3963,9 +4018,8 @@ function t69RenderRegionMgr(){var box=document.getElementById('regionMgr');if(!b
           .then(function(x){if(x&&x.success===false)throw new Error(x.message||'move failed');});
         chain.then(function(){toast('\u2705 Saved');t69RenderRegionMgr();t69RegisterRegion(newName||r.name);})
           .catch(function(e){toast('\u274C '+(e.message||e));b.textContent='save';b.disabled=false;});};
-      td3.appendChild(b);
-      tr.appendChild(td1);tr.appendChild(td2);tr.appendChild(td3);t.appendChild(tr);});
-    box.innerHTML='';box.appendChild(t);});}
+      td3.appendChild(b);tr.appendChild(td1);tr.appendChild(td2);tr.appendChild(td3);t.appendChild(tr);});
+    box.appendChild(t);});}
 
 function createCountry(){
   var name=document.getElementById('newCountryName').value.trim();
@@ -5064,7 +5118,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v121: ready');
+  console.log('T1969 v122: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
