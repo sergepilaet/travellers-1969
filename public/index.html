@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v122  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v123  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -534,7 +534,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v122: Firestore preview mode ===== */
+/* ===== F0 v123: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -955,7 +955,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v122 ===== */
+/* ===== end F0 v123 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -966,12 +966,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v122</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v123</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v122</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v123</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1045,6 +1045,7 @@ function signIn(){
       <button class="sidebar-btn" onclick="exportMap('916')">📱 Export 9:16 TikTok</button>
       <button class="sidebar-btn" onclick="exportMap('169')">🖥️ Export 16:9 YouTube</button>
       <button class="sidebar-btn" onclick="openCountryModal()">🌍 Add a new country…</button>
+      <button class="sidebar-btn" onclick="openRegionsModal()">🗂️ Countries &amp; regions…</button>
     </div>
     <div class="sidebar-scroll">
       <div class="ss">
@@ -1303,6 +1304,18 @@ function signIn(){
 </div>
 
 <!-- ADD COUNTRY MODAL -->
+<div class="modal-overlay" id="regionsModal">
+  <div class="modal-box" style="max-width:760px;width:94vw">
+    <button class="modal-close" onclick="closeRegionsModal()">✕</button>
+    <div class="modal-title">🌍 Countries &amp; regions</div>
+    <div class="modal-sub">Click a country to open its regions. Rename anything, or move a region to another country.</div>
+    <div style="display:flex;gap:8px;align-items:center;margin:8px 0 10px">
+      <input class="form-input" id="regTreeSearch" placeholder="Search country or region…" oninput="t69RenderTree()" style="flex:1">
+      <button class="btn-primary" onclick="closeRegionsModal();openCountryModal()" style="flex:0 0 auto;padding:8px 14px;font-size:12px">✚ Add country</button>
+    </div>
+    <div id="regionTree" style="max-height:62vh;overflow:auto;font-size:13px"></div>
+  </div>
+</div>
 <div class="modal-overlay" id="countryModal">
   <div class="modal-box" style="max-width:440px">
     <button class="modal-close" onclick="closeCountryModal()">✕</button>
@@ -1327,7 +1340,7 @@ function signIn(){
       <button class="btn-secondary" onclick="closeCountryModal()">Cancel</button>
       <button class="btn-primary" onclick="createCountry()">✚ Create</button>
     </div>
-    <div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.12);padding-top:10px"><div style="font-size:11px;color:#7EAAC8;font-weight:700;margin-bottom:6px">EXISTING REGIONS</div><div id="regionMgr" style="max-height:210px;overflow:auto;font-size:12px"></div></div>
+    
   </div>
 </div>
 
@@ -1372,7 +1385,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v122</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v123</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -3883,7 +3896,7 @@ function openCountryModal(){
   document.getElementById('newCountryName').value=(pre&&pre.country)?pre.country:'';
   document.getElementById('newCountryRegions').value=(pre&&pre.region&&pre.region!==pre.country)?pre.region:'';
   document.getElementById('countryLookupStatus').style.display='none';
-  document.getElementById('countryModal').classList.add('open');t69RenderRegionMgr();var _rs=document.getElementById('regionSuggest');if(_rs){_rs.style.display='none';_rs.innerHTML='';}if(pre&&pre.country)setTimeout(t69SuggestRegions,300);
+  document.getElementById('countryModal').classList.add('open');var _rs=document.getElementById('regionSuggest');if(_rs){_rs.style.display='none';_rs.innerHTML='';}if(pre&&pre.country)setTimeout(t69SuggestRegions,300);
   setTimeout(function(){document.getElementById('newCountryName').focus();},120);
 }
 function closeCountryModal(){
@@ -3928,98 +3941,125 @@ function cca2ToFlag(cca2){
   }).join('');
 }
 
-var T69_MGR_SORT={col:'country',dir:1};
+var T69_TREE_OPEN={};
+function openRegionsModal(){closeSettings();document.getElementById('regionsModal').classList.add('open');
+  var q=document.getElementById('regTreeSearch');if(q)q.value='';t69RenderTree(true);}
+function closeRegionsModal(){document.getElementById('regionsModal').classList.remove('open');}
 function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').value||'').trim();
   var box=document.getElementById('regionSuggest');if(!box)return;
   if(!nm){box.style.display='none';return;}
   box.style.display='block';box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Looking up regions\u2026</span>';
   callFn('fsSuggestRegions',{country:nm}).then(function(r){
-    if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions found \u2014 leave empty or type your own.</span>';return;}
-    box.innerHTML='';
-    var head=document.createElement('div');head.style.cssText='font-size:10px;color:#7EAAC8;font-weight:700;margin-bottom:5px';
-    head.textContent='OFFICIAL REGIONS OF '+(r.country||nm).toUpperCase()+' \u2014 tick what you want';
-    box.appendChild(head);
-    var acts=document.createElement('div');acts.style.cssText='margin-bottom:5px';
-    ['all','none'].forEach(function(w){var b=document.createElement('button');b.textContent=w;
-      b.style.cssText='background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;margin-right:8px;font-weight:700';
-      b.onclick=function(){box.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=(w==='all');});t69SyncRegionField();};
-      acts.appendChild(b);});
-    box.appendChild(acts);
-    r.regions.forEach(function(n){
+    if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
+    box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
+      document.getElementById('newCountryRegions').value=picked.join(', ');});
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v123 backend.</span>';});}
+function t69RenderSuggestList(box,regions,onPick){
+  var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
+  var types=Object.keys(byType).sort();
+  var bar=document.createElement('div');bar.style.cssText='margin-bottom:6px;font-size:11px;color:#7EAAC8';
+  bar.textContent=types.length>1?'This country has '+types.length+' levels \u2014 tick what you want:':'Tick what you want:';
+  box.appendChild(bar);
+  function sync(){var p=[];box.querySelectorAll('input[type=checkbox]').forEach(function(c){if(c.checked)p.push(c.value);});onPick(p);}
+  types.forEach(function(t){
+    var h=document.createElement('div');h.style.cssText='margin:6px 0 3px;font-size:10px;font-weight:700;color:var(--accent)';
+    h.textContent=t.toUpperCase()+' ('+byType[t].length+')';
+    var all=document.createElement('button');all.textContent='all';
+    all.style.cssText='background:none;border:none;color:#7EAAC8;font-size:10px;cursor:pointer;margin-left:8px;font-weight:700';
+    all.onclick=function(){byType[t].forEach(function(n){var c=box.querySelector('input[value="'+n.replace(/"/g,'\\"')+'"]');if(c)c.checked=true;});sync();};
+    h.appendChild(all);box.appendChild(h);
+    byType[t].forEach(function(n){
       var l=document.createElement('label');l.style.cssText='display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#cfe3f5;margin:0 10px 4px 0';
-      var c=document.createElement('input');c.type='checkbox';c.value=n;c.onchange=t69SyncRegionField;
-      l.appendChild(c);l.appendChild(document.createTextNode(n));box.appendChild(l);});
-  }).catch(function(){box.style.display='none';});}
-function t69SyncRegionField(){var box=document.getElementById('regionSuggest');var f=document.getElementById('newCountryRegions');
-  if(!box||!f)return;var picked=[];box.querySelectorAll('input[type=checkbox]').forEach(function(c){if(c.checked)picked.push(c.value);});
-  f.value=picked.join(', ');}
-function t69MgrSort(col){if(T69_MGR_SORT.col===col)T69_MGR_SORT.dir*=-1;else{T69_MGR_SORT.col=col;T69_MGR_SORT.dir=1;}t69RenderRegionMgr();}
-function t69RenderRegionMgr(){var box=document.getElementById('regionMgr');if(!box)return;
-  box.innerHTML='<div style="color:#7EAAC8">Loading\u2026</div>';
-  t69LoadTree(function(){
-    var regs=(T69_TREE||[]).slice();
-    if(!regs.length){box.innerHTML='<div style="color:#7EAAC8">No regions yet</div>';return;}
-    var countries=t69Countries();
+      var c=document.createElement('input');c.type='checkbox';c.value=n;c.onchange=sync;
+      l.appendChild(c);l.appendChild(document.createTextNode(n));box.appendChild(l);});});}
+function t69RenderTree(reload){var box=document.getElementById('regionTree');if(!box)return;
+  var draw=function(){
+    var q=((document.getElementById('regTreeSearch')||{}).value||'').toLowerCase();
+    var regs=(T69_TREE||[]).slice(),countries=t69Countries();
     box.innerHTML='';
-    /* ---- countries table ---- */
-    var ch=document.createElement('div');ch.textContent='COUNTRIES \u2014 rename applies to all their regions';
-    ch.style.cssText='font-size:10px;color:#7EAAC8;font-weight:700;margin:2px 0 4px';box.appendChild(ch);
-    var ct=document.createElement('table');ct.style.cssText='width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px';
-    countries.forEach(function(c){
-      var n=regs.filter(function(r){return r.country===c;}).length;
-      var tr=document.createElement('tr');tr.style.cssText='border-top:1px solid rgba(255,255,255,.07)';
-      var t1=document.createElement('td');t1.style.padding='3px 4px';
-      var inp=document.createElement('input');inp.value=c;inp.className='form-input';inp.style.cssText='padding:4px 6px;font-size:12px;width:100%';
-      t1.appendChild(inp);
-      var t2=document.createElement('td');t2.style.cssText='padding:3px 4px;color:#7EAAC8;white-space:nowrap';t2.textContent=n+' region'+(n===1?'':'s');
-      var t3=document.createElement('td');t3.style.cssText='padding:3px 4px;white-space:nowrap';
-      var b=document.createElement('button');b.textContent='save';b.disabled=true;
-      b.style.cssText='background:none;border:none;color:#44506a;font-size:11px;font-weight:700;cursor:default';
-      inp.oninput=function(){var d=inp.value.trim()&&inp.value.trim()!==c;b.disabled=!d;b.style.color=d?'var(--accent)':'#44506a';b.style.cursor=d?'pointer':'default';};
-      b.onclick=function(){if(b.disabled)return;b.disabled=true;b.textContent='\u2026';
+    countries.sort().forEach(function(c){
+      var kids=regs.filter(function(r){return r.country===c;});
+      if(q&&c.toLowerCase().indexOf(q)<0&&!kids.some(function(k){return k.name.toLowerCase().indexOf(q)>=0;}))return;
+      var open=!!T69_TREE_OPEN[c]||!!q;
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 4px;border-top:1px solid rgba(255,255,255,.08)';
+      var chev=document.createElement('button');chev.textContent=open?'\u25BE':'\u25B8';
+      chev.style.cssText='background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;width:18px;padding:0';
+      chev.onclick=function(){T69_TREE_OPEN[c]=!open;draw();};
+      var inp=document.createElement('input');inp.value=c;inp.className='form-input';
+      inp.style.cssText='padding:5px 8px;font-size:13px;font-weight:700;flex:1;max-width:280px';
+      var cnt=document.createElement('span');cnt.style.cssText='color:#7EAAC8;font-size:11px;flex:1';
+      cnt.textContent=kids.length+' region'+(kids.length===1?'':'s');
+      var sv=document.createElement('button');sv.textContent='save';sv.disabled=true;
+      sv.style.cssText='background:none;border:none;color:#44506a;font-size:11px;font-weight:700;cursor:default';
+      inp.oninput=function(){var d=inp.value.trim()&&inp.value.trim()!==c;sv.disabled=!d;sv.style.color=d?'var(--accent)':'#44506a';sv.style.cursor=d?'pointer':'default';};
+      sv.onclick=function(){if(sv.disabled)return;sv.textContent='\u2026';sv.disabled=true;
         callFn('fsRenameCountry',{from:c,to:inp.value.trim()}).then(function(r){
           if(!r||!r.success)throw new Error((r&&r.message)||'Failed');
-          toast('\u2705 '+(r.updated||0)+' region(s) updated');t69RenderRegionMgr();t69LoadTree();
-        }).catch(function(e){toast('\u274C '+(e.message||e));b.textContent='save';b.disabled=false;});};
-      t3.appendChild(b);tr.appendChild(t1);tr.appendChild(t2);tr.appendChild(t3);ct.appendChild(tr);});
-    box.appendChild(ct);
-    /* ---- regions table ---- */
-    var t=document.createElement('table');t.style.cssText='width:100%;border-collapse:collapse;font-size:12px';
-    var th=document.createElement('tr');
-    function hcell(label,col){var e=document.createElement('th');
-      e.style.cssText='text-align:left;color:#7EAAC8;font-size:10px;padding:2px 4px;cursor:pointer;user-select:none';
-      e.textContent=label+(T69_MGR_SORT.col===col?(T69_MGR_SORT.dir>0?' \u25B2':' \u25BC'):'');
-      e.onclick=function(){t69MgrSort(col);};return e;}
-    th.appendChild(hcell('REGION','name'));th.appendChild(hcell('BELONGS TO','country'));th.appendChild(document.createElement('th'));
-    t.appendChild(th);
-    var sc=T69_MGR_SORT.col,sd=T69_MGR_SORT.dir;
-    regs.sort(function(a,b){var x=(a[sc]||'').localeCompare(b[sc]||'');if(x===0)x=(a.name||'').localeCompare(b.name||'');return x*sd;});
-    regs.forEach(function(r){
-      var tr=document.createElement('tr');tr.style.cssText='border-top:1px solid rgba(255,255,255,.07)';
-      var td1=document.createElement('td');td1.style.padding='3px 4px';
-      var inp=document.createElement('input');inp.value=r.name;inp.className='form-input';inp.style.cssText='padding:4px 6px;font-size:12px;width:100%';
-      td1.appendChild(inp);
-      var td2=document.createElement('td');td2.style.padding='3px 4px';
-      var sel=document.createElement('select');sel.className='form-input';sel.style.cssText='padding:4px 6px;font-size:12px;width:100%';
-      countries.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-      if(countries.indexOf(r.country)<0){var o2=document.createElement('option');o2.value=r.country;o2.textContent=r.country;sel.appendChild(o2);}
-      sel.value=r.country;td2.appendChild(sel);
-      var td3=document.createElement('td');td3.style.cssText='padding:3px 4px;white-space:nowrap';
-      var b=document.createElement('button');b.textContent='save';b.disabled=true;
-      b.style.cssText='background:none;border:none;color:#44506a;cursor:default;font-size:11px;font-weight:700';
-      function dirty(){var d=(inp.value.trim()&&inp.value.trim()!==r.name)||sel.value!==r.country;
-        b.disabled=!d;b.style.color=d?'var(--accent)':'#44506a';b.style.cursor=d?'pointer':'default';}
-      inp.oninput=dirty;sel.onchange=dirty;
-      b.onclick=function(){if(b.disabled)return;b.disabled=true;b.textContent='\u2026';
-        var newName=inp.value.trim(),newCountry=sel.value,chain=Promise.resolve();
-        if(newName&&newName!==r.name)chain=chain.then(function(){return callFn('fsRenameRegion',{from:r.name,to:newName});})
-          .then(function(x){if(x&&x.success===false)throw new Error(x.message||'rename failed');});
-        if(newCountry!==r.country)chain=chain.then(function(){return callFn('fsSetRegionCountry',{region:newName||r.name,country:newCountry});})
-          .then(function(x){if(x&&x.success===false)throw new Error(x.message||'move failed');});
-        chain.then(function(){toast('\u2705 Saved');t69RenderRegionMgr();t69RegisterRegion(newName||r.name);})
-          .catch(function(e){toast('\u274C '+(e.message||e));b.textContent='save';b.disabled=false;});};
-      td3.appendChild(b);tr.appendChild(td1);tr.appendChild(td2);tr.appendChild(td3);t.appendChild(tr);});
-    box.appendChild(t);});}
+          toast('\u2705 '+(r.updated||0)+' region(s) moved to '+inp.value.trim());t69RenderTree(true);
+        }).catch(function(e){toast('\u274C '+(e.message||e));sv.textContent='save';sv.disabled=false;});};
+      var addb=document.createElement('button');addb.textContent='\u2795 region';
+      addb.style.cssText='background:none;border:none;color:#7EAAC8;font-size:11px;cursor:pointer;font-weight:700';
+      addb.onclick=function(){t69AddRegionsTo(c);};
+      row.appendChild(chev);row.appendChild(inp);row.appendChild(cnt);row.appendChild(addb);row.appendChild(sv);
+      box.appendChild(row);
+      if(!open)return;
+      kids.filter(function(k){return !q||k.name.toLowerCase().indexOf(q)>=0||c.toLowerCase().indexOf(q)>=0;})
+        .sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(k){
+        var r2=document.createElement('div');
+        r2.style.cssText='display:flex;align-items:center;gap:8px;padding:4px 4px 4px 34px;background:rgba(255,255,255,.03)';
+        var ki=document.createElement('input');ki.value=k.name;ki.className='form-input';
+        ki.style.cssText='padding:4px 8px;font-size:12px;flex:1;max-width:260px';
+        var ks=document.createElement('select');ks.className='form-input';ks.style.cssText='padding:4px 8px;font-size:12px;max-width:200px';
+        countries.forEach(function(cc){var o=document.createElement('option');o.value=cc;o.textContent=cc;ks.appendChild(o);});
+        ks.value=k.country;
+        var kb=document.createElement('button');kb.textContent='save';kb.disabled=true;
+        kb.style.cssText='background:none;border:none;color:#44506a;font-size:11px;font-weight:700;cursor:default';
+        function dirty(){var d=(ki.value.trim()&&ki.value.trim()!==k.name)||ks.value!==k.country;
+          kb.disabled=!d;kb.style.color=d?'var(--accent)':'#44506a';kb.style.cursor=d?'pointer':'default';}
+        ki.oninput=dirty;ks.onchange=dirty;
+        kb.onclick=function(){if(kb.disabled)return;kb.disabled=true;kb.textContent='\u2026';
+          var nn=ki.value.trim(),nc=ks.value,ch=Promise.resolve();
+          if(nn&&nn!==k.name)ch=ch.then(function(){return callFn('fsRenameRegion',{from:k.name,to:nn});})
+            .then(function(x){if(x&&x.success===false)throw new Error(x.message||'rename failed');});
+          if(nc!==k.country)ch=ch.then(function(){return callFn('fsSetRegionCountry',{region:nn||k.name,country:nc});})
+            .then(function(x){if(x&&x.success===false)throw new Error(x.message||'move failed');});
+          ch.then(function(){toast('\u2705 Saved');T69_TREE_OPEN[nc]=true;t69RenderTree(true);t69RegisterRegion(nn||k.name);})
+            .catch(function(e){toast('\u274C '+(e.message||e));kb.textContent='save';kb.disabled=false;});};
+        r2.appendChild(ki);r2.appendChild(ks);r2.appendChild(kb);box.appendChild(r2);});
+      if(!kids.length){var em=document.createElement('div');
+        em.style.cssText='padding:4px 4px 6px 34px;color:#7EAAC8;font-size:11px';
+        em.textContent='No regions yet \u2014 use \u2795 region to add the official ones.';box.appendChild(em);}
+    });
+    if(!box.children.length)box.innerHTML='<div style="color:#7EAAC8;padding:10px">Nothing matches that search.</div>';};
+  if(reload){box.innerHTML='<div style="color:#7EAAC8;padding:10px">Loading\u2026</div>';t69LoadTree(draw);}else draw();}
+function t69AddRegionsTo(country){var box=document.getElementById('regionTree');
+  var wrap=document.createElement('div');
+  wrap.style.cssText='background:rgba(91,200,245,.07);border-radius:8px;padding:10px;margin:6px 0';
+  wrap.innerHTML='<div style="font-size:11px;color:#7EAAC8">Loading official regions for '+country+'\u2026</div>';
+  box.insertBefore(wrap,box.firstChild);
+  callFn('fsSuggestRegions',{country:country}).then(function(r){
+    wrap.innerHTML='';var picked=[];
+    if(r&&r.regions&&r.regions.length)t69RenderSuggestList(wrap,r.regions,function(p){picked=p;});
+    else{var t=document.createElement('div');t.style.cssText='font-size:11px;color:#7EAAC8;margin-bottom:6px';
+      t.textContent='No official list for '+country+' \u2014 type names separated by commas:';wrap.appendChild(t);}
+    var man=document.createElement('input');man.className='form-input';man.placeholder='Or type your own, comma separated';
+    man.style.cssText='margin-top:8px;padding:6px 8px;font-size:12px';wrap.appendChild(man);
+    var bar=document.createElement('div');bar.style.cssText='margin-top:8px;display:flex;gap:8px';
+    var ok=document.createElement('button');ok.className='btn-primary';ok.textContent='Add to '+country;
+    ok.style.cssText='padding:6px 12px;font-size:12px';
+    var no=document.createElement('button');no.className='btn-secondary';no.textContent='Cancel';
+    no.style.cssText='padding:6px 12px;font-size:12px';no.onclick=function(){wrap.remove();};
+    ok.onclick=function(){var extra=(man.value||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
+      var all=picked.concat(extra);if(!all.length){toast('Pick or type at least one');return;}
+      ok.disabled=true;ok.textContent='\u2026';
+      callFn('fsCreateCountry',{country:country,regions:all}).then(function(x){
+        if(!x||!x.success)throw new Error((x&&x.message)||'Failed');
+        toast('\u2705 '+all.length+' region(s) added to '+country);
+        T69_TREE_OPEN[country]=true;wrap.remove();t69RenderTree(true);all.forEach(t69RegisterRegion);
+      }).catch(function(e){toast('\u274C '+(e.message||e));ok.disabled=false;ok.textContent='Add to '+country;});};
+    bar.appendChild(ok);bar.appendChild(no);wrap.appendChild(bar);
+  }).catch(function(e){wrap.innerHTML='<div style="font-size:11px;color:#ff8080">'+(e.message||e)+'</div>';});}
 
 function createCountry(){
   var name=document.getElementById('newCountryName').value.trim();
@@ -4036,7 +4076,7 @@ function createCountry(){
     toast('\u2705 '+made.join(', ')+' added');
     document.getElementById('newCountryName').value='';
     document.getElementById('newCountryRegions').value='';
-    t69RenderRegionMgr();
+    
   }).catch(function(e){status.textContent='\u274C '+(e.message||e);});
 }
 
@@ -5118,7 +5158,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v122: ready');
+  console.log('T1969 v123: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
