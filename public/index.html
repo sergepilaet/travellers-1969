@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v126  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v127  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -535,7 +535,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v126: Firestore preview mode ===== */
+/* ===== F0 v127: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -879,7 +879,7 @@ function t69OpenGeoModal(loc,lat,lng,foundName){
  document.getElementById('t69GeoCoords').textContent=_t69GeoCur.lat.toFixed(5)+', '+_t69GeoCur.lng.toFixed(5);
  var lf=document.getElementById('t69GeoLinkIn');if(lf)lf.value='';
  t69GeoLink();document.getElementById('t69Geo').classList.add('open');
- setTimeout(function(){if(!_t69GeoMap){_t69GeoMap=L.map('t69GeoMap',{zoomControl:false,attributionControl:false});_t69GeoBase=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(_t69GeoMap);}
+ setTimeout(function(){if(!_t69GeoMap){_t69GeoMap=L.map('t69GeoMap',{zoomControl:false,attributionControl:false});_t69GeoBase=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(_t69GeoMap);}
   _t69GeoMap.invalidateSize();_t69GeoMap.setView([_t69GeoCur.lat,_t69GeoCur.lng],13);setTimeout(function(){_t69GeoMap.invalidateSize();_t69GeoMap.setView([_t69GeoCur.lat,_t69GeoCur.lng],14);},400);
   if(_t69GeoMk)_t69GeoMk.remove();_t69GeoMk=L.marker([_t69GeoCur.lat,_t69GeoCur.lng],{draggable:true}).addTo(_t69GeoMap);_t69GeoMk.on('dragend',function(){var p=_t69GeoMk.getLatLng();_t69GeoCur.lat=Math.round(p.lat*1e5)/1e5;_t69GeoCur.lng=Math.round(p.lng*1e5)/1e5;document.getElementById('t69GeoCoords').textContent=_t69GeoCur.lat.toFixed(5)+', '+_t69GeoCur.lng.toFixed(5)+' (moved)';t69GeoLink();});},60);}
 function t69Geocode(id,queued){var loc=t69Loc(id);if(!loc){t69GeoNext();return;}
@@ -900,7 +900,7 @@ function t69Geocode(id,queued){var loc=t69Loc(id);if(!loc){t69GeoNext();return;}
   }).catch(function(){toast('\u274C Geocoders unreachable \u2014 position manually');t69OpenGeoModal(loc,fb.lat,fb.lng,null);});
  });}
 function t69GeoSave(){var c=_t69GeoCur;if(!c)return;callFn('fsSaveLocation',{state:currentState,id:c.id,patch:{lat:c.lat,lng:c.lng,mapsUrl:'https://www.google.com/maps?q='+c.lat+','+c.lng}}).then(function(r){if(r&&r.success){c.loc.lat=c.lat;c.loc.lng=c.lng;toast('\u2705 GPS saved for '+c.loc.name);if(typeof applyFilters==='function')applyFilters();t69RenderTable();}else toast('\u274C '+(r&&r.message||'Save failed'));t69GeoClose();t69GeoNext();}).catch(function(e){toast('\u274C '+(e.message||e));t69GeoClose();t69GeoNext();});}
-function t69GeoToggleSat(){if(!_t69GeoMap)return;_t69GeoSat=!_t69GeoSat;if(_t69GeoBase)_t69GeoMap.removeLayer(_t69GeoBase);_t69GeoBase=L.tileLayer(_t69GeoSat?'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}':'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(_t69GeoMap);var b=document.getElementById('t69GeoSat');if(b)b.textContent=_t69GeoSat?'\uD83D\uDDFA Map':'\uD83D\uDEF0 Satellite';}
+function t69GeoToggleSat(){if(!_t69GeoMap)return;_t69GeoSat=!_t69GeoSat;if(_t69GeoBase)_t69GeoMap.removeLayer(_t69GeoBase);_t69GeoBase=L.tileLayer(_t69GeoSat?'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}':'https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(_t69GeoMap);var b=document.getElementById('t69GeoSat');if(b)b.textContent=_t69GeoSat?'\uD83D\uDDFA Map':'\uD83D\uDEF0 Satellite';}
 function t69GeoFromLink(){var lf=document.getElementById('t69GeoLinkIn');var u=(lf&&lf.value||'').trim();if(!u)return;
  if(u.indexOf('maps.app.goo.gl')>=0||u.indexOf('goo.gl/')>=0){toast('\u26A0\uFE0F Short link \u2014 open it in a tab first, then copy the FULL google.com/maps URL here');return;}
  var m=u.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)||u.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/)||u.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
@@ -956,7 +956,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v126 ===== */
+/* ===== end F0 v127 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -967,12 +967,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v126</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v127</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v126</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v127</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1139,6 +1139,10 @@ function signIn(){
       <button class="mt-btn" id="btnDet" onclick="setLayer('detail')">🔍 Detail</button>
       <div class="mt-div"></div>
       <button class="mt-btn" id="btnSat" onclick="setLayer('satellite')">🛰 Satellite</button>
+      <div class="mt-div"></div>
+      <button class="mt-btn t69ms active" data-ms="positron" onclick="t69SetMapStyle('positron')" title="Light, minimal">◻ Light</button>
+      <button class="mt-btn t69ms" data-ms="bright" onclick="t69SetMapStyle('bright')" title="Bright colours">◼ Bright</button>
+      <button class="mt-btn t69ms" data-ms="liberty" onclick="t69SetMapStyle('liberty')" title="Full colour, most detail">◈ Liberty</button>
       <div class="mt-div"></div>
       <label class="mt-btn" style="cursor:pointer;display:flex;align-items:center;gap:4px;font-size:10px" title="Always show pinned markers regardless of filters">
         <input type="checkbox" id="alwaysShowPinned" checked onchange="applyFilters()" style="accent-color:var(--accent);cursor:pointer"> 📌 Always
@@ -1393,7 +1397,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v126</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v127</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -1521,6 +1525,12 @@ var searchQuery='',sortMode='default',mapReady=false,activeQuickFilter='all';
 var addLat=null,addLng=null,addMapsUrl='';
 var currentDetailIdx=-1,alwaysShowPinned=false;
 
+function t69LoadVector(cb){if(window.maplibregl&&L&&L.maplibreGL){cb();return;}
+ var c1=document.createElement('link');c1.rel='stylesheet';c1.href='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css';document.head.appendChild(c1);
+ var s1=document.createElement('script');s1.src='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
+ s1.onload=function(){var s2=document.createElement('script');s2.src='https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js';
+  s2.onload=function(){cb(true);};s2.onerror=function(){cb(false);};document.head.appendChild(s2);};
+ s1.onerror=function(){cb(false);};document.head.appendChild(s1);}
 function loadLeaflet(cb){if(typeof L!=='undefined'){cb();return;}var lnk=document.createElement('link');lnk.rel='stylesheet';lnk.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(lnk);var s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';s.onload=cb;s.onerror=function(){cb();};document.head.appendChild(s);}
 window.addEventListener('load',function(){setProgress(20,'Connecting...');setTimeout(function(){google.script.run.withSuccessHandler(onStatesLoaded).catch(function(e){setSplashStatus('Error: '+(e.message||e));}).getAvailableStates();},300);});
 var availableUS = [], availableCA = [];
@@ -1535,11 +1545,45 @@ function initMap(){map=L.map('map',{zoomControl:false,preferCanvas:true}).setVie
       console.log('T1969 zoom',fn,'by',st);
       return orig.apply(null,arguments);
     };
-  });roadLayer=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap · © CARTO',subdomains:'abcd',maxZoom:20});satLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri',maxZoom:19});roadLayer.addTo(map);try{var _lp=localStorage.getItem('t69_layer');if(_lp&&_lp!=='road')setTimeout(function(){setLayer(_lp);},0);}catch(e){}}
+  });roadLayer=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'\u00a9 OpenStreetMap',maxZoom:19});t69InitVectorBase();satLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri',maxZoom:19});roadLayer.addTo(map);try{var _lp=localStorage.getItem('t69_layer');if(_lp&&_lp!=='road')setTimeout(function(){setLayer(_lp);},0);}catch(e){}}
+window.T69_STYLES={positron:'https://tiles.openfreemap.org/styles/positron',
+  bright:'https://tiles.openfreemap.org/styles/bright',
+  liberty:'https://tiles.openfreemap.org/styles/liberty'};
+function t69StyleName(){try{return localStorage.getItem('t69_mapstyle')||'positron';}catch(e){return 'positron';}}
+function t69InitVectorBase(){
+  t69LoadVector(function(ok){
+    if(!ok||!L.maplibreGL){window.T69_VECTOR_OK=false;
+      if(currentLayer==='road'&&roadLayer&&!map.hasLayer(roadLayer))roadLayer.addTo(map);return;}
+    window.T69_VECTOR_OK=true;
+    t69BuildVectorLayer();
+    if(currentLayer==='road')t69ShowVector(true);
+  });}
+function t69BuildVectorLayer(){
+  try{if(window.vectorLayer&&map.hasLayer(window.vectorLayer))map.removeLayer(window.vectorLayer);}catch(e){}
+  window.vectorLayer=L.maplibreGL({style:window.T69_STYLES[t69StyleName()]||window.T69_STYLES.positron,
+    attribution:'\u00a9 OpenStreetMap \u00b7 OpenFreeMap'});}
+function t69ShowVector(on){
+  if(!window.T69_VECTOR_OK||!window.vectorLayer)return false;
+  if(on){if(roadLayer&&map.hasLayer(roadLayer))map.removeLayer(roadLayer);
+    if(!map.hasLayer(window.vectorLayer))window.vectorLayer.addTo(map);
+    try{var c=window.vectorLayer.getContainer&&window.vectorLayer.getContainer();
+      if(c)c.style.zIndex='150';}catch(e){}}
+  else if(map.hasLayer(window.vectorLayer))map.removeLayer(window.vectorLayer);
+  return true;}
+function t69SetMapStyle(name){
+  try{localStorage.setItem('t69_mapstyle',name);}catch(e){}
+  if(!window.T69_VECTOR_OK){toast('Vector map unavailable \u2014 using OpenStreetMap');return;}
+  t69ShowVector(false);t69BuildVectorLayer();
+  if(currentLayer==='road')t69ShowVector(true);
+  document.querySelectorAll('.t69ms').forEach(function(b){
+    var on=b.getAttribute('data-ms')===name;
+    b.classList.toggle('active',on);});
+  toast('Map style: '+name);}
 function setLayer(type){if(type===currentLayer)return;currentLayer=type;
 if(!window.osmLayer)window.osmLayer=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'\u00a9 OpenStreetMap',maxZoom:19});
 [roadLayer,satLayer,window.osmLayer].forEach(function(l){if(l&&map.hasLayer(l))map.removeLayer(l);});
-(type==='satellite'?satLayer:(type==='detail'?window.osmLayer:roadLayer)).addTo(map);
+if(type==='road'){if(!t69ShowVector(true))roadLayer.addTo(map);}
+else{t69ShowVector(false);(type==='satellite'?satLayer:window.osmLayer).addTo(map);}
 if(!window.satLabels)window.satLabels=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{attribution:'\u00a9 Esri',maxZoom:19,pane:'shadowPane'});
 if(type==='satellite'){window.satLabels.addTo(map);}else if(map.hasLayer(window.satLabels)){map.removeLayer(window.satLabels);}
 var ids={road:'btnRoad',detail:'btnDet',satellite:'btnSat'};Object.keys(ids).forEach(function(k){var b=document.getElementById(ids[k]);if(b)b.classList.toggle('active',k===type);});
@@ -4067,7 +4111,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v126 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v127 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -4660,7 +4704,7 @@ async function t69ExportRun(stops,dur,W,H,tag,wide,waypoints){
     var im=new Image();im.crossOrigin='anonymous';
     im.onload=function(){tiles[k]=im;loaded++;if(loaded%25===0)t69ExProg('Loading map '+Math.round(loaded/order.length*100)+'%');res();};
     im.onerror=function(){loaded++;res();};
-    im.src='https://a.basemaps.cartocdn.com/rastertiles/voyager/'+k+'@2x.png';
+    im.src='https://tile.openstreetmap.org/'+k+'.png';
   });}));
   if(T69EX.cancel)return;
   t69ExProg('Recording\u2026 keep this tab in the foreground');
@@ -5272,7 +5316,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v126: ready');
+  console.log('T1969 v127: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
