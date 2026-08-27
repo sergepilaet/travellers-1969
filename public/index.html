@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v127  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v128  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -535,7 +535,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v127: Firestore preview mode ===== */
+/* ===== F0 v128: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -956,7 +956,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v127 ===== */
+/* ===== end F0 v128 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -967,12 +967,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v127</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v128</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v127</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v128</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1140,9 +1140,12 @@ function signIn(){
       <div class="mt-div"></div>
       <button class="mt-btn" id="btnSat" onclick="setLayer('satellite')">🛰 Satellite</button>
       <div class="mt-div"></div>
-      <button class="mt-btn t69ms active" data-ms="positron" onclick="t69SetMapStyle('positron')" title="Light, minimal">◻ Light</button>
-      <button class="mt-btn t69ms" data-ms="bright" onclick="t69SetMapStyle('bright')" title="Bright colours">◼ Bright</button>
-      <button class="mt-btn t69ms" data-ms="liberty" onclick="t69SetMapStyle('liberty')" title="Full colour, most detail">◈ Liberty</button>
+      <span id="t69StyleGroup" style="display:flex;align-items:center;gap:0">
+        <span style="font-size:9px;color:var(--muted);letter-spacing:.06em;padding:0 6px">STYLE</span>
+        <button class="mt-btn t69ms active" data-ms="positron" onclick="t69SetMapStyle('positron')" title="Lightest and fastest">◻ Light</button>
+        <button class="mt-btn t69ms" data-ms="bright" onclick="t69SetMapStyle('bright')" title="Bright colours">◼ Bright</button>
+        <button class="mt-btn t69ms" data-ms="liberty" onclick="t69SetMapStyle('liberty')" title="Full colour, most detail — slowest">◈ Liberty</button>
+      </span>
       <div class="mt-div"></div>
       <label class="mt-btn" style="cursor:pointer;display:flex;align-items:center;gap:4px;font-size:10px" title="Always show pinned markers regardless of filters">
         <input type="checkbox" id="alwaysShowPinned" checked onchange="applyFilters()" style="accent-color:var(--accent);cursor:pointer"> 📌 Always
@@ -1397,7 +1400,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v127</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v128</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -1551,6 +1554,7 @@ window.T69_STYLES={positron:'https://tiles.openfreemap.org/styles/positron',
   liberty:'https://tiles.openfreemap.org/styles/liberty'};
 function t69StyleName(){try{return localStorage.getItem('t69_mapstyle')||'positron';}catch(e){return 'positron';}}
 function t69InitVectorBase(){
+  try{var n=t69StyleName();document.querySelectorAll('.t69ms').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-ms')===n);});}catch(e){}
   t69LoadVector(function(ok){
     if(!ok||!L.maplibreGL){window.T69_VECTOR_OK=false;
       if(currentLayer==='road'&&roadLayer&&!map.hasLayer(roadLayer))roadLayer.addTo(map);return;}
@@ -1561,7 +1565,8 @@ function t69InitVectorBase(){
 function t69BuildVectorLayer(){
   try{if(window.vectorLayer&&map.hasLayer(window.vectorLayer))map.removeLayer(window.vectorLayer);}catch(e){}
   window.vectorLayer=L.maplibreGL({style:window.T69_STYLES[t69StyleName()]||window.T69_STYLES.positron,
-    attribution:'\u00a9 OpenStreetMap \u00b7 OpenFreeMap'});}
+    attribution:'\u00a9 OpenStreetMap \u00b7 OpenFreeMap',fadeDuration:0,refreshExpiredTiles:false,attributionControl:false});
+  window.T69_STYLE_LIVE=t69StyleName();}
 function t69ShowVector(on){
   if(!window.T69_VECTOR_OK||!window.vectorLayer)return false;
   if(on){if(roadLayer&&map.hasLayer(roadLayer))map.removeLayer(roadLayer);
@@ -1573,8 +1578,8 @@ function t69ShowVector(on){
 function t69SetMapStyle(name){
   try{localStorage.setItem('t69_mapstyle',name);}catch(e){}
   if(!window.T69_VECTOR_OK){toast('Vector map unavailable \u2014 using OpenStreetMap');return;}
-  t69ShowVector(false);t69BuildVectorLayer();
-  if(currentLayer==='road')t69ShowVector(true);
+  if(window.T69_STYLE_LIVE===name&&window.vectorLayer){if(currentLayer==='road')t69ShowVector(true);}
+  else{t69ShowVector(false);t69BuildVectorLayer();if(currentLayer==='road')t69ShowVector(true);}
   document.querySelectorAll('.t69ms').forEach(function(b){
     var on=b.getAttribute('data-ms')===name;
     b.classList.toggle('active',on);});
@@ -1586,6 +1591,7 @@ if(type==='road'){if(!t69ShowVector(true))roadLayer.addTo(map);}
 else{t69ShowVector(false);(type==='satellite'?satLayer:window.osmLayer).addTo(map);}
 if(!window.satLabels)window.satLabels=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{attribution:'\u00a9 Esri',maxZoom:19,pane:'shadowPane'});
 if(type==='satellite'){window.satLabels.addTo(map);}else if(map.hasLayer(window.satLabels)){map.removeLayer(window.satLabels);}
+var sg=document.getElementById('t69StyleGroup');if(sg)sg.style.display=(type==='road'?'flex':'none');
 var ids={road:'btnRoad',detail:'btnDet',satellite:'btnSat'};Object.keys(ids).forEach(function(k){var b=document.getElementById(ids[k]);if(b)b.classList.toggle('active',k===type);});
 try{localStorage.setItem('t69_layer',type);}catch(e){}}
 
@@ -3315,21 +3321,30 @@ function t69CloneStop(st){return{id:newStopId(),order:1,name:st.name||'',state:s
 function t69StopFromLoc(loc){return{id:newStopId(),order:1,name:loc.name||'',state:loc.state||'',
  lat:loc.lat||0,lng:loc.lng||0,category:loc.category||'',status:loc.status||'Planning',
  plannedDate:null,visitedDate:null,sourceSheet:loc.state||'',sourceRow:loc.rowIndex||0};}
+function t69DestKey(toSegId,stop){
+ var seg=(routeSegments||[]).find(function(x){return sid(x)===toSegId||x.id===toSegId;});
+ if(!seg)return sk(stop);
+ var D=window._t69dates||{},used=D[toSegId]||{},c=skCoord(stop),fb=null;
+ for(var i=0;i<(seg.stops||[]).length;i++){var st=seg.stops[i];
+  if(skCoord(st)!==c)continue;var kk=sk(st);
+  if(!used[kk])return kk;if(!fb)fb=kk;}
+ return fb||sk(stop);}
 function t69CopyDates(fromSegId,toSegId,stop){try{
  var D=window._t69dates;if(!D||!D[fromSegId])return;
- var k=sk(stop);var rec=D[fromSegId][k];if(!rec)return;
+ var k=sk(stop);var rec=D[fromSegId][k]||D[fromSegId][skCoord(stop)];if(!rec)return;
  D[toSegId]=D[toSegId]||{};
- if(D[toSegId][k])return;
+ var dk=t69DestKey(toSegId,stop);
+ if(D[toSegId][dk])return;
  var cp={};Object.keys(rec).forEach(function(x){if(x!=='calendarEventId')cp[x]=rec[x];});
- D[toSegId][k]=cp;
+ D[toSegId][dk]=cp;
  if(typeof callFn==='function')callFn('saveStopDates',{tripId:(typeof tid==='function'?tid():'roadtrip-2027'),segId:toSegId,stopDates:D[toSegId]}).catch(function(){});
 }catch(e){console.warn('date copy',e);}}
 function t69MoveDates(fromSegId,toSegId,stop){try{
  var D=window._t69dates;if(!D||!D[fromSegId])return;
- var k=sk(stop);var rec=D[fromSegId][k];if(!rec)return;
+ var k=sk(stop);var rec=D[fromSegId][k]||D[fromSegId][skCoord(stop)];if(!rec)return;
  D[toSegId]=D[toSegId]||{};
  D[toSegId][k]=rec;
- delete D[fromSegId][k];
+ delete D[fromSegId][k];delete D[fromSegId][skCoord(stop)];
  if(typeof callFn==='function'){var t=(typeof tid==='function'?tid():'roadtrip-2027');
   callFn('saveStopDates',{tripId:t,segId:fromSegId,stopDates:D[fromSegId]}).catch(function(){});
   callFn('saveStopDates',{tripId:t,segId:toSegId,stopDates:D[toSegId]}).catch(function(){});}
@@ -3509,7 +3524,7 @@ function t69ApplyPinView(){
     b.style.background=on?'var(--accent)':'';b.style.color=on?'#0D1B2E':'';b.style.fontWeight=on?'700':'';});}
 function t69SetPinView(v){window.T69_PINVIEW=v;t69ApplyPinView();
   toast(v==='all'?'Showing all pins':(v==='stops'?'Showing route stops only':'Route line only'));}
-function t69StopDate(seg,st){try{var D=window._t69dates||{};var k=Number(st.lat).toFixed(4)+'_'+Number(st.lng).toFixed(4);
+function t69StopDate(seg,st){try{var D=window._t69dates||{};var k=sk(st);
   var d=D[seg.id]&&D[seg.id][k];return d&&(d.date||d.start||d.arrive)||'';}catch(e){return '';}}
 function t69SegStats(seg){
   var el=document.getElementById('seg-total-'+seg.id);
@@ -4111,7 +4126,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v127 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v128 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -4469,7 +4484,8 @@ function createCountry(){
 var D={};
 function tid(){return window.TRIP_ID||'roadtrip-2027';}
 function sid(s){return s.id||s._id||null;}
-function sk(s){return (+(s.lat||0)).toFixed(4)+'_'+(+(s.lng||0)).toFixed(4);}
+function skCoord(s){return (+(s.lat||0)).toFixed(4)+'_'+(+(s.lng||0)).toFixed(4);}
+function sk(s){return (s&&s.id)?s.id:skCoord(s||{});}
 function pd(s){if(!s)return null;var p=s.split('/');if(p.length!==3)return null;return new Date(+p[2],+p[1]-1,+p[0]);}
 function fd(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
 function fds(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getFullYear()).slice(2);}
@@ -4500,6 +4516,15 @@ async function loadDates(){
       Object.keys(raw[segId]).forEach(function(k){
         var val=migrate(raw[segId][k]);
         if(/^\d+$/.test(k)){var idx=parseInt(k);if(stops[idx])D[segId][sk(stops[idx])]=val;}
+        else if(/^-?\d+\.\d+_-?\d+\.\d+$/.test(k)){
+          var used=D[segId],hit=null;
+          for(var q=0;q<stops.length;q++){
+            if(skCoord(stops[q])!==k)continue;
+            var kk=sk(stops[q]);
+            if(!used[kk]){hit=kk;break;}
+          }
+          D[segId][hit||k]=val;
+        }
         else D[segId][k]=val;
       });
     });
@@ -4929,7 +4954,7 @@ function findStopBySegKey(segId,key){
   var found=null;
   (window.routeSegments||[]).forEach(function(seg){
     if(found||sid(seg)!==segId)return;
-    (seg.stops||[]).forEach(function(stop){if(!found&&sk(stop)===key)found=stop;});
+    (seg.stops||[]).forEach(function(stop){if(!found&&(sk(stop)===key||skCoord(stop)===key))found=stop;});
   });
   return found;
 }
@@ -5316,7 +5341,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v127: ready');
+  console.log('T1969 v128: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
