@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v136  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v137  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -349,7 +349,9 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
   /* Map */
   .map-wrap{flex:1;width:100%;min-height:0}
   .map-search-bar{top:8px;left:8px;right:8px;transform:none;width:auto;min-width:0;max-width:calc(100% - 16px)}
-  .map-toggle{top:56px;bottom:auto;left:8px;right:auto;flex-direction:row;border-radius:8px}
+  .map-toggle{top:56px;bottom:auto;left:8px;right:8px;flex-direction:row;border-radius:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:calc(100vw - 16px)}
+  .map-toggle .mt-btn{flex:0 0 auto;font-size:11px;padding:7px 9px}
+  #t69StyleGroup>span:first-child{display:none}
   .mt-btn{padding:6px 9px;font-size:10px;white-space:nowrap}
   .mt-div{width:1px;height:auto}
 
@@ -369,6 +371,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
   /* Right list: bottom sheet */
   .rlist{display:flex;flex-direction:column;position:fixed;left:0;right:0;bottom:0;z-index:3800;width:100%!important;height:0;max-height:0;overflow:hidden;border-left:none;border-top:1px solid var(--border);border-radius:16px 16px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.6);transition:height .3s ease,max-height .3s ease}
   .rlist::before{content:'';display:block;width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 4px;flex-shrink:0}
+  #t69SheetX{display:flex!important}
   .rlist.mob-open{height:70vh;max-height:70vh}
   .rlist-header{padding:6px 14px 8px;flex-shrink:0}
   .loc-cards{overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -541,7 +544,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v136: Firestore preview mode ===== */
+/* ===== F0 v137: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -962,7 +965,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v136 ===== */
+/* ===== end F0 v137 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -973,12 +976,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v136</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v137</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v136</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v137</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1185,6 +1188,7 @@ function signIn(){
 
   <!-- RIGHT LIST -->
   <div class="rlist" id="rlist">
+    <button id="t69SheetX" onclick="t69CloseSheet()" title="Close" style="display:none;position:absolute;top:6px;right:8px;z-index:5;background:var(--card2);border:1px solid var(--border);color:var(--accent);width:30px;height:30px;border-radius:50%;font-size:15px;line-height:1;cursor:pointer;align-items:center;justify-content:center">✕</button>
     <div class="rlist-tabs">
       <button class="rlist-tab active" id="tabBtnList" onclick="switchRlistTab('list')">📋 List</button>
       <button class="rlist-tab" id="tabBtnRoute" onclick="switchRlistTab('route')">🗺️ Route</button>
@@ -1406,7 +1410,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v136</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v137</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -3531,7 +3535,10 @@ function t69StopPopup(seg,si,st,i){
   if(rt.length)h+='<div style="font-size:11px;margin-top:3px;color:#b8860b;font-weight:700">'+rt.join(' \u00b7 ')+'</div>';
   var dt=(typeof t69StopDate==='function')?t69StopDate(seg,st):'';
   if(dt)h+='<div style="font-size:11px;margin-top:3px">\uD83D\uDCC5 '+dt+'</div>';
-  h+='<div style="margin-top:6px;font-size:11px"><a href="'+maps+'" target="_blank">Google Maps</a>';
+  h+='<div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">'
+   +'<button onclick="t69StopDetails('+(st.lat||0)+','+(st.lng||0)+')" style="background:var(--accent);color:#0D1B2E;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer">\uD83D\uDCCB More details</button>'
+   +'</div>'
+   +'<div style="margin-top:6px;font-size:11px"><a href="'+maps+'" target="_blank">Google Maps</a>';
   if(L&&L.website&&L.website!=='N/A'&&/^https?:/i.test(L.website))h+=' \u00b7 <a href="'+L.website+'" target="_blank">Website</a>';
   h+='</div></div>';
   return h;}
@@ -3560,6 +3567,17 @@ function t69ApplyPinView(){
   document.querySelectorAll('.t69pv').forEach(function(b){
     var on=b.getAttribute('data-pv')===v;
     b.style.background=on?'var(--accent)':'';b.style.color=on?'#0D1B2E':'';b.style.fontWeight=on?'700':'';});}
+function t69CloseSheet(){
+  try{var r=document.querySelector('.rlist');if(!r)return;
+    r.classList.remove('open','expanded');
+    if(typeof closeRlist==='function'){closeRlist();return;}
+    r.style.maxHeight='0';r.style.height='0';
+  }catch(e){}}
+window.t69StopDetails=function(lat,lng){
+  try{var idx=-1;(window.allLocations||[]).forEach(function(l,i){
+    if(idx<0&&l&&l.lat!=null&&Math.abs(l.lat-lat)<0.0006&&Math.abs(l.lng-lng)<0.0006)idx=i;});
+    if(idx<0){toast('Open that region to see full details');return;}
+    if(typeof openDetail==='function')openDetail(idx);}catch(e){}};
 function t69SetPinView(v){window.T69_PINVIEW=v;t69ApplyPinView();
   toast(v==='all'?'Showing all pins':(v==='stops'?'Showing route stops only':'Route line only'));}
 function t69StopDate(seg,st){try{var D=window._t69dates||{};var k=(window.sk?window.sk(st):(st.id||''));
@@ -4199,7 +4217,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v136 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v137 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -4603,6 +4621,7 @@ async function loadDates(){
       });
     });
     window._t69dates=D;
+    try{setTimeout(function(){if(typeof paint==='function')paint();},80);}catch(e){}
     console.log('T1969 v47f loaded',JSON.stringify(D).slice(0,150));
   }catch(e){console.error('T1969 load',e);}
   paint();
@@ -5459,7 +5478,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v136: ready');
+  console.log('T1969 v137: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
