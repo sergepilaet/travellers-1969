@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v145  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v146  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -544,7 +544,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v145: Firestore preview mode ===== */
+/* ===== F0 v146: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -965,7 +965,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v145 ===== */
+/* ===== end F0 v146 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -976,12 +976,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v145</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v146</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v145</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v146</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1410,7 +1410,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v145</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v146</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -1425,6 +1425,8 @@ function signIn(){
 <div class="settings-section">
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69MaintBody');var a=document.getElementById('t69MaintArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">🔄 Maintenance <span id="t69MaintArrow">▸</span></div><div id="t69MaintBody" style="display:none">
       <div style="padding:2px 4px 10px">
+        <div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:6px">CALENDAR</div>
+        <button class="settings-btn" style="margin-bottom:10px" onclick="t69SetCalId()">📅 Which calendar to sync into…</button>
         <div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:6px">DATA SOURCE</div>
         <label style="display:block;font-size:12px;margin:3px 0;cursor:pointer"><input type="radio" name="t69ds" value="sheets"> 📋 Google Sheets (live)</label>
         <label style="display:block;font-size:12px;margin:3px 0;cursor:pointer"><input type="radio" name="t69ds" value="firestore"> 🔥 Firestore (preview)</label>
@@ -4354,7 +4356,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v145 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v146 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -5193,7 +5195,14 @@ window.t69ClearNearMeCircle=function(){
 };
 /* ===== T1969 Calendar Sync — begin ===== */
 (function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tz-lookup@6.1.25/tz.js';document.head.appendChild(s);})();
-var T69_CAL_ID='88e28808c3ecd8186ef1902f75473d82af77e83bc0cd2f3f65f017409f6bc5cd@group.calendar.google.com';
+var T69_CAL_DEFAULT='88e28808c3ecd8186ef1902f75473d82af77e83bc0cd2f3f65f017409f6bc5cd@group.calendar.google.com';
+function t69CalId(){try{return localStorage.getItem('t69_cal_id')||T69_CAL_DEFAULT;}catch(e){return T69_CAL_DEFAULT;}}
+Object.defineProperty(window,'T69_CAL_ID',{get:function(){return t69CalId();}});
+window.t69SetCalId=function(){var cur=t69CalId();
+  var v=prompt('Google Calendar to sync into.\n\nUse "primary" for your own main calendar, or paste a calendar ID from Google Calendar \u2192 Settings \u2192 Integrate calendar.',cur);
+  if(v===null)return;v=v.trim();
+  try{if(!v||v===T69_CAL_DEFAULT)localStorage.removeItem('t69_cal_id');else localStorage.setItem('t69_cal_id',v);}catch(e){}
+  toast('\uD83D\uDCC5 Calendar set to '+(v||'Travellers 1969'));};
 window._t69CalToken=window._t69CalToken||null;
 window.getCalendarAccessToken=async function(){
   if(!window._t69CalToken){try{var s=sessionStorage.getItem('t69cal');if(s)window._t69CalToken=JSON.parse(s);}catch(e){}}
@@ -5233,6 +5242,15 @@ function buildCalendarEventPayload(stop,dates){
   function plus30(t){var m=/^(\d{1,2}):(\d{2})/.exec(t69To24h(t)||'');if(!m)return '';
     var mins=(+m[1])*60+(+m[2])+30;if(mins>1439)mins=1439;
     return ('0'+Math.floor(mins/60)).slice(-2)+':'+('0'+(mins%60)).slice(-2);}
+  var nights=0;
+  try{if(multiDay){var a1=t69ISODate(dates.arrivalDate),b1=t69ISODate(dates.departureDate);
+    nights=Math.round((new Date(b1)-new Date(a1))/86400000);}}catch(e){}
+  if(nights>=2){
+    payload.summary=(stop.name||'Stay')+' \u00b7 '+nights+' nights';
+    payload.start={date:t69ISODate(dates.arrivalDate)};
+    payload.end={date:t69ISODate(addD(dates.departureDate,1))};
+    return payload;
+  }
   if(tStart){
     var tz=(typeof tzlookup==='function'&&stop.lat&&stop.lng)?tzlookup(stop.lat,stop.lng):'America/Denver';
     var sd=t69ISODate(dates.arrivalDate);
@@ -5666,7 +5684,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v145: ready');
+  console.log('T1969 v146: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
