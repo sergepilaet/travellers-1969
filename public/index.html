@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v144  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v145  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -544,7 +544,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v144: Firestore preview mode ===== */
+/* ===== F0 v145: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -965,7 +965,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v144 ===== */
+/* ===== end F0 v145 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -976,12 +976,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v144</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v145</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v144</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v145</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1410,7 +1410,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v144</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v145</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -4354,7 +4354,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v144 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v145 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -5226,12 +5226,21 @@ function buildCalendarEventPayload(stop,dates){
   if(dates.arrivalTime)times='Arrival '+dates.arrivalTime+(dates.departureTime?(' \u2192 Departure '+dates.departureTime):'');
   var desc=[stop.name||'',stop.state||'',stop.category||'',times,mapsUrl].filter(Boolean).join('\n');
   var payload={summary:stop.name||'Stop',description:desc,reminders:{useDefault:false,overrides:[]}};
+  if(dates.__tag)payload.extendedProperties={private:{t69:dates.__tag}};
   var multiDay=dates.departureDate&&dates.departureDate!==dates.arrivalDate;
-  if(dates.arrivalTime&&!multiDay){
+  var tStart=dates.arrivalTime||dates.departureTime||'';
+  var tEnd=(dates.arrivalTime&&dates.departureTime)?dates.departureTime:'';
+  function plus30(t){var m=/^(\d{1,2}):(\d{2})/.exec(t69To24h(t)||'');if(!m)return '';
+    var mins=(+m[1])*60+(+m[2])+30;if(mins>1439)mins=1439;
+    return ('0'+Math.floor(mins/60)).slice(-2)+':'+('0'+(mins%60)).slice(-2);}
+  if(tStart){
     var tz=(typeof tzlookup==='function'&&stop.lat&&stop.lng)?tzlookup(stop.lat,stop.lng):'America/Denver';
     var sd=t69ISODate(dates.arrivalDate);
-    payload.start={dateTime:sd+'T'+t69To24h(dates.arrivalTime)+':00',timeZone:tz};
-    payload.end={dateTime:sd+'T'+t69To24h(dates.departureTime||dates.arrivalTime)+':00',timeZone:tz};
+    var ed=multiDay?t69ISODate(dates.departureDate):sd;
+    var endT=multiDay?(dates.departureTime||dates.arrivalTime||tStart)
+                     :(tEnd&&t69To24h(tEnd)!==t69To24h(tStart)?tEnd:plus30(tStart));
+    payload.start={dateTime:sd+'T'+t69To24h(tStart)+':00',timeZone:tz};
+    payload.end={dateTime:ed+'T'+t69To24h(endT)+':00',timeZone:tz};
   }else{
     payload.start={date:t69ISODate(dates.arrivalDate)};
     payload.end={date:t69ISODate(addD(dates.departureDate||dates.arrivalDate,1))};
@@ -5252,8 +5261,26 @@ async function syncStopToCalendar(segId,key,dates){
   if(!stop)return;
   var existingId=dates.calendarEventId;
   var token=await getCalendarAccessToken();
+  var tag=(tid()+'|'+segId+'|'+key);
+  if(dates.syncCalendar&&dates.arrivalDate&&!existingId){
+    try{
+      var q='https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(T69_CAL_ID)
+        +'/events?privateExtendedProperty='+encodeURIComponent('t69='+tag)+'&showDeleted=false&maxResults=5';
+      var fr=await fetch(q,{headers:{'Authorization':'Bearer '+token}});
+      if(fr.ok){var fj=await fr.json();
+        if(fj&&fj.items&&fj.items.length){
+          existingId=fj.items[0].id;
+          dates.calendarEventId=existingId;
+          for(var di=1;di<fj.items.length;di++){
+            try{await deleteStopFromCalendar(fj.items[di].id,token);}catch(e){}
+          }
+        }}
+    }catch(e){console.warn('T1969 dup check',e);}
+  }
   if(dates.syncCalendar&&dates.arrivalDate){
+    dates.__tag=tag;
     var payload=buildCalendarEventPayload(stop,dates);
+    delete dates.__tag;
     var url='https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(T69_CAL_ID)+'/events'+(existingId?('/'+encodeURIComponent(existingId)):'');
     var res=await fetch(url,{method:existingId?'PATCH':'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(payload)});
     if(!res.ok){
@@ -5639,7 +5666,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v144: ready');
+  console.log('T1969 v145: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
