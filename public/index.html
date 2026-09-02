@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v146  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v147  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -320,7 +320,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
 .modal-overlay.open{display:flex}
 .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:16px 16px 0 0;width:100%;max-width:580px;max-height:88vh;overflow-y:auto;padding:18px;box-shadow:0 -8px 40px rgba(0,0,0,.5)}
 /* ── DESKTOP (≥ 768px) ────────────────────────────────────── */
-@media(min-width:768px){
+@media(min-width:768px) and (min-height:520px){
   .sidebar{display:flex}
   .detail-col{display:flex;transition:width .25s ease}
   .rlist{display:flex}
@@ -333,7 +333,7 @@ input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
 @media(min-width:600px){.modal-overlay{align-items:center}.modal-box{border-radius:16px;max-height:82vh}}
 
 /* ── MOBILE (< 768px) ────────────────────────────────────── */
-@media(max-width:767px){
+@media(max-width:767px),(max-height:519px){
   /* Header */
   header{padding:0 8px;gap:6px}
   .brand{font-size:16px;flex-shrink:0}
@@ -544,7 +544,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v146: Firestore preview mode ===== */
+/* ===== F0 v147: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -965,7 +965,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v146 ===== */
+/* ===== end F0 v147 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -976,12 +976,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v146</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v147</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v146</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v147</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1410,7 +1410,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v146</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v147</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2454,7 +2454,7 @@ function openQuickLink(type){
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
 
 // ── Mobile helpers ───────────────────────────────────────────
-function isMobile(){return window.innerWidth < 768;}
+function isMobile(){return window.innerWidth<768||window.innerHeight<520;}
 
 function toggleMobSidebar(){
   if(!isMobile()){toggleSidebar();return;}
@@ -4356,7 +4356,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v146 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v147 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -4896,22 +4896,37 @@ async function t69ExportRun(stops,dur,W,H,tag,wide,waypoints){
     phases.push({t:t0,d:hold,type:'hold'});t0+=hold;
     totalT=t0;
   }else{
-    var sc=1,intro=1.2,fly=1.5,outro=2,pause=1.3;
-    var need=intro+fly+outro+pause*stops.length+2;
-    if(dur<need){sc=dur/need;intro*=sc;fly*=sc;outro*=sc;pause*=sc;}
-    var driveT=Math.max(1,dur-intro-fly-outro-pause*stops.length);
+    var intro=1.2,fly=1.5,outro=2,hold=2.2,pause=1.3;
+    var nLegs=Math.max(1,stops.length-1);
+    var fixed=intro+fly+outro+hold;
+    var drivePref=Math.max(2,dur*0.45);
+    var want=fixed+pause*stops.length+drivePref;
+    /* scale EVERYTHING so the clip lasts exactly as long as asked */
+    var sc=dur/want;
+    intro*=sc;fly*=sc;outro*=sc;hold*=sc;pause*=sc;
+    var driveT=dur-(intro+fly+outro+hold+pause*stops.length);
+    if(driveT<0.5){ /* too many stops for the time: give drive a floor, shrink pauses */
+      driveT=Math.max(0.5,dur*0.25);
+      pause=Math.max(0.1,(dur-(intro+fly+outro+hold)-driveT)/stops.length);
+    }
+    var span=(stopD[stopD.length-1]-stopD[0])||1;
+    var fr=[],frSum=0;
+    for(var li=0;li<nLegs;li++){
+      /* blend distance share with an equal share so a short final leg still gets screen time */
+      var f=0.55*((stopD[li+1]-stopD[li])/span)+0.45*(1/nLegs);
+      fr.push(f);frSum+=f;
+    }
     phases.push({t:t0,d:intro,type:'intro'});t0+=intro;
     phases.push({t:t0,d:fly,type:'fly'});t0+=fly;
     for(var si=0;si<stops.length;si++){
       phases.push({t:t0,d:pause,type:'pause',stop:si});t0+=pause;
       if(si<stops.length-1){
-        var frac=(stopD[si+1]-stopD[si])/(stopD[stopD.length-1]-stopD[0]||1);
-        var dd=driveT*Math.max(frac,0.02);
+        var dd=driveT*(fr[si]/frSum);
         phases.push({t:t0,d:dd,type:'drive',from:stopD[si],to:stopD[si+1],leg:si});t0+=dd;
       }
     }
     phases.push({t:t0,d:outro,type:'outro'});t0+=outro;
-    phases.push({t:t0,d:2.2,type:'hold'});t0+=2.2;
+    phases.push({t:t0,d:hold,type:'hold'});t0+=hold;
     totalT=t0;
   }
   function ptAt(dd){if(pts.length===1)return pts[0];var lo=0,hi=cum.length-1;while(lo<hi){var m=(lo+hi)>>1;if(cum[m]<dd)lo=m+1;else hi=m;}var i=Math.max(1,lo);var f=(dd-cum[i-1])/((cum[i]-cum[i-1])||1);return {lat:pts[i-1].lat+(pts[i].lat-pts[i-1].lat)*f,lng:pts[i-1].lng+(pts[i].lng-pts[i-1].lng)*f};}
@@ -5684,7 +5699,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v146: ready');
+  console.log('T1969 v147: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
