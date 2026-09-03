@@ -266,16 +266,31 @@ exports.fsGoogleRating = functions.region('europe-west1').https.onCall(async (da
   const res=await fetch(url);
   const j=await res.json();
   const r=(j&&j.results&&j.results[0])||null;
-  if(!r||typeof r.rating!=='number') return {success:false,message:'not found'};
-  const rating=r.rating, reviews=r.user_ratings_total||0;
-  if(d.state&&d.rowIndex){
+  if(!r) return {success:false,message:'not found'};
+  const rating=(typeof r.rating==='number')?r.rating:null;
+  const reviews=r.user_ratings_total||0;
+  /* ask Places for the official website too, so dead links can be replaced */
+  let website='';
+  if(r.place_id&&(d.wantWebsite!==false)){
     try{
-      await admin.firestore().collection('locations').doc(String(d.state).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''))
-        .collection('items').doc(String(d.rowIndex))
-        .update({googleRating:rating,googleReviews:reviews,googleRatingAt:Date.now()});
+      const du='https://maps.googleapis.com/maps/api/place/details/json?place_id='+encodeURIComponent(r.place_id)
+        +'&fields=website,url&key='+GPLACES_KEY;
+      const dj=await (await fetch(du)).json();
+      website=(dj&&dj.result&&(dj.result.website||''))||'';
     }catch(e){}
   }
-  return {success:true,rating:rating,reviews:reviews};
+  if(d.state&&d.rowIndex){
+    try{
+      const patch={googleRatingAt:Date.now()};
+      if(rating!==null){patch.googleRating=rating;patch.googleReviews=reviews;}
+      if(website&&d.saveWebsite!==false)patch.website=website;
+      await admin.firestore().collection('locations').doc(String(d.state).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''))
+        .collection('items').doc(String(d.rowIndex))
+        .update(patch);
+    }catch(e){}
+  }
+  if(rating===null&&!website) return {success:false,message:'not found'};
+  return {success:true,rating:rating,reviews:reviews,website:website};
 });
 exports.archiveTrip = functions.region('europe-west1').https.onCall(async (data,context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated','Login required');
