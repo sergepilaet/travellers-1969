@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v153  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v155  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -550,7 +550,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v153: Firestore preview mode ===== */
+/* ===== F0 v155: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -573,7 +573,7 @@ function t69RestList(path){function page(tok,acc){return t69Auth().then(function
   return fetch(u,{method:'GET',headers:h}).then(function(r){if(!r.ok)throw new Error('Firestore read '+r.status+' \u2014 check security rules');return r.json();});})
   .then(function(j){acc=acc.concat((j.documents||[]).map(t69RestDoc));return j.nextPageToken?page(j.nextPageToken,acc):acc;});}
  return page(null,[]);}
-function t69RestLoc(d){return{name:d.name||'',website:d.website||'N/A',mapsUrl:d.mapsUrl||'',address:d.address||'',ratings:d.ratings||{},category:d.category||'',status:d.status||'Planning',budget:(typeof d.budget==='number')?d.budget:0,season:d.season||'Year-round',notes:d.notes||'',reservation:d.reservation||'No',pinned:!!d.pinned,lat:(typeof d.lat==='number')?d.lat:null,lng:(typeof d.lng==='number')?d.lng:null,state:d.state||'',googleRating:(typeof d.googleRating==='number')?d.googleRating:null,googleReviews:(typeof d.googleReviews==='number')?d.googleReviews:0,rowIndex:d._id,id:d._id};}
+function t69RestLoc(d){return{name:d.name||'',website:d.website||'N/A',mapsUrl:d.mapsUrl||'',address:d.address||'',ratings:d.ratings||{},category:d.category||'',subcategory:d.subcategory||'',status:d.status||'Planning',budget:(typeof d.budget==='number')?d.budget:0,season:d.season||'Year-round',notes:d.notes||'',reservation:d.reservation||'No',pinned:!!d.pinned,lat:(typeof d.lat==='number')?d.lat:null,lng:(typeof d.lng==='number')?d.lng:null,state:d.state||'',googleRating:(typeof d.googleRating==='number')?d.googleRating:null,googleReviews:(typeof d.googleReviews==='number')?d.googleReviews:0,rowIndex:d._id,id:d._id};}
 function t69States(){if(_t69StCache)return Promise.resolve(_t69StCache);return t69RestList('/locations').then(function(ds){_t69StCache=ds;setTimeout(function(){_t69StCache=null;},60000);return ds;});}
 var T69REST={
  fsGetStates:function(){return t69States().then(function(ds){return ds.filter(function(d){return d.type==='us'||d.type==='ca';}).map(function(d){return d.name;}).sort();});},
@@ -708,17 +708,17 @@ function t69Rows(text){
    while(k+1<cells.length&&(cells[k+1]||'').trim()==='')k++;}}
  if(cur.length>4)out.push(cur.join('\t'));
  return (out.length>=2)?out:lines;}
-function t69ParseRows(text){var out=[];var lines=t69Rows(text);
+function t69ParseRows(text,opts){var out=[];var lines=t69Rows(text);var _multi=!!(opts&&opts.multi);
  lines.forEach(function(ln){if(!ln.trim())return;if(/^\s*\[?\d+\]:\s*http/.test(ln))return;var cells=ln.split('\t');if(cells.length<2&&/\S\s{2,}\S/.test(ln))cells=ln.split(/\s{2,}/);if(cells.length<2){if(ln.indexOf(';')>=0)cells=ln.split(';');else if(ln.indexOf(',')>=0)cells=ln.split(',');}
   if(!cells[0]||!cells[0].trim())return;var low=cells[0].trim().toLowerCase();if(low==='naam'||low==='name')return;
-  function t69Md(x){x=(x||'').trim();var m=x.match(/\]\(([^)]+)\)/);if(m)return m[1].trim();m=x.match(/(https?:\/\/[^\s\]]+)/);return m?m[1].trim():x;}out.push({name:(cells[0]||'').trim().replace(/^\[|\]$/g,''),website:t69Md(cells[1]),mapsUrl:t69Md(cells[2]),adres:(cells[3]||'').trim(),category:(cells[7]||'Bizarre').trim(),status:(cells[8]||'Planning').trim(),budget:(cells[9]||'0').trim(),season:(cells[10]||'Year-round').trim(),notes:(cells[11]||'').replace(/\(\[[^\]]*\]\[\d+\]\)/g,'').trim(),reservation:(cells[12]||'No').trim()});});
+  function t69Md(x){x=(x||'').trim();var m=x.match(/\]\(([^)]+)\)/);if(m)return m[1].trim();m=x.match(/(https?:\/\/[^\s\]]+)/);return m?m[1].trim():x;}out.push({name:(cells[0]||'').trim().replace(/^\[|\]$/g,''),website:t69Md(cells[1]),mapsUrl:t69Md(cells[2]),adres:(cells[3]||'').trim(),category:(cells[7]||'Bizarre').trim(),status:(cells[8]||'Planning').trim(),budget:(cells[9]||'0').trim(),season:(cells[10]||'Year-round').trim(),notes:(cells[11]||'').replace(/\(\[[^\]]*\]\[\d+\]\)/g,'').trim(),reservation:(cells[12]||'No').trim(),subcategory:(cells[13]||'').trim(),state:(cells[14]||'').trim()});});
  return out;}
 function t69Prog(label,done,total){var p=document.getElementById('t69Prog');
  if(!p){p=document.createElement('div');p.id='t69Prog';p.style.cssText='position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9700;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:10px 16px;min-width:260px;box-shadow:0 8px 30px rgba(0,0,0,.5);font-size:12px';p.innerHTML='<div id="t69ProgL" style="font-weight:700;margin-bottom:6px"></div><div style="background:var(--card);border-radius:6px;height:8px;overflow:hidden"><div id="t69ProgB" style="height:8px;width:0%;background:var(--accent);transition:width .3s"></div></div>';document.body.appendChild(p);}
  document.getElementById('t69ProgL').textContent=label+' \u2014 '+done+' / '+total;
  document.getElementById('t69ProgB').style.width=(total?Math.round(done*100/total):0)+'%';}
 function t69ProgHide(){var p=document.getElementById('t69Prog');if(p)p.remove();}
-function t69ImportPaste(){if(typeof currentState==='undefined'||!currentState){toast('Open a state first');return;}
+function t69ImportPaste(){if((typeof currentState==='undefined'||!currentState)&&!confirm('No region is open.\n\nContinue only if your data has a State column (column O) \u2014 each row then goes to its own region.'))return;
  var ov=document.getElementById('t69ImpOv');if(ov)ov.remove();ov=document.createElement('div');ov.id='t69ImpOv';ov.style.cssText='position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center';
  var card=document.createElement('div');card.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;width:min(820px,95vw);max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:10px';
  card.innerHTML='<div style="font-weight:700">\uD83D\uDCE5 Paste AI results - '+currentState+'</div><div style="font-size:11px;color:var(--muted)">Paste the table from your AI. Rows matching existing Maps link / website / address are flagged as duplicates.</div>';
@@ -745,7 +745,8 @@ function t69ImportPaste(){if(typeof currentState==='undefined'||!currentState){t
   (function nextRow(){if(!toImport.length){t69ProgHide();toast('\u2705 Imported '+done+' locations');ov.remove();loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);if(doGeo)setTimeout(t69GeocodeAll,4500);
    var gEl=document.getElementById('t69ImpG');if(gEl&&gEl.checked)setTimeout(function(){t69FetchGoogle(false,true);},doGeo?60000:5000);return;}
    var r=toImport.shift();
-   var call=(r._dup&&repDup&&r._dupId)?callFn('fsSaveLocation',{state:currentState,id:r._dupId,patch:{name:r.name,website:r.website,mapsUrl:r.mapsUrl,address:r.adres,category:r.category,status:r.status,budget:r.budget,season:r.season,notes:r.notes,reservation:r.reservation}}):callFn('fsAddLocation',{state:currentState,naam:r.name,website:r.website,mapsUrl:r.mapsUrl,adres:r.adres,category:r.category,status:r.status,budget:r.budget,season:r.season,notes:r.notes});
+   var _st=(r.state&&r.state.trim())?r.state.trim():currentState;
+   var call=(r._dup&&repDup&&r._dupId)?callFn('fsSaveLocation',{state:_st,id:r._dupId,patch:{name:r.name,website:r.website,mapsUrl:r.mapsUrl,address:r.adres,category:r.category,subcategory:r.subcategory||'',status:r.status,budget:r.budget,season:r.season,notes:r.notes,reservation:r.reservation}}):callFn('fsAddLocation',{state:_st,naam:r.name,website:r.website,mapsUrl:r.mapsUrl,adres:r.adres,category:r.category,status:r.status,budget:r.budget,season:r.season,notes:r.notes});
    call.then(function(){done++;t69Prog('\uD83D\uDCE5 Importing',done,totalN);setTimeout(nextRow,120);}).catch(function(){done++;t69Prog('\uD83D\uDCE5 Importing',done,totalN);setTimeout(nextRow,120);});})();});
  var cl=document.createElement('button');cl.className='t69t-btn';cl.textContent='\u2715 Close';cl.addEventListener('click',function(){ov.remove();});
  row.appendChild(imp);row.appendChild(cl);card.appendChild(row);
@@ -903,7 +904,7 @@ function t69RenderReview(ro){
    +t69Th('Name','name')+(multi?t69Th('Region','state'):'')+'<th style="min-width:320px">Info</th>'
    +trav.map(function(t){return t69Th('\u2605 '+t69Esc(t),'r:'+t)}).join('')
    +t69Th('Avg','avg')+t69Th('Google','google')
-   +t69Th('Category','category')+t69Th('Status','status')+t69Th('Season','season')
+   +t69Th('Category','category')+t69Th('Sub','subcategory')+t69Th('Status','status')+t69Th('Season','season')
    +'<th style="width:52px">Res</th><th style="width:34px">\uD83D\uDDFA</th><th style="width:52px">Web</th></tr>';
   t69SortedList().forEach(function(loc){
     var id=loc.rowIndex,r=locRatings(loc),avg=getAvg(loc),g=t69GVal(loc);
@@ -922,6 +923,11 @@ function t69RenderReview(ro){
     function sel(key,val,opts){return ro?('<td>'+t69Esc(val)+'</td>')
       :('<td><select onchange="t69SaveCell(\''+id+'\',\''+key+'\',this)">'+opts.map(function(o){return '<option'+(o===val?' selected':'')+'>'+t69Esc(o)+'</option>';}).join('')+'</select></td>');}
     h+=sel('category',loc.category,t69Cats())
+     +(ro?('<td>'+t69Esc(loc.subcategory||'')+'</td>')
+        :('<td><select onchange="t69SaveCell(\''+id+'\',\'subcategory\',this)">'
+          +['']. concat(t69SubsFor(normalizeCat(loc.category))).map(function(o){
+              return '<option'+(o===(loc.subcategory||'')?' selected':'')+'>'+t69Esc(o)+'</option>';}).join('')
+          +'</select></td>'))
      +sel('status',loc.status||'Planning',t69Statuses())
      +(ro?('<td>'+t69Esc(loc.season||'')+'</td>')
         :('<td><input class="t69-season" value="'+t69Esc(loc.season||'')+'" onchange="t69SaveCell(\''+id+'\',\'season\',this)"></td>'))
@@ -963,6 +969,10 @@ if(window.t69BulkOn){var _tb=document.getElementById('t69TblTable');
 }
 function t69Loc(id){for(var i=0;i<allLocations.length;i++)if(String(allLocations[i].rowIndex)===String(id))return allLocations[i];return null;}
 function t69SaveCell(id,key,el){var loc=t69Loc(id);if(!loc)return;var patch={},val;
+ if(key==='subcategory'){val=el.value;patch.subcategory=val;loc.subcategory=val;
+  callFn('fsUpdateLocationField',{state:loc.state||currentState,rowIndex:id,field:'subcategory',value:val})
+   .then(function(){toast('\u2705 Saved');}).catch(function(e){toast('\u274C '+(e.message||e));});
+  return;}
  if(key==='pinned'){val=!!el.checked;patch.pinned=val;}
  else if(key.indexOf('rating:')===0){var nm=key.slice(7),r=Object.assign({},locRatings(loc)),v=parseFloat(el.value);if(!isNaN(v)&&v>0)r[nm]=Math.min(5,v);else delete r[nm];patch.ratings=r;val=r;}
  else if(key==='budget'){val=parseFloat(el.value)||0;patch.budget=val;}
@@ -1082,7 +1092,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v153 ===== */
+/* ===== end F0 v155 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1093,12 +1103,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v153</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v155</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v153</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v155</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1234,6 +1244,12 @@ function signIn(){
           </a>
           <a class="ql-btn" id="qlHotelscom" href="#" onclick="openQuickLink('hotelscom');return false" title="Search on Hotels.com">
             <span class="ql-btn-icon">🛏️</span>Hotels.com
+          </a>
+          <a class="ql-btn" id="qlCarwash" href="#" onclick="openQuickLink('carwash');return false" title="Car washes near this point">
+            <span class="ql-btn-icon">🚿</span>Car wash
+          </a>
+          <a class="ql-btn" id="qlMister" href="#" onclick="openQuickLink('mister');return false" title="Mister Car Wash locations near this point">
+            <span class="ql-btn-icon">🚙</span>Mister Car Wash
           </a>
         </div>
         <div style="font-size:9px;color:var(--muted);margin-top:5px;text-align:center" id="qlGpsNote">Uses GPS if available, otherwise map center</div>
@@ -1530,7 +1546,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v153</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v155</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -1928,6 +1944,7 @@ function applyFilters(){
   filteredLocs=allLocations.filter(function(l){
     if(t69CatHidden(l.category))return false;
     if(!activeCats.has(l.category))return false;
+    if(window.T69_SUBOFF&&l.subcategory&&window.T69_SUBOFF[normalizeCat(l.category)+'|'+l.subcategory])return false;
     if((l.budget||0)>maxBudget)return false;
     if(minRating>0){var a=getAvg(l);if(a===null||a<minRating)return false;}
     if(window.minGRating>0){var gv=t69GVal(l);if(!gv||gv.v<window.minGRating)return false;}
@@ -2348,7 +2365,33 @@ function unpinFromDetail(state,rowIndex,lat,lng){
 }
 
 // ── Cat filters, stats ────────────────────────────────────────
-function buildCatFilters(locs){var counts={};locs.forEach(function(l){var nc=normalizeCat(l.category);counts[nc]=(counts[nc]||0)+1;});var con=document.getElementById('catFilters');con.innerHTML='';Object.entries(counts).sort(function(a,b){return a[0].localeCompare(b[0]);}).forEach(function(entry){var cat=entry[0],n=entry[1];if(t69CatHidden(cat))return;var c=catColor(cat);var el=document.createElement('div');el.className='cf'+(activeCats.has(cat)?'':' off');el.innerHTML='<div class="cd" style="background:'+c+'"></div><span class="cn">'+cat+'</span><span class="cc">'+n+'</span>';el.onclick=function(){activeCats.has(cat)?activeCats.delete(cat):activeCats.add(cat);el.classList.toggle('off');applyFilters();};con.appendChild(el);});}
+function buildCatFilters(locs){var counts={};locs.forEach(function(l){var nc=normalizeCat(l.category);counts[nc]=(counts[nc]||0)+1;});var con=document.getElementById('catFilters');con.innerHTML='';Object.entries(counts).sort(function(a,b){return a[0].localeCompare(b[0]);}).forEach(function(entry){var cat=entry[0],n=entry[1];if(t69CatHidden(cat))return;var c=catColor(cat);var el=document.createElement('div');el.className='cf'+(activeCats.has(cat)?'':' off');el.innerHTML='<div class="cd" style="background:'+c+'"></div><span class="cn">'+cat+'</span><span class="cc">'+n+'</span>';el.onclick=function(){activeCats.has(cat)?activeCats.delete(cat):activeCats.add(cat);el.classList.toggle('off');applyFilters();buildCatFilters(locs);};con.appendChild(el);
+ /* subcategories of this category, shown only while it is switched on */
+ var subs=t69SubsFor(cat);
+ if(subs.length&&activeCats.has(cat)){
+   var box=document.createElement('div');
+   box.style.cssText='margin:1px 0 5px 20px;display:flex;flex-direction:column;gap:2px';
+   subs.forEach(function(sc){
+     var cnt=0;locs.forEach(function(l){if(normalizeCat(l.category)===cat&&(l.subcategory||'')===sc)cnt++;});
+     if(!cnt)return;
+     var lab=document.createElement('label');
+     lab.style.cssText='display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);cursor:pointer';
+     var cb=document.createElement('input');cb.type='checkbox';
+     cb.checked=!(window.T69_SUBOFF&&window.T69_SUBOFF[cat+'|'+sc]);
+     cb.onchange=function(){window.T69_SUBOFF=window.T69_SUBOFF||{};
+       if(cb.checked)delete window.T69_SUBOFF[cat+'|'+sc];else window.T69_SUBOFF[cat+'|'+sc]=1;
+       applyFilters();};
+     lab.appendChild(cb);lab.appendChild(document.createTextNode(sc));
+     var c2=document.createElement('span');c2.textContent=cnt;
+     c2.style.cssText='margin-left:auto;font-size:10px;opacity:.7';lab.appendChild(c2);
+     box.appendChild(lab);});
+   if(box.children.length)con.appendChild(box);
+ }
+ });}
+function t69SubsFor(cat){
+  try{var m=(window.settings&&settings.subcategories)||{};
+    var a=m[cat]||[];return Array.isArray(a)?a.slice().sort():[];}catch(e){return [];}}
+function t69AllSubs(){try{return (window.settings&&settings.subcategories)||{};}catch(e){return {};}}
 function allCats(){var src=(allLocations&&allLocations.length)?allLocations:Object.values(individualPins||{});activeCats=new Set(src.map(function(l){return normalizeCat(l.category);}));if(!allLocations||!allLocations.length)buildCatFilters(src);document.querySelectorAll('.cf').forEach(function(e){e.classList.remove('off');});applyFilters();}
 function noneCats(){activeCats.clear();document.querySelectorAll('.cf').forEach(function(e){e.classList.add('off');});applyFilters();}
 function updateStats(locs){var t=locs.length,b=locs.reduce(function(s,l){return s+(l.budget||0);},0);var er=locs.filter(function(l){return l.elsRating;}).map(function(l){return l.elsRating;});var sr=locs.filter(function(l){return l.sergeRating;}).map(function(l){return l.sergeRating;});var avgs=locs.map(function(l){return getAvg(l);}).filter(function(x){return x!==null;});var ea=er.length?(er.reduce(function(a,b){return a+b;})/er.length).toFixed(1):'—';var sa=sr.length?(sr.reduce(function(a,b){return a+b;})/sr.length).toFixed(1):'—';var mp=locs.filter(function(l){return l.lat&&l.lng;}).length;function sv(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}sv('hLoc',t);sv('hBdg','$'+b);sv('hRat',avgs.length?(avgs.reduce(function(a,b){return a+b;})/avgs.length).toFixed(1):'—');sv('hMust',locs.filter(function(l){return l.status==="Don't Skip";}).length);sv('sTotal',t);sv('sBudget','$'+b);sv('sEls',ea);sv('sSerge',sa);sv('sMapped',mp+'/'+t);sv('sFree',locs.filter(function(l){return(l.budget||0)===0;}).length);}
@@ -2567,6 +2610,8 @@ function openQuickLink(type){
   if(type==='booking') url='https://www.booking.com/searchresults.html?latitude='+lat+'&longitude='+lng+'&radius=25&radiusunit=km&checkin=&checkout=';
   if(type==='airbnb')  url='https://www.airbnb.com/s/homes?refinement_paths%5B%5D=%2Fhomes&search_type=search_query&place_id=&lat='+lat+'&lng='+lng+'&zoom=12';
   if(type==='camping') url='https://www.google.com/maps/search/campground/@'+lat+','+lng+',12z';
+  if(type==='carwash')  url='https://www.google.com/maps/search/car+wash/@'+lat+','+lng+',12z';
+  if(type==='mister')   url='https://www.google.com/maps/search/Mister+Car+Wash/@'+lat+','+lng+',11z';
   if(type==='hotelscom') url='https://www.hotels.com/Hotel-Search?latLong='+lat+','+lng+'&sort=DISTANCE';
   if(url) window.open(url,'_blank');
   if(pos.src==='map center') toast('💡 Tip: Use Near Me first to set GPS position for more accurate results');
@@ -4493,7 +4538,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v153 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v155 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -4768,10 +4813,85 @@ function createCountry(){
 
   function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+  window.t69SubMgrHtml=function(){
+    var subs=(settings&&settings.subcategories)||{};
+    var cats=(settings&&settings.categories)||[];
+    var h='<div class="t69-sgrp"><div class="t69-sgrp-t">Subcategories</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin:-2px 0 6px">Pick a category, then add the sub-types you want to filter on.</div>'
+      +'<select id="t69SubCat" style="width:100%;margin-bottom:6px">'
+      +cats.map(function(c){return '<option'+(c===window._t69SubCat?' selected':'')+'>'+t69Esc(c)+'</option>';}).join('')
+      +'</select><div id="t69SubList"></div>'
+      +'<div style="display:flex;gap:5px;margin-top:5px">'
+      +'<input id="t69SubNew" placeholder="New subcategory\u2026" style="flex:1">'
+      +'<button class="t69t-btn" onclick="t69SubAdd()">+ Add</button></div></div>';
+    setTimeout(t69SubRender,0);
+    return h;};
+  window.t69SubRender=function(){
+    var sel=document.getElementById('t69SubCat'),box=document.getElementById('t69SubList');
+    if(!sel||!box)return;
+    window._t69SubCat=sel.value;
+    sel.onchange=function(){window._t69SubCat=sel.value;t69SubRender();};
+    var list=((settings.subcategories||{})[sel.value]||[]).slice().sort();
+    box.innerHTML=list.length?'':'<div style="font-size:11px;color:var(--muted)">None yet</div>';
+    list.forEach(function(v){
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:6px;padding:2px 0;font-size:12px';
+      row.innerHTML='<span style="flex:1">'+t69Esc(v)+'</span>';
+      var del=document.createElement('button');del.className='t69t-btn';del.textContent='\u2715';
+      del.onclick=function(){t69SubDel(sel.value,v);};
+      row.appendChild(del);box.appendChild(row);});};
+  window.t69SubAdd=function(){
+    var sel=document.getElementById('t69SubCat'),inp=document.getElementById('t69SubNew');
+    var cat=sel&&sel.value,v=(inp&&inp.value||'').trim();
+    if(!cat||!v)return;
+    var m=Object.assign({},settings.subcategories||{});
+    m[cat]=(m[cat]||[]).slice();
+    if(m[cat].indexOf(v)>=0){toast('Already there');return;}
+    m[cat].push(v);
+    callFn('saveSettingExtra',{subcategories:m}).then(function(){
+      settings.subcategories=m;window.T69SET=settings;inp.value='';t69SubRender();
+      try{applyFilters();}catch(e){}
+      toast('\u2705 '+v+' added to '+cat);}).catch(function(e){toast('\u274C '+(e.message||e));});};
+  window.t69SubDel=function(cat,v){
+    var used=(allLocations||[]).filter(function(l){return (l.subcategory||'')===v;}).length;
+    if(used&&!confirm(v+' is used by '+used+' location(s).\n\nRemove it from the list anyway? Those locations keep the value.'))return;
+    var m=Object.assign({},settings.subcategories||{});
+    m[cat]=(m[cat]||[]).filter(function(x){return x!==v;});
+    callFn('saveSettingExtra',{subcategories:m}).then(function(){
+      settings.subcategories=m;window.T69SET=settings;t69SubRender();
+      try{applyFilters();}catch(e){}
+      toast('\u2705 Removed');}).catch(function(e){toast('\u274C '+(e.message||e));});};
+  window.t69MergePicker=function(type,val,inUse,values,onDone){
+    var others=(values||[]).filter(function(v){return v!==val;});
+    if(!others.length){alert('"'+val+'" is used by '+inUse+' location(s) and there is nothing else to merge into.\nAdd another value first.');return;}
+    var ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;z-index:9800;background:rgba(4,10,20,.6);display:flex;align-items:center;justify-content:center;padding:16px';
+    var box=document.createElement('div');
+    box.style.cssText='background:var(--surface2,#1e2538);border:1px solid var(--border);border-radius:12px;padding:16px;width:360px;max-width:94vw';
+    box.innerHTML='<div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:4px">Remove \u201c'+t69Esc(val)+'\u201d</div>'
+      +'<div style="font-size:12px;color:var(--muted);margin-bottom:10px">'+inUse+' location(s) still use it. Choose where they should go \u2014 they will be moved, then \u201c'+t69Esc(val)+'\u201d disappears.</div>';
+    var sel=document.createElement('select');sel.className='form-input';sel.style.cssText='width:100%;padding:7px;margin-bottom:12px';
+    others.forEach(function(v){var o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);});
+    box.appendChild(sel);
+    var bar=document.createElement('div');bar.style.cssText='display:flex;gap:8px;justify-content:flex-end';
+    var no=document.createElement('button');no.className='btn-secondary';no.textContent='Keep it';
+    no.style.cssText='padding:7px 14px;font-size:12px';no.onclick=function(){ov.remove();};
+    var ok=document.createElement('button');ok.className='btn-primary';ok.textContent='Move & remove';
+    ok.style.cssText='padding:7px 14px;font-size:12px';
+    ok.onclick=function(){
+      ok.disabled=true;ok.textContent='Moving\u2026';
+      callFn('fsRenameValue',{type:type,from:val,to:sel.value}).then(function(r){
+        if(!r||!r.success)throw new Error((r&&r.message)||'Failed');
+        toast('\u2705 '+(r.moved||0)+' moved to \u201c'+sel.value+'\u201d \u00b7 \u201c'+val+'\u201d removed');
+        ov.remove();if(onDone)onDone(r.values);
+      }).catch(function(e){toast('\u274C '+(e.message||e));ok.disabled=false;ok.textContent='Move & remove';});};
+    bar.appendChild(no);bar.appendChild(ok);box.appendChild(bar);
+    ov.appendChild(box);document.body.appendChild(ov);
+    ov.addEventListener('mousedown',function(e){if(e.target===ov)ov.remove();});};
   function renderSettings(){
     var c=document.getElementById('t69-smgr');if(!c||!settings) return;
     c.innerHTML='<div class="t69-stitle">&#9881; Manage App Values</div>'
-      +grp('categories','Categories')+grp('statusValues','Status')+grp('seasonValues','Season');
+      +grp('categories','Categories')+t69SubMgrHtml()+grp('statusValues','Status')+grp('seasonValues','Season');
     c.querySelectorAll('[data-a]').forEach(function(b){b.addEventListener('click',act);});
     c.querySelectorAll('.t69-cpick').forEach(function(inp){inp.addEventListener('change',async function(){
       var cat=inp.dataset.c,col=inp.value;
@@ -4821,7 +4941,10 @@ function createCountry(){
       try{
         var r2=await callFn('fsDeleteValue',{type:type,value:val});
         if(r2&&r2.success===false&&r2.inUse){
-          alert('Cannot remove "'+val+'".\n\nIt is still used by '+r2.inUse+' location(s).\nRename it into another value first \u2014 that moves them.');
+          t69MergePicker(type,val,r2.inUse,settings[type]||[],function(newVals){
+            settings[type]=newVals;renderSettings();
+            try{if(typeof loadState==='function'&&currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}
+          });
           return;}
         if(!r2||!r2.success)throw new Error((r2&&r2.message)||'Failed');
         settings[type]=r2.values;renderSettings();toast('\u2705 Removed');}
@@ -5867,7 +5990,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v153: ready');
+  console.log('T1969 v155: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
