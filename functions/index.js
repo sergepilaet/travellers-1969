@@ -213,6 +213,53 @@ exports.saveSettings = functions.region('europe-west1').https.onCall(async (data
   await sheets.spreadsheets.batchUpdate({spreadsheetId:SPREADSHEET_ID,requestBody:{requests}});
   return {success:true};
 });
+exports.fsRenameValue = functions.region('europe-west1').https.onCall(async (data,context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated','Login required');
+  const type=(data&&data.type)||'', from=((data&&data.from)||'').trim(), to=((data&&data.to)||'').trim();
+  const FIELD={categories:'category',statusValues:'status',seasonValues:'season'}[type];
+  if(!FIELD||!from||!to) return {success:false,message:'type, from and to required'};
+  const db=admin.firestore();
+  const regions=await db.collection('locations').get();
+  let moved=0;
+  for(const reg of regions.docs){
+    const items=await reg.ref.collection('items').where(FIELD,'==',from).get();
+    if(items.empty) continue;
+    let batch=db.batch(), n=0;
+    for(const it of items.docs){
+      batch.update(it.ref,{[FIELD]:to}); moved++; n++;
+      if(n>=400){ await batch.commit(); batch=db.batch(); n=0; }
+    }
+    if(n) await batch.commit();
+  }
+  const doc=await db.collection('config').doc('appSettings').get();
+  let arr=(doc.exists?doc.data()[type]:null)||[];
+  const had=arr.indexOf(from)!==-1;
+  arr=arr.filter(v=>v!==from);
+  if(arr.indexOf(to)===-1) arr.push(to);
+  await db.collection('config').doc('appSettings').set({[type]:arr},{merge:true});
+  return {success:true,moved:moved,merged:had&&arr.indexOf(to)!==-1,values:arr};
+});
+
+exports.fsDeleteValue = functions.region('europe-west1').https.onCall(async (data,context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated','Login required');
+  const type=(data&&data.type)||'', value=((data&&data.value)||'').trim();
+  const FIELD={categories:'category',statusValues:'status',seasonValues:'season'}[type];
+  if(!FIELD||!value) return {success:false,message:'type and value required'};
+  const db=admin.firestore();
+  let inUse=0;
+  const regions=await db.collection('locations').get();
+  for(const reg of regions.docs){
+    const items=await reg.ref.collection('items').where(FIELD,'==',value).get();
+    inUse+=items.size;
+  }
+  if(inUse) return {success:false,inUse:inUse,message:value+' is still used by '+inUse+' location(s)'};
+  const doc=await db.collection('config').doc('appSettings').get();
+  let arr=(doc.exists?doc.data()[type]:null)||[];
+  arr=arr.filter(v=>v!==value);
+  await db.collection('config').doc('appSettings').set({[type]:arr},{merge:true});
+  return {success:true,values:arr};
+});
+
 exports.renameSettingValue = functions.region('europe-west1').https.onCall(async (data,context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated','Login required');
   const { type, oldValue, newValue } = data;

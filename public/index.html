@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v152  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v153  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -550,7 +550,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v152: Firestore preview mode ===== */
+/* ===== F0 v153: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -867,10 +867,77 @@ window.t69ReviewToggle=function(){
   if(b){b.classList.toggle('active',on);b.textContent=on?'\u2715 Exit review':'\uD83D\uDC41 Review mode';}
   toast(on?'Review mode \u2014 scoring columns only':'All columns');};
 try{if(localStorage.getItem('t69_review')==='1')document.body.classList.add('t69-review');}catch(e){}
+function t69RevWebCell(loc,id,ro){
+  var w=(loc.website&&loc.website!=='N/A')?loc.website:'';
+  var ok=(w&&w.indexOf('http')===0);
+  var sug=loc.websiteSuggest||'';
+  var out='<td class="t69-revweb" style="text-align:center;white-space:nowrap">';
+  out+=ok?('<a class="t69t-btn" href="'+t69Esc(w)+'" target="_blank" title="'+t69Esc(w)+'" style="text-decoration:none">\u2197</a>')
+         :'<span style="color:var(--muted)">\u2014</span>';
+  if(sug&&!ro)out+=' <button class="t69t-btn t69-sug" title="Google has a different site:\n'+t69Esc(sug)
+     +'\nClick to use it" onclick="t69AcceptWeb(\''+id+'\')" style="color:#ffb74d;border-color:#ffb74d">\u26A0</button>';
+  return out+'</td>';}
+window.t69AcceptWeb=function(id){
+  var loc=t69Loc(id);if(!loc||!loc.websiteSuggest)return;
+  if(!confirm('Replace the website?\n\nNow:    '+(loc.website||'(none)')+'\nGoogle: '+loc.websiteSuggest))return;
+  var v=loc.websiteSuggest;
+  callFn('fsUpdateLocationField',{state:loc.state||currentState,rowIndex:id,field:'website',value:v})
+    .then(function(){loc.website=v;delete loc.websiteSuggest;toast('\u2705 Website updated');t69RenderTable();})
+    .catch(function(e){toast('\u274C '+(e.message||e));});};
+window.t69AcceptAllWeb=function(){
+  var list=(allLocations||[]).filter(function(l){return l.websiteSuggest;});
+  if(!list.length){toast('No website suggestions');return;}
+  if(!confirm('Accept Google\u2019s website for '+list.length+' location(s)?'))return;
+  var done=0;
+  (function nx(){
+    if(!list.length){toast('\u2705 '+done+' website(s) updated');t69RenderTable();return;}
+    var l=list.shift();
+    callFn('fsUpdateLocationField',{state:l.state||currentState,rowIndex:l.rowIndex,field:'website',value:l.websiteSuggest})
+      .then(function(){l.website=l.websiteSuggest;delete l.websiteSuggest;done++;})
+      .catch(function(){})
+      .then(function(){setTimeout(nx,80);});})();};
+function t69RenderReview(ro){
+  var trav=T69_TRAVELLERS.slice(0,6);
+  var multi=window.t69MultiRegion;
+  var h='<tr>'+(window.t69BulkOn?'<th style="width:24px"><input type="checkbox" id="t69BulkAll"></th>':'')
+   +t69Th('Name','name')+(multi?t69Th('Region','state'):'')+'<th style="min-width:320px">Info</th>'
+   +trav.map(function(t){return t69Th('\u2605 '+t69Esc(t),'r:'+t)}).join('')
+   +t69Th('Avg','avg')+t69Th('Google','google')
+   +t69Th('Category','category')+t69Th('Status','status')+t69Th('Season','season')
+   +'<th style="width:52px">Res</th><th style="width:34px">\uD83D\uDDFA</th><th style="width:52px">Web</th></tr>';
+  t69SortedList().forEach(function(loc){
+    var id=loc.rowIndex,r=locRatings(loc),avg=getAvg(loc),g=t69GVal(loc);
+    h+='<tr data-id="'+id+'">'
+     +(window.t69BulkOn?('<td style="text-align:center"><input type="checkbox" class="t69BulkCb" data-id="'+id+'"'+(window.t69BulkSel&&window.t69BulkSel[id]?' checked':'')+'></td>'):'')
+     +(ro?('<td>'+t69Esc(loc.name||'')+'</td>')
+        :('<td><input class="t69-name" value="'+t69Esc(loc.name||'')+'" onchange="t69SaveCell(\''+id+'\',\'name\',this)"></td>'))
+     +(multi?('<td class="t69-reg">'+t69Esc(loc.state||'')+'</td>'):'')
+     +(ro?('<td class="t69-infocell">'+t69Esc(loc.notes||'')+'</td>')
+        :('<td class="t69-infocell"><textarea class="t69-infotxt" rows="2" onchange="t69SaveCell(\''+id+'\',\'notes\',this)">'+t69Esc(loc.notes||'')+'</textarea></td>'));
+    trav.forEach(function(t){var v=(r[t]!==undefined)?r[t]:'';
+      h+=ro?('<td style="text-align:center">'+t69Esc(v)+'</td>')
+           :('<td style="text-align:center"><input class="t69-num" type="number" min="0" max="5" step="0.5" value="'+t69Esc(v)+'" onchange="t69SaveCell(\''+id+'\',\'rating:'+t69Esc(t)+'\',this)"></td>');});
+    h+='<td style="text-align:center;color:var(--accent);font-weight:700">'+(avg?avg.toFixed(1):'\u2014')+'</td>'
+     +'<td style="text-align:center;white-space:nowrap">'+(g?('<span style="color:'+(g.approx?'#7EAAC8':'#ffb74d')+'">'+(g.approx?'\u2248':'\u2605')+' '+g.v.toFixed(1)+(g.n?(' <span style="color:var(--muted);font-size:10px">('+g.n+')</span>'):'')+'</span>'):'\u2014')+'</td>';
+    function sel(key,val,opts){return ro?('<td>'+t69Esc(val)+'</td>')
+      :('<td><select onchange="t69SaveCell(\''+id+'\',\''+key+'\',this)">'+opts.map(function(o){return '<option'+(o===val?' selected':'')+'>'+t69Esc(o)+'</option>';}).join('')+'</select></td>');}
+    h+=sel('category',loc.category,t69Cats())
+     +sel('status',loc.status||'Planning',t69Statuses())
+     +(ro?('<td>'+t69Esc(loc.season||'')+'</td>')
+        :('<td><input class="t69-season" value="'+t69Esc(loc.season||'')+'" onchange="t69SaveCell(\''+id+'\',\'season\',this)"></td>'))
+     +sel('reservation',loc.reservation||'No',['No','Yes'])
+     +t69MapsCell(loc)
+     +t69RevWebCell(loc,id,ro)
+     +'</tr>';});
+  return h;}
 function t69RenderTable(){var ro=t69RO();
  try{var _sr={},_n=0;(allLocations||[]).forEach(function(l){var st=l.state||'';if(st&&!_sr[st]){_sr[st]=1;_n++;}});window.t69MultiRegion=_n>1;}catch(e){window.t69MultiRegion=false;}
 document.getElementById('t69TblState').textContent=currentState;document.getElementById('t69TblCount').textContent=allLocations.length+' locations'+(ro?' \u00b7 read-only on mobile':'');
 var trav=T69_TRAVELLERS.slice(0,6);
+if(document.body.classList.contains('t69-review')){
+ document.getElementById('t69TblTable').innerHTML=t69RenderReview(ro);
+ t69WireTable();
+ return;}
 var h='<tr>'+(window.t69BulkOn?'<th style="width:24px"><input type="checkbox" id="t69BulkAll"></th>':'')+t69Th('Naam','name')+(window.t69MultiRegion?t69Th('Regio','state'):'')+'<th>Web</th><th>Maps</th>'+t69Th('Adres','address')+trav.map(function(t){return t69Th('\u2605 '+t69Esc(t),'r:'+t);}).join('')+t69Th('Avg','avg')+t69Th('Google rating','google')+t69Th('Category','category')+t69Th('Status','status')+t69Th('Price','budget')+t69Th('Season','season')+'<th>Info</th>'+t69Th('Reservation','reservation')+t69Th('\uD83D\uDCCC','pinned')+t69Th('GPS','gps')+(ro?'':'<th></th>')+'</tr>';
 t69SortedList().forEach(function(loc){var id=loc.rowIndex,r=locRatings(loc),avg=getAvg(loc);
  function inp(key,val,cls,type){if(ro)return '<td class="c-'+key+'" title="'+t69Esc(val)+'">'+t69Esc(val)+'</td>';return '<td><input class="'+cls+'" title="'+t69Esc(val)+'" type="'+(type||'text')+'"'+(type==='number'?' min="0" step="0.5"':'')+' value="'+t69Esc(val)+'" onchange="t69SaveCell(\''+id+'\',\''+key+'\',this)"></td>';}
@@ -886,6 +953,9 @@ t69SortedList().forEach(function(loc){var id=loc.rowIndex,r=locRatings(loc),avg=
  +'<td style="text-align:center;white-space:nowrap"><span title="'+((loc.lat&&loc.lng)?'Coordinates saved':'No coordinates saved yet \u2014 use Geocode all missing or Edit')+'">'+((loc.lat&&loc.lng)?'\u2705':'\u26A0\uFE0F')+'</span>'+(ro?'':' <button class="t69t-btn" onclick="t69Geocode(\''+id+'\',false)" title="Edit coordinates">\u270F Edit</button>')+'</td>'
  +(ro?'':'<td><button class="t69t-btn" onclick="t69DeleteRow(\''+id+'\')" title="Delete">\uD83D\uDDD1</button></td>')+'</tr>';});
 document.getElementById('t69TblTable').innerHTML=h;
+t69WireTable();
+}
+function t69WireTable(){
 document.getElementById('t69TblTable').querySelectorAll('th.t69s').forEach(function(th){th.addEventListener('click',function(){t69Sort(th.getAttribute('data-k'));});});
 if(window.t69BulkOn){var _tb=document.getElementById('t69TblTable');
  _tb.querySelectorAll('.t69BulkCb').forEach(function(cb){cb.addEventListener('change',function(){var did=cb.getAttribute('data-id');if(cb.checked)window.t69BulkSel[did]=1;else delete window.t69BulkSel[did];if(window.t69BulkBar)window.t69BulkBar();});});
@@ -1012,7 +1082,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v152 ===== */
+/* ===== end F0 v153 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1023,12 +1093,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v152</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v153</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v152</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v153</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1460,7 +1530,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v152</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v153</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -4423,7 +4493,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v152 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v153 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -4734,13 +4804,27 @@ function createCountry(){
       var nv=prompt('Rename "'+val+'" to:');
       if(!nv||!nv.trim()||nv.trim()===val) return;
       var btn=e.currentTarget;btn.textContent='...';btn.disabled=true;
-      try{var r=await callFn('renameSettingValue',{type:type,oldValue:val,newValue:nv.trim()});
-        settings[type]=r.updatedValues;renderSettings();}
-      catch(er){alert('Failed: '+er.message);btn.textContent='&#9999;';btn.disabled=false;}
+      var target=nv.trim();
+      var exists=(settings[type]||[]).indexOf(target)>=0;
+      if(exists&&!confirm('"'+target+'" already exists.\n\nMerge "'+val+'" into it?\nAll locations using "'+val+'" will be moved.')){
+        btn.textContent='\u270E';btn.disabled=false;return;}
+      try{
+        var r=await callFn('fsRenameValue',{type:type,from:val,to:target});
+        if(!r||!r.success)throw new Error((r&&r.message)||'Failed');
+        settings[type]=r.values;renderSettings();
+        toast('\u2705 '+(r.moved||0)+' location(s) moved to "'+target+'"');
+        try{if(typeof loadState==='function'&&currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}
+      }
+      catch(er){alert('Failed: '+er.message);btn.textContent='\u270E';btn.disabled=false;}
     }else if(a==='del'){
-      if(!confirm('Remove "'+val+'"? Existing rows keep the value.')) return;
-      try{var nv2=(settings[type]||[]).filter(function(v){return v!==val;});
-        await callFn('saveSettings',{type:type,values:nv2});settings[type]=nv2;renderSettings();}
+      if(!confirm('Remove "'+val+'" from the list?')) return;
+      try{
+        var r2=await callFn('fsDeleteValue',{type:type,value:val});
+        if(r2&&r2.success===false&&r2.inUse){
+          alert('Cannot remove "'+val+'".\n\nIt is still used by '+r2.inUse+' location(s).\nRename it into another value first \u2014 that moves them.');
+          return;}
+        if(!r2||!r2.success)throw new Error((r2&&r2.message)||'Failed');
+        settings[type]=r2.values;renderSettings();toast('\u2705 Removed');}
       catch(er){alert('Failed: '+er.message);}
     }else if(a==='eye'){
       var h=(settings.hiddenCategories||[]).slice();
@@ -5783,7 +5867,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v152: ready');
+  console.log('T1969 v153: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
