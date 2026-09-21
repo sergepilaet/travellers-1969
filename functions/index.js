@@ -216,13 +216,18 @@ exports.saveSettings = functions.region('europe-west1').https.onCall(async (data
 exports.fsRenameValue = functions.region('europe-west1').https.onCall(async (data,context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated','Login required');
   const type=(data&&data.type)||'', from=((data&&data.from)||'').trim(), to=((data&&data.to)||'').trim();
-  const FIELD={categories:'category',statusValues:'status',seasonValues:'season'}[type];
-  if(!FIELD||!from||!to) return {success:false,message:'type, from and to required'};
+  const cat=((data&&data.category)||'').trim();
+  const FIELD={categories:'category',statusValues:'status',seasonValues:'season',subcategories:'subcategory'}[type];
+  if(!FIELD||!from) return {success:false,message:'type and from required'};
+  if(!to&&type!=='subcategories') return {success:false,message:'to required'};
+  if(type==='subcategories'&&!cat) return {success:false,message:'category required'};
   const db=admin.firestore();
   const regions=await db.collection('locations').get();
   let moved=0;
   for(const reg of regions.docs){
-    const items=await reg.ref.collection('items').where(FIELD,'==',from).get();
+    let q=reg.ref.collection('items').where(FIELD,'==',from);
+    if(type==='subcategories') q=q.where('category','==',cat);
+    const items=await q.get();
     if(items.empty) continue;
     let batch=db.batch(), n=0;
     for(const it of items.docs){
@@ -232,12 +237,29 @@ exports.fsRenameValue = functions.region('europe-west1').https.onCall(async (dat
     if(n) await batch.commit();
   }
   const doc=await db.collection('config').doc('appSettings').get();
-  let arr=(doc.exists?doc.data()[type]:null)||[];
-  const had=arr.indexOf(from)!==-1;
-  arr=arr.filter(v=>v!==from);
+  const cfg=doc.exists?doc.data():{};
+  if(type==='subcategories'){
+    const subs=Object.assign({},cfg.subcategories||{});
+    let arr=(subs[cat]||[]).filter(v=>v!==from);
+    if(to&&arr.indexOf(to)===-1) arr.push(to);
+    subs[cat]=arr;
+    await db.collection('config').doc('appSettings').set({subcategories:subs},{merge:true});
+    return {success:true,moved:moved,values:arr,subcategories:subs};
+  }
+  let arr=(cfg[type]||[]).filter(v=>v!==from);
   if(arr.indexOf(to)===-1) arr.push(to);
-  await db.collection('config').doc('appSettings').set({[type]:arr},{merge:true});
-  return {success:true,moved:moved,merged:had&&arr.indexOf(to)!==-1,values:arr};
+  const upd={[type]:arr};
+  if(type==='categories'){
+    /* colour and sub-list travel with the category */
+    const cc=Object.assign({},cfg.categoryColors||{});
+    if(cc[from]&&!cc[to]) cc[to]=cc[from];
+    delete cc[from]; upd.categoryColors=cc;
+    const subs=Object.assign({},cfg.subcategories||{});
+    if(subs[from]){subs[to]=Array.from(new Set([].concat(subs[to]||[],subs[from])));delete subs[from];}
+    upd.subcategories=subs;
+  }
+  await db.collection('config').doc('appSettings').set(upd,{merge:true});
+  return {success:true,moved:moved,values:arr,categoryColors:upd.categoryColors,subcategories:upd.subcategories};
 });
 
 exports.fsDeleteValue = functions.region('europe-west1').https.onCall(async (data,context) => {
@@ -316,6 +338,8 @@ exports.fsGoogleRating = functions.region('europe-west1').https.onCall(async (da
   if(!r) return {success:false,message:'not found'};
   const rating=(typeof r.rating==='number')?r.rating:null;
   const reviews=r.user_ratings_total||0;
+  const businessStatus=r.business_status||'';
+  const closed=businessStatus==='CLOSED_PERMANENTLY';
   /* ask Places for the official website too, so dead links can be replaced */
   let website='';
   if(r.place_id&&(d.wantWebsite!==false)){
@@ -326,18 +350,27 @@ exports.fsGoogleRating = functions.region('europe-west1').https.onCall(async (da
       website=(dj&&dj.result&&(dj.result.website||''))||'';
     }catch(e){}
   }
+  let filled='',suggest='';
   if(d.state&&d.rowIndex){
     try{
-      const patch={googleRatingAt:Date.now()};
+      const ref=admin.firestore().collection('locations').doc(String(d.state).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''))
+        .collection('items').doc(String(d.rowIndex));
+      const cur=((await ref.get()).data()||{}).website||'';
+      const dom=u=>String(u||'').toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').split('/')[0];
+      const curOk=/^https?:\/\//i.test(cur);
+      const patch={googleRatingAt:Date.now(),businessStatus:businessStatus,closed:closed};
       if(rating!==null){patch.googleRating=rating;patch.googleReviews=reviews;}
-      if(website&&d.saveWebsite!==false)patch.website=website;
+      /* fill gaps only; a different site next to a valid one becomes a suggestion */
+      if(website&&!curOk){patch.website=website;patch.websiteSuggest='';filled=website;}
+      else if(website&&curOk&&dom(website)!==dom(cur)){patch.websiteSuggest=website;suggest=website;}
       await admin.firestore().collection('locations').doc(String(d.state).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''))
         .collection('items').doc(String(d.rowIndex))
         .update(patch);
     }catch(e){}
   }
-  if(rating===null&&!website) return {success:false,message:'not found'};
-  return {success:true,rating:rating,reviews:reviews,website:website};
+  if(rating===null&&!website&&!businessStatus) return {success:false,message:'not found'};
+  return {success:true,rating:rating,reviews:reviews,
+    website:(d.state&&d.rowIndex)?filled:website,websiteSuggest:suggest,closed:closed,businessStatus:businessStatus};
 });
 exports.archiveTrip = functions.region('europe-west1').https.onCall(async (data,context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated','Login required');
