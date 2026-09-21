@@ -26,8 +26,7 @@ const clean = v => String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ').trim();
     const meta = reg.data() || {};
     const region = meta.name || reg.id;
     const country = meta.country || '';
-    const items = await reg.collection ? await reg.ref.collection('items').get() : null;
-    if (!items) continue;
+    const items = await reg.ref.collection('items').get();
     items.forEach(doc => {
       const d = doc.data() || {};
       if (!d.name) return;
@@ -48,6 +47,7 @@ const clean = v => String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ').trim();
     process.stdout.write('.');
   }
 
+  if (!rows.length) { console.error('\nNo locations read — nothing written.'); process.exit(1); }
   rows.sort((a, b) => {
     const A = a.split('\t'), B = b.split('\t');
     return (A[1] || '').localeCompare(B[1] || '') || (A[0] || '').localeCompare(B[0] || '');

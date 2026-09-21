@@ -1,8 +1,89 @@
-Travellers 1969 — data snapshot 2026-09-20 21:57
-0 locations across 0 regions
+Travellers 1969 — data snapshot 2026-09-21 14:18
+2434 locations across 67 regions
 
 PER REGION
-
+  Alabama                   37
+  Alaska                    35
+  Alberta                   34
+  Arizona                   29
+  Arkansas                  19
+  Belgium                   55
+  British Columbia          36
+  California                76
+  Colorado                  48
+  Connecticut               38
+  Delaware                  37
+  District of Columbia      44
+  Florida                   131
+  Georgia                   81
+  Hawaii                    67
+  Idaho                     81
+  Illinois                  43
+  Indiana                   45
+  Iowa                      38
+  Kansas                    28
+  Kentucky                  27
+  Louisiana                 26
+  Maine                     30
+  Maldives                  30
+  Manitoba                  27
+  Maryland                  64
+  Massachusetts             26
+  Mexico                    17
+  Michigan                  24
+  Minnesota                 28
+  Mississippi               16
+  Missouri                  17
+  Montana                   25
+  Nebraska                  13
+  Nevada                    19
+  New Brunswick             18
+  New Hampshire             22
+  New Jersey                17
+  New Mexico                19
+  New York                  23
+  Newfoundland and Labrador 34
+  North Carolina            56
+  North Dakota              42
+  Northwest Territories     23
+  Nova Scotia               31
+  Nunavut                   15
+  Ohio                      50
+  Oklahoma                  43
+  Ontario                   45
+  Oregon                    44
+  Pennsylvania              49
+  Prince Edward Island      20
+  Quebec                    41
+  Rhode Island              31
+  Saskatchewan              30
+  South Carolina            39
+  South Dakota              30
+  Tennessee                 31
+  Texas                     41
+  Utah                      59
+  Vermont                   29
+  Virginia                  29
+  Washington                30
+  West Virginia             21
+  Wisconsin                 32
+  Wyoming                   35
+  Yukon                     14
 
 PER CATEGORY
-
+  Bizarre                   546
+  Nature                    478
+  Restaurant                263
+  Historic                  202
+  Museum                    197
+  Hotel                     174
+  Naturist                  146
+  Brewery/Distillery        119
+  Scenic Route              84
+  Entertainment/sports      58
+  Aviation                  53
+  Entertainment             26
+  Theme Park                26
+  Festival                  23
+  Ski Resort                22
+  Ghost Town                17
