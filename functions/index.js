@@ -213,6 +213,20 @@ exports.saveSettings = functions.region('europe-west1').https.onCall(async (data
   await sheets.spreadsheets.batchUpdate({spreadsheetId:SPREADSHEET_ID,requestBody:{requests}});
   return {success:true};
 });
+exports.fsValuesInUse = functions.region('europe-west1').https.onCall(async (data,context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated','Login required');
+  const db=admin.firestore(), out={categories:{},statusValues:{},seasonValues:{}};
+  const regions=await db.collection('locations').get();
+  for(const reg of regions.docs){
+    const items=await reg.ref.collection('items').select('category','status','season').get();
+    items.forEach(d=>{const v=d.data()||{};
+      if(v.category)out.categories[v.category]=(out.categories[v.category]||0)+1;
+      if(v.status)out.statusValues[v.status]=(out.statusValues[v.status]||0)+1;
+      if(v.season)out.seasonValues[v.season]=(out.seasonValues[v.season]||0)+1;});
+  }
+  return {success:true,used:out};
+});
+
 exports.fsRenameValue = functions.region('europe-west1').https.onCall(async (data,context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated','Login required');
   const type=(data&&data.type)||'', from=((data&&data.from)||'').trim(), to=((data&&data.to)||'').trim();
@@ -355,11 +369,12 @@ exports.fsGoogleRating = functions.region('europe-west1').https.onCall(async (da
     try{
       const ref=admin.firestore().collection('locations').doc(String(d.state).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''))
         .collection('items').doc(String(d.rowIndex));
-      const cur=((await ref.get()).data()||{}).website||'';
+      const curDoc=((await ref.get()).data()||{});const cur=curDoc.website||'';
       const dom=u=>String(u||'').toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').split('/')[0];
       const curOk=/^https?:\/\//i.test(cur);
       const patch={googleRatingAt:Date.now(),businessStatus:businessStatus,closed:closed};
       if(rating!==null){patch.googleRating=rating;patch.googleReviews=reviews;}
+      if((curDoc.lat==null||curDoc.lng==null)&&r.geometry&&r.geometry.location){patch.lat=r.geometry.location.lat;patch.lng=r.geometry.location.lng;}
       /* fill gaps only; a different site next to a valid one becomes a suggestion */
       if(website&&!curOk){patch.website=website;patch.websiteSuggest='';filled=website;}
       else if(website&&curOk&&dom(website)!==dom(cur)){patch.websiteSuggest=website;suggest=website;}
