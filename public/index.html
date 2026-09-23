@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v162  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v163  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -550,7 +550,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v162: Firestore preview mode ===== */
+/* ===== F0 v163: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -611,7 +611,7 @@ document.addEventListener('DOMContentLoaded',function(){var rs=document.querySel
 +'#t69TblTable td{border-bottom:1px solid var(--border);padding:3px 4px;vertical-align:middle;white-space:nowrap}'
 +'#t69TblTable input,#t69TblTable select{background:var(--card);border:1px solid transparent;border-radius:5px;color:var(--text);font-size:11px;padding:3px 5px}'
 +'#t69TblTable input:focus,#t69TblTable select:focus{border-color:var(--accent);outline:none}'
-+'body.t69-review #t69TblTable td:has(input.t69-adr){display:none}'+'body.t69-review #t69TblTable th:nth-last-child(2),body.t69-review #t69TblTable td:nth-last-child(2){display:none}'+'body.t69-review #t69TblTable input.t69-info{width:100%}'+'#t69TblTable tr.t69-closed td{opacity:.5}#t69TblTable tr.t69-closed td:first-child::before{content:"\\26D4 ";opacity:1}'+'#t69TblTable td.t69-reg{color:var(--accent);font-size:11px;white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis}'
++'body.t69-review #t69TblTable td:has(input.t69-adr){display:none}'+'body.t69-review #t69TblTable th:nth-last-child(2),body.t69-review #t69TblTable td:nth-last-child(2){display:none}'+'body.t69-review #t69TblTable input.t69-info{width:100%}'+'.t69-add{display:flex;gap:5px;margin-top:4px}.t69-add input{flex:1}'+'.t69-subcat{background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:4px 6px}'+'#t69TblTable tr.t69-closed td{opacity:.5}#t69TblTable tr.t69-closed td:first-child::before{content:"\\26D4 ";opacity:1}'+'#t69TblTable td.t69-reg{color:var(--accent);font-size:11px;white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis}'
 +'#t69TblTable input.t69-num{width:44px;text-align:center}'
 +'#t69TblTable input.t69-name{width:190px}#t69TblTable input.t69-mid{width:150px}#t69TblTable input.t69-notes{width:240px}#t69TblTable input.t69-season{width:80px}'
 +'#t69Geo{display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.6);align-items:center;justify-content:center}'
@@ -784,7 +784,15 @@ function t69BulkBar(){var bar=document.getElementById('t69BulkBar');if(!t69BulkO
  var n=Object.keys(t69BulkSel).length;
  bar.innerHTML='<span style="font-weight:700;font-size:12px">'+n+' selected</span>';
  function mkSel(label,type){var vals=((window.T69SET&&window.T69SET[type])||[]);var sel=document.createElement('select');sel.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:4px 6px';sel.innerHTML='<option value="">'+label+'...</option>'+vals.map(function(v){return '<option>'+t69Esc(v)+'</option>';}).join('');sel.addEventListener('change',function(){if(!sel.value)return;t69BulkApply(type==='categories'?'category':(type==='statusValues'?'status':'season'),sel.value);});return sel;}
- bar.appendChild(mkSel('Set category','categories'));bar.appendChild(mkSel('Set status','statusValues'));bar.appendChild(mkSel('Set season','seasonValues'));
+   (function(){var subs={},any=false;
+    try{var m=t69AllSubs();Object.keys(m).forEach(function(c){(m[c]||[]).forEach(function(v){subs[v]=1;any=true;});});}catch(e){}
+    if(any){var ss=document.createElement('select');
+      ss.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:4px 6px';
+      ss.innerHTML='<option value="">Set sub...</option><option value="__CLEAR__">\u2014 clear \u2014</option>'
+        +Object.keys(subs).sort().map(function(v){return '<option>'+t69Esc(v)+'</option>';}).join('');
+      ss.addEventListener('change',function(){if(!ss.value)return;t69BulkApply('subcategory',ss.value==='__CLEAR__'?'':ss.value);});
+      bar.appendChild(ss);}})();
+  bar.appendChild(mkSel('Set category','categories'));bar.appendChild(mkSel('Set status','statusValues'));bar.appendChild(mkSel('Set season','seasonValues'));
  var rsel=document.createElement('select');rsel.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:4px 6px';rsel.innerHTML='<option value="">Set reservation...</option><option>Yes</option><option>No</option>';rsel.addEventListener('change',function(){if(rsel.value)t69BulkApply('reservation',rsel.value);});bar.appendChild(rsel);
  var pinB=document.createElement('button');pinB.className='t69t-btn';pinB.textContent='\uD83D\uDCCC Pin';pinB.addEventListener('click',function(){t69BulkApply('pinned',true);});bar.appendChild(pinB);
  var unB=document.createElement('button');unB.className='t69t-btn';unB.textContent='Unpin';unB.addEventListener('click',function(){t69BulkApply('pinned',false);});bar.appendChild(unB);
@@ -924,6 +932,16 @@ window.t69AcceptAllWeb=function(){
       .then(function(){l.website=l.websiteSuggest;delete l.websiteSuggest;done++;})
       .catch(function(){})
       .then(function(){setTimeout(nx,80);});})();};
+window.t69SubOptions=function(cat,cur){
+  var subs=t69SubsFor(normalizeCat(cat)),out=[''].concat(subs);
+  if(cur&&out.indexOf(cur)<0)out.push(cur);
+  return out.map(function(o){return '<option'+(o===(cur||'')?' selected':'')+'>'+t69Esc(o||'\u2014')+'</option>';}).join('');};
+window.t69SubCell=function(loc,id,ro){
+  if(ro)return '<td>'+t69Esc(loc.subcategory||'')+'</td>';
+  var subs=t69SubsFor(normalizeCat(loc.category));
+  if(!subs.length)return '<td style="color:var(--muted);font-size:10px;text-align:center">\u2014</td>';
+  return '<td><select onchange="t69SaveCell(\''+id+'\',\'subcategory\',this)">'
+    +t69SubOptions(loc.category,loc.subcategory||'')+'</select></td>';};
 function t69RenderReview(ro){
   var trav=T69_TRAVELLERS.slice(0,6);
   var multi=window.t69MultiRegion;
@@ -972,7 +990,7 @@ if(document.body.classList.contains('t69-review')){
  document.getElementById('t69TblTable').innerHTML=t69RenderReview(ro);
  t69WireTable();
  return;}
-var h='<tr>'+(window.t69BulkOn?'<th style="width:24px"><input type="checkbox" id="t69BulkAll"></th>':'')+t69Th('Naam','name')+(window.t69MultiRegion?t69Th('Regio','state'):'')+'<th>Web</th><th>Maps</th>'+t69Th('Adres','address')+trav.map(function(t){return t69Th('\u2605 '+t69Esc(t),'r:'+t);}).join('')+t69Th('Avg','avg')+t69Th('Google rating','google')+t69Th('Category','category')+t69Th('Status','status')+t69Th('Price','budget')+t69Th('Season','season')+'<th>Info</th>'+t69Th('Reservation','reservation')+t69Th('\uD83D\uDCCC','pinned')+t69Th('GPS','gps')+(ro?'':'<th></th>')+'</tr>';
+var h='<tr>'+(window.t69BulkOn?'<th style="width:24px"><input type="checkbox" id="t69BulkAll"></th>':'')+t69Th('Naam','name')+(window.t69MultiRegion?t69Th('Region','state'):'')+'<th>Web</th><th>Maps</th>'+t69Th('Adres','address')+trav.map(function(t){return t69Th('\u2605 '+t69Esc(t),'r:'+t);}).join('')+t69Th('Avg','avg')+t69Th('Google rating','google')+t69Th('Category','category')+'<th>Sub</th>'+t69Th('Status','status')+t69Th('Price','budget')+t69Th('Season','season')+'<th>Info</th>'+t69Th('Reservation','reservation')+t69Th('\uD83D\uDCCC','pinned')+t69Th('GPS','gps')+(ro?'':'<th></th>')+'</tr>';
 t69SortedList().forEach(function(loc){var id=loc.rowIndex,r=locRatings(loc),avg=getAvg(loc);
  function inp(key,val,cls,type){if(ro)return '<td class="c-'+key+'" title="'+t69Esc(val)+'">'+t69Esc(val)+'</td>';return '<td><input class="'+cls+'" title="'+t69Esc(val)+'" type="'+(type||'text')+'"'+(type==='number'?' min="0" step="0.5"':'')+' value="'+t69Esc(val)+'" onchange="t69SaveCell(\''+id+'\',\''+key+'\',this)"></td>';}
  function sel(key,val,opts){if(ro)return '<td>'+t69Esc(val)+'</td>';return '<td><select onchange="t69SaveCell(\''+id+'\',\''+key+'\',this)">'+opts.map(function(o){return '<option'+(o===val?' selected':'')+'>'+t69Esc(o)+'</option>';}).join('')+'</select></td>';}
@@ -980,7 +998,7 @@ t69SortedList().forEach(function(loc){var id=loc.rowIndex,r=locRatings(loc),avg=
  trav.forEach(function(t){var v=(r[t]!==undefined)?r[t]:'';if(ro){h+='<td style="text-align:center">'+t69Esc(v)+'</td>';}else{h+='<td><input class="t69-num" type="number" min="0" max="5" step="0.5" value="'+t69Esc(v)+'" onchange="t69SaveCell(\''+id+'\',\'rating:'+t.replace(/'/g,"\\'")+'\',this)"></td>';}});
  h+='<td style="text-align:center;color:var(--accent);font-weight:700">'+(avg?avg.toFixed(1):'\u2014')+'</td>'
  +'<td style="text-align:center;font-size:11px;color:'+t69GCol(loc)+'" title="'+((t69GVal(loc)&&t69GVal(loc).fb)?'No Google rating \u2014 showing your own average instead':'Google rating (review count)')+'">'+(t69GStr(loc)||'\u2014')+'</td>'
- +sel('category',loc.category,t69Cats())+sel('status',loc.status||'Planning',t69Statuses())
+ +sel('category',loc.category,t69Cats())+t69SubCell(loc,id,ro)+sel('status',loc.status||'Planning',t69Statuses())
  +inp('budget',loc.budget||0,'t69-num','number')+inp('season',loc.season||'','t69-season')+inp('notes',(loc.notes||'').replace(/\\n/g,' '),'t69-notes')
  +sel('reservation',loc.reservation||'No',['No','Yes'])
  +'<td style="text-align:center">'+(ro?(loc.pinned?'\uD83D\uDCCC':''):'<input type="checkbox"'+(loc.pinned?' checked':'')+' onchange="t69SaveCell(\''+id+'\',\'pinned\',this)">')+'</td>'
@@ -1139,7 +1157,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v162 ===== */
+/* ===== end F0 v163 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1150,12 +1168,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v162</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v163</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v162</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v163</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1591,7 +1609,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v162</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v163</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2363,7 +2381,11 @@ function openDetail(idx){
   if(avgStr){html+='<div class="d-row"><strong>Rating</strong><div><span style="color:var(--accent);letter-spacing:-1px;font-size:13px">'+stars+'</span> <span style="color:var(--accent);font-weight:700;font-size:11px">'+avgStr+'</span>';if(ratingsInline(loc))html+='<br><span style="font-size:10px;color:var(--muted)">'+ratingsInline(loc)+'</span>';html+='</div></div>';}
   if(t69GStr(loc))html+='<div class="d-row"><strong>Google</strong><span class="d-val">★ '+t69GStr(loc)+'</span></div>';
   html+='<div class="d-row"><strong>Status</strong><select class="d-edit-sel" id="dcStatusSel">'+['Planning',"Don't Skip",'Booked','Maybe','Visited'].map(function(s){return '<option'+(( loc.status||'Planning')===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div>';
-  html+='<div class="d-row"><strong>Category</strong><select class="d-edit-sel" id="dcCatSel">'+['Bizarre','Nature','Restaurant','Museum','Historic','Festival','Aviation','Ghost Town','Entertainment','Entertainment/sports','Naturist Resort','Hotel','Theme Park','Brewery/Distillery','Scenic Route','Ski Resort'].map(function(cat){return '<option'+(loc.category===cat?' selected':'')+'>'+cat+'</option>';}).join('')+'</select></div>';
+  html+='<div class="d-row"><strong>Category</strong><select class="d-edit-sel" id="dcCatSel">'+t69Cats().map(function(cat){return '<option'+(loc.category===cat?' selected':'')+'>'+cat+'</option>';}).join('')+'</select></div>';
+  (function(){var _subs=t69SubsFor(normalizeCat(loc.category));
+    if(_subs.length||loc.subcategory)
+      html+='<div class="d-row"><strong>Sub</strong><select class="d-edit-sel" id="dcSubSel">'
+        +t69SubOptions(loc.category,loc.subcategory||'')+'</select></div>';})();
   if(loc.reservation==='Yes')html+='<div class="d-row" style="color:#F59E0B"><strong>⚠️ Reservation</strong><span>Required</span></div>';
   if(loc.address&&loc.address!=='N/A'&&loc.address)html+='<div class="d-row"><strong>Address</strong></div><div style="font-size:10px;color:var(--muted);padding:4px 0;border-bottom:1px solid var(--border)">'+loc.address+'</div>';
   if(notes)html+='<div class="d-notes">'+notes+'</div>';
@@ -2375,7 +2397,11 @@ function openDetail(idx){
     var ss=document.getElementById('dcStatusSel');
     if(ss)ss.onchange=function(){var v=this.value;updateLocField('status',v,loc.rowIndex,currentState);if(filteredLocs[idx]){filteredLocs[idx].status=v;refreshCard(idx);}};
     var cs=document.getElementById('dcCatSel');
-    if(cs)cs.onchange=function(){var v=this.value;updateLocField('category',v,loc.rowIndex,currentState);if(filteredLocs[idx]){filteredLocs[idx].category=v;refreshCard(idx);}};
+    if(cs)cs.onchange=function(){var v=this.value;updateLocField('category',v,loc.rowIndex,currentState);if(filteredLocs[idx]){filteredLocs[idx].category=v;filteredLocs[idx].subcategory='';refreshCard(idx);}openDetail(idx);};
+    var sbs=document.getElementById('dcSubSel');
+    if(sbs)sbs.onchange=function(){var v=(this.value==='\u2014'?'':this.value);
+      updateLocField('subcategory',v,loc.rowIndex,currentState);
+      if(filteredLocs[idx]){filteredLocs[idx].subcategory=v;refreshCard(idx);}};
   })();
   document.getElementById('detailCol').classList.add('open');
   if(mapReady)setTimeout(function(){map.invalidateSize();},260);
@@ -2401,6 +2427,10 @@ function openCrossStateDetail(loc){
   var html='<div class="d-row"><strong>Budget</strong><span class="d-val">'+(loc.budget===0?'FREE':'$'+loc.budget+'/pp')+'</span></div>';
   html+='<div class="d-row"><strong>Season</strong><span class="d-val">'+(loc.season||'—')+'</span></div>';
   if(avgStr){html+='<div class="d-row"><strong>Rating</strong><div><span style="color:var(--accent);letter-spacing:-1px;font-size:13px">'+stars+'</span> <span style="color:var(--accent);font-weight:700;font-size:11px">'+avgStr+'</span>';if(ratingsInline(loc))html+='<br><span style="font-size:10px;color:var(--muted)">'+ratingsInline(loc)+'</span>';html+='</div></div>';}
+  (function(){var _subs=t69SubsFor(normalizeCat(loc.category));
+    if(_subs.length||loc.subcategory)
+      html+='<div class="d-row"><strong>Sub</strong><select class="d-edit-sel" id="dcSubSel">'
+        +t69SubOptions(loc.category,loc.subcategory||'')+'</select></div>';})();
   if(loc.reservation==='Yes')html+='<div class="d-row" style="color:#F59E0B"><strong>⚠️ Reservation</strong><span>Required</span></div>';
   if(notes)html+='<div class="d-notes">'+notes+'</div>';
   if(loc.website&&loc.website!=='N/A'&&loc.website)html+='<a class="d-link" href="'+loc.website+'" target="_blank">🔗 '+loc.website.replace(/https?:\/\/(www\.)?/,'').split('/')[0]+'</a>';
@@ -2433,12 +2463,13 @@ function t69SyncColors(){
 function buildCatFilters(locs){t69SyncColors();var counts={};locs.forEach(function(l){var nc=normalizeCat(l.category);counts[nc]=(counts[nc]||0)+1;});var con=document.getElementById('catFilters');con.innerHTML='';Object.entries(counts).sort(function(a,b){return a[0].localeCompare(b[0]);}).forEach(function(entry){var cat=entry[0],n=entry[1];if(t69CatHidden(cat))return;var c=catColor(cat);var el=document.createElement('div');el.className='cf'+(activeCats.has(cat)?'':' off');el.innerHTML='<div class="cd" style="background:'+c+'"></div><span class="cn">'+cat+'</span><span class="cc">'+n+'</span>';el.onclick=function(){activeCats.has(cat)?activeCats.delete(cat):activeCats.add(cat);el.classList.toggle('off');applyFilters();buildCatFilters(locs);};con.appendChild(el);
  /* subcategories of this category, shown only while it is switched on */
  var subs=t69SubsFor(cat);
+ window.T69_SHOWEMPTYSUB=true;
  if(subs.length&&activeCats.has(cat)){
    var box=document.createElement('div');
    box.style.cssText='margin:1px 0 5px 20px;display:flex;flex-direction:column;gap:2px';
    subs.forEach(function(sc){
      var cnt=0;locs.forEach(function(l){if(normalizeCat(l.category)===cat&&(l.subcategory||'')===sc)cnt++;});
-     if(!cnt)return;
+     if(!cnt&&!window.T69_SHOWEMPTYSUB)return;
      var lab=document.createElement('label');
      lab.style.cssText='display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);cursor:pointer';
      var cb=document.createElement('input');cb.type='checkbox';
@@ -4602,7 +4633,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v162 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v163 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -4928,16 +4959,13 @@ window.t69ExportNames=async function(){
     toast('\u2705 '+total+' names exported from '+names.length+' regions');
   }catch(e){t69ProgHide();toast('\u274C '+(e.message||e));}};
   window.t69SubMgrHtml=function(){
-    var subs=(settings&&settings.subcategories)||{};
     var cats=(settings&&settings.categories)||[];
-    var h='<div class="t69-sgrp"><div class="t69-sgrp-t">Subcategories</div>'
-      +'<div style="font-size:10px;color:var(--muted);margin:-2px 0 6px">Pick a category, then add the sub-types you want to filter on.</div>'
-      +'<select id="t69SubCat" style="width:100%;margin-bottom:6px">'
+    var h='<div class="t69-grp"><div class="t69-glbl">Subcategories</div>'
+      +'<select id="t69SubCat" class="t69-subcat" style="width:100%;margin:0 0 4px">'
       +cats.map(function(c){return '<option'+(c===window._t69SubCat?' selected':'')+'>'+t69Esc(c)+'</option>';}).join('')
       +'</select><div id="t69SubList"></div>'
-      +'<div style="display:flex;gap:5px;margin-top:5px">'
-      +'<input id="t69SubNew" placeholder="New subcategory\u2026" style="flex:1">'
-      +'<button class="t69t-btn" onclick="t69SubAdd()">+ Add</button></div></div>';
+      +'<div class="t69-add"><input id="t69SubNew" placeholder="New subcategory\u2026"><button class="t69t-btn" onclick="t69SubAdd()">+ Add</button></div>'
+      +'</div>';
     setTimeout(t69SubRender,0);
     return h;};
   window.t69SubRender=function(){
@@ -4946,16 +4974,15 @@ window.t69ExportNames=async function(){
     window._t69SubCat=sel.value;
     sel.onchange=function(){window._t69SubCat=sel.value;t69SubRender();};
     var list=((settings.subcategories||{})[sel.value]||[]).slice().sort();
-    box.innerHTML=list.length?'':'<div style="font-size:11px;color:var(--muted)">None yet</div>';
+    box.innerHTML=list.length?'':'<div class="t69-item" style="opacity:.55">None yet for this category</div>';
     list.forEach(function(v){
-      var row=document.createElement('div');
-      row.style.cssText='display:flex;align-items:center;gap:6px;padding:2px 0;font-size:12px';
-      row.innerHTML='<span style="flex:1">'+t69Esc(v)+'</span>';
-      var ren=document.createElement('button');ren.className='t69t-btn';ren.textContent='\u270E';
+      var row=document.createElement('div');row.className='t69-item';
+      var name=document.createElement('span');name.className='t69-val';name.textContent=v;
+      var ren=document.createElement('button');ren.className='t69-ibtn';ren.textContent='\u270E';ren.title='Rename';
       ren.onclick=function(){t69SubRename(sel.value,v);};
-      var del=document.createElement('button');del.className='t69t-btn';del.textContent='\u2715';
+      var del=document.createElement('button');del.className='t69-ibtn';del.textContent='\u2715';del.title='Remove';
       del.onclick=function(){t69SubDel(sel.value,v);};
-      row.appendChild(ren);row.appendChild(del);box.appendChild(row);});};
+      row.appendChild(name);row.appendChild(ren);row.appendChild(del);box.appendChild(row);});};
   window.t69SubRename=function(cat,v){
     var nv=prompt('Rename subcategory "'+v+'" to:',v);if(nv===null)return;nv=nv.trim();
     if(!nv||nv===v)return;
@@ -6142,7 +6169,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v162: ready');
+  console.log('T1969 v163: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
