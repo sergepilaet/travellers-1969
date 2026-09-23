@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v163  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v164  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -550,7 +550,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v163: Firestore preview mode ===== */
+/* ===== F0 v164: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -1017,7 +1017,7 @@ function t69Loc(id){for(var i=0;i<allLocations.length;i++)if(String(allLocations
 function t69SaveCell(id,key,el){var loc=t69Loc(id);if(!loc)return;var patch={},val;
  if(key==='subcategory'){val=el.value;patch.subcategory=val;loc.subcategory=val;
   callFn('fsUpdateLocationField',{state:loc.state||currentState,rowIndex:id,field:'subcategory',value:val})
-   .then(function(){toast('\u2705 Saved');}).catch(function(e){toast('\u274C '+(e.message||e));});
+   .then(function(){toast('\u2705 Saved');try{applyFilters();buildCatFilters(window.allLocations||[]);}catch(e){}}).catch(function(e){toast('\u274C '+(e.message||e));});
   return;}
  if(key==='pinned'){val=!!el.checked;patch.pinned=val;}
  else if(key.indexOf('rating:')===0){var nm=key.slice(7),r=Object.assign({},locRatings(loc)),v=parseFloat(el.value);if(!isNaN(v)&&v>0)r[nm]=Math.min(5,v);else delete r[nm];patch.ratings=r;val=r;}
@@ -1157,7 +1157,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v163 ===== */
+/* ===== end F0 v164 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1168,12 +1168,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v163</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v164</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v163</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v164</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1609,7 +1609,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v163</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v164</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2401,7 +2401,9 @@ function openDetail(idx){
     var sbs=document.getElementById('dcSubSel');
     if(sbs)sbs.onchange=function(){var v=(this.value==='\u2014'?'':this.value);
       updateLocField('subcategory',v,loc.rowIndex,currentState);
-      if(filteredLocs[idx]){filteredLocs[idx].subcategory=v;refreshCard(idx);}};
+      if(filteredLocs[idx]){filteredLocs[idx].subcategory=v;refreshCard(idx);}
+      var _m=(window.allLocations||[]).find(function(x){return x.rowIndex===loc.rowIndex;});if(_m)_m.subcategory=v;
+      try{applyFilters();buildCatFilters(window.allLocations||[]);}catch(e){}};
   })();
   document.getElementById('detailCol').classList.add('open');
   if(mapReady)setTimeout(function(){map.invalidateSize();},260);
@@ -2461,27 +2463,30 @@ function t69SyncColors(){
       if(uc[c]){CC[c]=uc[c];return;}
       if(!CC[c]){var h=0;for(var i=0;i<c.length;i++)h=(h*31+c.charCodeAt(i))>>>0;CC[c]=pal[h%pal.length];}});}catch(e){}}
 function buildCatFilters(locs){t69SyncColors();var counts={};locs.forEach(function(l){var nc=normalizeCat(l.category);counts[nc]=(counts[nc]||0)+1;});var con=document.getElementById('catFilters');con.innerHTML='';Object.entries(counts).sort(function(a,b){return a[0].localeCompare(b[0]);}).forEach(function(entry){var cat=entry[0],n=entry[1];if(t69CatHidden(cat))return;var c=catColor(cat);var el=document.createElement('div');el.className='cf'+(activeCats.has(cat)?'':' off');el.innerHTML='<div class="cd" style="background:'+c+'"></div><span class="cn">'+cat+'</span><span class="cc">'+n+'</span>';el.onclick=function(){activeCats.has(cat)?activeCats.delete(cat):activeCats.add(cat);el.classList.toggle('off');applyFilters();buildCatFilters(locs);};con.appendChild(el);
- /* subcategories of this category, shown only while it is switched on */
+ /* subcategories: pills under the category, like the season filters */
  var subs=t69SubsFor(cat);
- window.T69_SHOWEMPTYSUB=true;
  if(subs.length&&activeCats.has(cat)){
    var box=document.createElement('div');
-   box.style.cssText='margin:1px 0 5px 20px;display:flex;flex-direction:column;gap:2px';
+   box.style.cssText='display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 6px 22px';
    subs.forEach(function(sc){
-     var cnt=0;locs.forEach(function(l){if(normalizeCat(l.category)===cat&&(l.subcategory||'')===sc)cnt++;});
-     if(!cnt&&!window.T69_SHOWEMPTYSUB)return;
-     var lab=document.createElement('label');
-     lab.style.cssText='display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);cursor:pointer';
-     var cb=document.createElement('input');cb.type='checkbox';
-     cb.checked=!(window.T69_SUBOFF&&window.T69_SUBOFF[cat+'|'+sc]);
-     cb.onchange=function(){window.T69_SUBOFF=window.T69_SUBOFF||{};
-       if(cb.checked)delete window.T69_SUBOFF[cat+'|'+sc];else window.T69_SUBOFF[cat+'|'+sc]=1;
-       applyFilters();};
-     lab.appendChild(cb);lab.appendChild(document.createTextNode(sc));
-     var c2=document.createElement('span');c2.textContent=cnt;
-     c2.style.cssText='margin-left:auto;font-size:10px;opacity:.7';lab.appendChild(c2);
-     box.appendChild(lab);});
-   if(box.children.length)con.appendChild(box);
+     var cnt=0,src=(window.allLocations||locs);
+     src.forEach(function(l){if(normalizeCat(l.category)===cat&&(l.subcategory||'')===sc)cnt++;});
+     var off=!!(window.T69_SUBOFF&&window.T69_SUBOFF[cat+'|'+sc]);
+     var pill=document.createElement('button');
+     pill.textContent=sc+(cnt?(' '+cnt):' 0');
+     pill.title=cnt?(cnt+' location(s)'):'No locations use this yet';
+     pill.style.cssText='border:1px solid '+(off?'var(--border)':'var(--accent)')
+       +';background:'+(off?'transparent':'rgba(91,200,245,.14)')
+       +';color:'+(off?'var(--muted)':'var(--accent)')
+       +';font-size:10px;padding:2px 7px;border-radius:10px;cursor:pointer;line-height:1.5;'
+       +(cnt?'':'opacity:.5');
+     pill.onclick=function(ev){
+       ev.stopPropagation();
+       window.T69_SUBOFF=window.T69_SUBOFF||{};
+       if(off)delete window.T69_SUBOFF[cat+'|'+sc];else window.T69_SUBOFF[cat+'|'+sc]=1;
+       applyFilters();buildCatFilters(window.allLocations||locs);};
+     box.appendChild(pill);});
+   con.appendChild(box);
  }
  });}
 function t69SubsFor(cat){
@@ -4633,7 +4638,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v163 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v164 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -6169,7 +6174,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v163: ready');
+  console.log('T1969 v164: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
