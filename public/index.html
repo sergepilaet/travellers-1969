@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v161  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v162  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -550,7 +550,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v161: Firestore preview mode ===== */
+/* ===== F0 v162: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -857,7 +857,8 @@ function t69ImportAll(){if(!confirm('F1 \u2014 Import ALL states from the Google
    setTimeout(function(){callFn('importSheetTab',{tab:tab}).then(function(res){if(res&&res.success){ok++;total+=res.written;t69ImpLog('\u2705 '+tab+': '+res.written+' ('+i+'/'+tabs.length+')',true);}else{fail.push(tab);t69ImpLog('\u274C '+tab+': '+(res&&res.message||'failed'),true);}next();}).catch(function(e){fail.push(tab);t69ImpLog('\u274C '+tab+': '+(e.message||e),true);next();});},1100);})();
  }).catch(function(e){t69ImpLog('\u274C '+(e.message||e));});}
 function t69Statuses(){return ['Planning',"Don't Skip",'Booked','Maybe','Visited'];}
-function t69Cats(){var base=((window.settings&&settings.categories&&settings.categories.length)?settings.categories.slice():['Bizarre','Nature','Restaurant','Museum','Historic','Hotel']);if(typeof allLocations!=='undefined')allLocations.forEach(function(l){if(l.category&&base.indexOf(l.category)<0)base.push(l.category);});return base;}
+window.t69Set=function(){return window.T69SET||{};};
+function t69Cats(){var base=((window.t69Set().categories&&window.t69Set().categories.length)?window.t69Set().categories.slice():['Bizarre','Nature','Restaurant','Museum','Historic','Hotel']);if(typeof allLocations!=='undefined')allLocations.forEach(function(l){if(l.category&&base.indexOf(l.category)<0)base.push(l.category);});return base;}
 function t69RO(){return (window.matchMedia&&matchMedia('(pointer:coarse)').matches)||window.innerWidth<720;}
 function openTableView(){if(!isFsMode()){toast('\u229E Table view is Firestore-only \u2014 switch Data source in Settings \u2192 Maintenance');return;}if(typeof currentState==='undefined'||!currentState){toast('Select a state first');return;}t69RenderTable();document.getElementById('t69Tbl').classList.add('open');}
 function closeTableView(){document.getElementById('t69Tbl').classList.remove('open');try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}}
@@ -1138,7 +1139,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v161 ===== */
+/* ===== end F0 v162 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1149,12 +1150,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v161</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v162</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v161</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v162</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1590,7 +1591,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v161</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v162</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -1694,7 +1695,7 @@ var CAT_CANONICAL={
 
 function normalizeCat(raw){return t69SettingsCat(raw,t69NormCatBase(raw));}
 function t69SettingsCat(raw,res){
-  try{var list=(window.settings&&settings.categories)||[];if(!list.length)return res;
+  try{var list=window.t69Set().categories||[];if(!list.length)return res;
     var nz=function(x){return String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');};
     var a=nz(raw),b=nz(res),hit=null;
     list.forEach(function(v){var n=nz(v);if(!hit&&(n===a||n===b))hit=v;});
@@ -2424,9 +2425,9 @@ function unpinFromDetail(state,rowIndex,lat,lng){
 
 // ── Cat filters, stats ────────────────────────────────────────
 function t69SyncColors(){
-  try{if(!window.settings)return;var pal=['#5BC8F5','#10B981','#F59E0B','#E74C3C','#9B59B6','#1ABC9C','#E67E22','#3498DB','#FF6B9D','#8D6E63','#27AE60','#D35400'];
-    var uc=settings.categoryColors||{};
-    (settings.categories||[]).forEach(function(c){
+  try{var _S=window.t69Set();if(!_S.categories)return;var pal=['#5BC8F5','#10B981','#F59E0B','#E74C3C','#9B59B6','#1ABC9C','#E67E22','#3498DB','#FF6B9D','#8D6E63','#27AE60','#D35400'];
+    var uc=_S.categoryColors||{};
+    (_S.categories||[]).forEach(function(c){
       if(uc[c]){CC[c]=uc[c];return;}
       if(!CC[c]){var h=0;for(var i=0;i<c.length;i++)h=(h*31+c.charCodeAt(i))>>>0;CC[c]=pal[h%pal.length];}});}catch(e){}}
 function buildCatFilters(locs){t69SyncColors();var counts={};locs.forEach(function(l){var nc=normalizeCat(l.category);counts[nc]=(counts[nc]||0)+1;});var con=document.getElementById('catFilters');con.innerHTML='';Object.entries(counts).sort(function(a,b){return a[0].localeCompare(b[0]);}).forEach(function(entry){var cat=entry[0],n=entry[1];if(t69CatHidden(cat))return;var c=catColor(cat);var el=document.createElement('div');el.className='cf'+(activeCats.has(cat)?'':' off');el.innerHTML='<div class="cd" style="background:'+c+'"></div><span class="cn">'+cat+'</span><span class="cc">'+n+'</span>';el.onclick=function(){activeCats.has(cat)?activeCats.delete(cat):activeCats.add(cat);el.classList.toggle('off');applyFilters();buildCatFilters(locs);};con.appendChild(el);
@@ -2453,9 +2454,9 @@ function buildCatFilters(locs){t69SyncColors();var counts={};locs.forEach(functi
  }
  });}
 function t69SubsFor(cat){
-  try{var m=(window.settings&&settings.subcategories)||{};
+  try{var m=window.t69Set().subcategories||{};
     var a=m[cat]||[];return Array.isArray(a)?a.slice().sort():[];}catch(e){return [];}}
-function t69AllSubs(){try{return (window.settings&&settings.subcategories)||{};}catch(e){return {};}}
+function t69AllSubs(){try{return window.t69Set().subcategories||{};}catch(e){return {};}}
 function allCats(){var src=(allLocations&&allLocations.length)?allLocations:Object.values(individualPins||{});activeCats=new Set(src.map(function(l){return normalizeCat(l.category);}));if(!allLocations||!allLocations.length)buildCatFilters(src);document.querySelectorAll('.cf').forEach(function(e){e.classList.remove('off');});applyFilters();}
 function noneCats(){activeCats.clear();document.querySelectorAll('.cf').forEach(function(e){e.classList.add('off');});applyFilters();}
 function updateStats(locs){var t=locs.length,b=locs.reduce(function(s,l){return s+(l.budget||0);},0);var er=locs.filter(function(l){return l.elsRating;}).map(function(l){return l.elsRating;});var sr=locs.filter(function(l){return l.sergeRating;}).map(function(l){return l.sergeRating;});var avgs=locs.map(function(l){return getAvg(l);}).filter(function(x){return x!==null;});var ea=er.length?(er.reduce(function(a,b){return a+b;})/er.length).toFixed(1):'—';var sa=sr.length?(sr.reduce(function(a,b){return a+b;})/sr.length).toFixed(1):'—';var mp=locs.filter(function(l){return l.lat&&l.lng;}).length;function sv(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}sv('hLoc',t);sv('hBdg','$'+b);sv('hRat',avgs.length?(avgs.reduce(function(a,b){return a+b;})/avgs.length).toFixed(1):'—');sv('hMust',locs.filter(function(l){return l.status==="Don't Skip";}).length);sv('sTotal',t);sv('sBudget','$'+b);sv('sEls',ea);sv('sSerge',sa);sv('sMapped',mp+'/'+t);sv('sFree',locs.filter(function(l){return(l.budget||0)===0;}).length);}
@@ -4601,7 +4602,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v161 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v162 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -5051,7 +5052,7 @@ window.t69ExportNames=async function(){
     });});
   }
 
-  function colOf(v){var cc=(settings&&settings.categoryColors)||{};return cc[v]||(window.CC&&CC[v])||'#888888';}
+  function colOf(v){try{t69SyncColors();}catch(e){}var cc=(settings&&settings.categoryColors)||{};return cc[v]||(window.CC&&CC[v])||'#888888';}
   function hid(v){return ((settings&&settings.hiddenCategories)||[]).indexOf(v)>=0;}
   function grp(type,label){
     var vals=(settings||{})[type]||[];
@@ -6141,7 +6142,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v161: ready');
+  console.log('T1969 v162: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
