@@ -375,6 +375,8 @@ exports.fsGoogleRating = functions.region('europe-west1').https.onCall(async (da
       const patch={googleRatingAt:Date.now(),businessStatus:businessStatus,closed:closed};
       if(rating!==null){patch.googleRating=rating;patch.googleReviews=reviews;}
       if((curDoc.lat==null||curDoc.lng==null)&&r.geometry&&r.geometry.location){patch.lat=r.geometry.location.lat;patch.lng=r.geometry.location.lng;}
+      /* a town-only address (no house number) gets Google's full address */
+      if(r.formatted_address&&(!curDoc.address||!/\d/.test(curDoc.address)))patch.address=r.formatted_address;
       /* fill gaps only; a different site next to a valid one becomes a suggestion */
       if(website&&!curOk){patch.website=website;patch.websiteSuggest='';filled=website;}
       else if(website&&curOk&&dom(website)!==dom(cur)){patch.websiteSuggest=website;suggest=website;}
