@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v169  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v170  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -550,7 +550,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v169: Firestore preview mode ===== */
+/* ===== F0 v170: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -708,6 +708,12 @@ function t69Rows(text){
    while(k+1<cells.length&&(cells[k+1]||'').trim()==='')k++;}}
  if(cur.length>4)out.push(cur.join('\t'));
  return (out.length>=2)?out:lines;}
+function t69RS(loc){
+  var st=(loc&&loc.state)||'';
+  if(st&&st.indexOf('__ALL_')!==0)return st;
+  if(currentState&&String(currentState).indexOf('__ALL_')!==0)return currentState;
+  return null;}
+function t69RSById(id){var l=(window.allLocations||[]).find(function(x){return String(x.rowIndex)===String(id);});return t69RS(l);}
 function t69CoordFrom(raw,which){
   var t=String(raw||'').trim();if(!t)return null;
   var m=t.match(/@?(-?\d{1,3}\.\d{3,}),\s*(-?\d{1,3}\.\d{3,})/);
@@ -828,12 +834,12 @@ function t69BulkBar(){var bar=document.getElementById('t69BulkBar');if(!t69BulkO
 function t69BulkApply(field,value){var ids=Object.keys(t69BulkSel);if(!ids.length){toast('Select rows first');return;}
  var totB=ids.length;t69Prog('\u270F Updating',0,totB);var done=0;
  (function nx(){if(!ids.length){t69ProgHide();toast('\u2705 '+done+' updated');loadState(currentState);setTimeout(function(){t69RenderTable();t69BulkBar();},700);return;}var id=ids.shift();
-  callFn('fsUpdateLocationField',{state:currentState,rowIndex:id,field:field,value:value}).then(function(){done++;t69Prog('\u270F Updating',done,totB);setTimeout(nx,80);}).catch(function(){done++;t69Prog('\u270F Updating',done,totB);setTimeout(nx,80);});})();}
+  callFn('fsUpdateLocationField',{state:t69RSById(id),rowIndex:id,field:field,value:value}).then(function(r){if(r&&r.success===false)throw new Error(r.message);done++;t69Prog('\u270F Updating',done,totB);setTimeout(nx,80);}).catch(function(){done++;t69Prog('\u270F Updating',done,totB);setTimeout(nx,80);});})();}
 function t69BulkDelete(){var ids=Object.keys(t69BulkSel);if(!ids.length){toast('Select rows first');return;}
  if(!confirm('Delete '+ids.length+' selected location(s)? This cannot be undone.'))return;
- var totD=ids.length;t69Prog('\uD83D\uDDD1 Deleting',0,totD);var done=0;
- (function nx(){if(!ids.length){t69ProgHide();toast('\uD83D\uDDD1 '+done+' deleted');t69BulkSel={};window.t69BulkSel=t69BulkSel;loadState(currentState);setTimeout(function(){t69RenderTable();t69BulkBar();},700);return;}var id=ids.shift();
-  callFn('fsDeleteLocation',{state:currentState,id:id}).then(function(){done++;t69Prog('\uD83D\uDDD1 Deleting',done,totD);setTimeout(nx,80);}).catch(function(){done++;t69Prog('\uD83D\uDDD1 Deleting',done,totD);setTimeout(nx,80);});})();}
+ var totD=ids.length;window._t69DelFail=0;window._t69DelErr='';t69Prog('\uD83D\uDDD1 Deleting',0,totD);var done=0;
+ (function nx(){if(!ids.length){t69ProgHide();var _f=window._t69DelFail||0,_e=window._t69DelErr||'';window._t69DelFail=0;window._t69DelErr='';toast((_f?'\u26A0 ':'\u2705 ')+'Deleted '+(totD-_f)+(_f?(', failed '+_f+' \u2014 '+_e):''));loadState(currentState);setTimeout(function(){t69RenderTable();t69BulkBar();},700);return;}var id=ids.shift();
+  callFn('fsDeleteLocation',{state:t69RSById(id),id:id}).then(function(r){if(r&&r.success===false){window._t69DelFail=(window._t69DelFail||0)+1;window._t69DelErr=window._t69DelErr||r.message;}done++;t69Prog('\uD83D\uDDD1 Deleting',done,totD);setTimeout(nx,80);}).catch(function(){done++;t69Prog('\uD83D\uDDD1 Deleting',done,totD);setTimeout(nx,80);});})();}
 
 function t69HlRoute(loc){try{
  document.querySelectorAll('.seg-stop').forEach(function(r){r.style.outline='';r.style.background='';});
@@ -971,7 +977,7 @@ window.t69AcceptAllWeb=function(){
 window.t69DeleteLocation=function(idx){
   var loc=filteredLocs[idx];if(!loc)return;
   if(!confirm('Delete "'+loc.name+'"?\n\nThis removes it from '+(loc.state||currentState)+' permanently.'))return;
-  callFn('fsDeleteLocation',{state:loc.state||currentState,id:loc.rowIndex}).then(function(r){
+  callFn('fsDeleteLocation',{state:t69RS(loc),id:loc.rowIndex}).then(function(r){
     if(r&&r.success===false)throw new Error(r.message||'Failed');
     toast('\u2705 Deleted "'+loc.name+'"');
     try{closeDetail();}catch(e){}
@@ -1070,14 +1076,14 @@ function t69SaveCell(id,key,el){var loc=t69Loc(id);if(!loc)return;var patch={},v
  else if(key.indexOf('rating:')===0){var nm=key.slice(7),r=Object.assign({},locRatings(loc)),v=parseFloat(el.value);if(!isNaN(v)&&v>0)r[nm]=Math.min(5,v);else delete r[nm];patch.ratings=r;val=r;}
  else if(key==='budget'){val=parseFloat(el.value)||0;patch.budget=val;}
  else{val=el.value;patch[key]=val;}
- callFn('fsSaveLocation',{state:currentState,id:id,patch:patch}).then(function(res){if(!res||!res.success){toast('\u274C '+(res&&res.message||'Save failed'));return;}
+ callFn('fsSaveLocation',{state:t69RSById(id),id:id,patch:patch}).then(function(res){if(!res||!res.success){toast('\u274C '+(res&&res.message||'Save failed'));return;}
   if(key==='pinned')loc.pinned=val;else if(key.indexOf('rating:')===0)loc.ratings=val;else loc[key]=val;
   if(key==='category'&&typeof activeCats!=='undefined'){activeCats.add(val);if(typeof buildCatFilters==='function')buildCatFilters(allLocations);}
   if(typeof applyFilters==='function')applyFilters();
   if(key.indexOf('rating:')===0||key==='category'||key==='name')t69RenderTable();
   toast('\u2714 Saved');}).catch(function(e){toast('\u274C '+(e.message||e));});}
-function t69DeleteRow(id){var loc=t69Loc(id);if(!loc)return;if(!confirm('Delete "'+loc.name+'" from '+currentState+'?\n\nThis cannot be undone.'))return;callFn('fsDeleteLocation',{state:currentState,id:id}).then(function(r){if(r&&r.success){toast('\uD83D\uDDD1 Deleted');loadState(currentState);setTimeout(t69RenderTable,900);}else toast('\u274C '+(r&&r.message||'Delete failed'));}).catch(function(e){toast('\u274C '+(e.message||e));});}
-function t69AddRow(){var n=prompt('Name of the new location:');if(!n)return;callFn('fsAddLocation',{state:currentState,naam:n.trim(),category:'Bizarre',status:'Planning'}).then(function(r){if(r&&r.success){toast('\u2705 Added');loadState(currentState);setTimeout(t69RenderTable,900);}else toast('\u274C '+(r&&r.message||'Add failed'));}).catch(function(e){toast('\u274C '+(e.message||e));});}
+function t69DeleteRow(id){var loc=t69Loc(id);if(!loc)return;if(!confirm('Delete "'+loc.name+'" from '+(t69RS(loc)||'?')+'?\n\nThis cannot be undone.'))return;callFn('fsDeleteLocation',{state:t69RS(loc),id:id}).then(function(r){if(r&&r.success){toast('\uD83D\uDDD1 Deleted');loadState(currentState);setTimeout(t69RenderTable,900);}else toast('\u274C '+(r&&r.message||'Delete failed'));}).catch(function(e){toast('\u274C '+(e.message||e));});}
+function t69AddRow(){if(String(currentState||'').indexOf('__ALL_')===0){toast('Open a single state first, or use + Add from Google Maps link');return;}var n=prompt('Name of the new location:');if(!n)return;callFn('fsAddLocation',{state:currentState,naam:n.trim(),category:'Bizarre',status:'Planning'}).then(function(r){if(r&&r.success){toast('\u2705 Added');loadState(currentState);setTimeout(t69RenderTable,900);}else toast('\u274C '+(r&&r.message||'Add failed'));}).catch(function(e){toast('\u274C '+(e.message||e));});}
 function t69OpenGeoModal(loc,lat,lng,foundName){
  _t69GeoCur.lat=Math.round(lat*1e5)/1e5;_t69GeoCur.lng=Math.round(lng*1e5)/1e5;
  document.getElementById('t69GeoName').textContent=loc.name;
@@ -1105,7 +1111,7 @@ function t69Geocode(id,queued){var loc=t69Loc(id);if(!loc){t69GeoNext();return;}
    else{toast('\u26A0\uFE0F Nothing found for \u201C'+loc.name+'\u201D \u2014 position manually');t69OpenGeoModal(loc,fb.lat,fb.lng,null);}
   }).catch(function(){toast('\u274C Geocoders unreachable \u2014 position manually');t69OpenGeoModal(loc,fb.lat,fb.lng,null);});
  });}
-function t69GeoSave(){var c=_t69GeoCur;if(!c)return;callFn('fsSaveLocation',{state:currentState,id:c.id,patch:{lat:c.lat,lng:c.lng,mapsUrl:'https://www.google.com/maps?q='+c.lat+','+c.lng}}).then(function(r){if(r&&r.success){c.loc.lat=c.lat;c.loc.lng=c.lng;toast('\u2705 GPS saved for '+c.loc.name);if(typeof applyFilters==='function')applyFilters();t69RenderTable();}else toast('\u274C '+(r&&r.message||'Save failed'));t69GeoClose();t69GeoNext();}).catch(function(e){toast('\u274C '+(e.message||e));t69GeoClose();t69GeoNext();});}
+function t69GeoSave(){var c=_t69GeoCur;if(!c)return;callFn('fsSaveLocation',{state:t69RS(c.loc)||t69RSById(c.id),id:c.id,patch:{lat:c.lat,lng:c.lng,mapsUrl:'https://www.google.com/maps?q='+c.lat+','+c.lng}}).then(function(r){if(r&&r.success){c.loc.lat=c.lat;c.loc.lng=c.lng;toast('\u2705 GPS saved for '+c.loc.name);if(typeof applyFilters==='function')applyFilters();t69RenderTable();}else toast('\u274C '+(r&&r.message||'Save failed'));t69GeoClose();t69GeoNext();}).catch(function(e){toast('\u274C '+(e.message||e));t69GeoClose();t69GeoNext();});}
 function t69GeoToggleSat(){if(!_t69GeoMap)return;_t69GeoSat=!_t69GeoSat;if(_t69GeoBase)_t69GeoMap.removeLayer(_t69GeoBase);_t69GeoBase=L.tileLayer(_t69GeoSat?'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}':'https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(_t69GeoMap);var b=document.getElementById('t69GeoSat');if(b)b.textContent=_t69GeoSat?'\uD83D\uDDFA Map':'\uD83D\uDEF0 Satellite';}
 function t69GeoFromLink(){var lf=document.getElementById('t69GeoLinkIn');var u=(lf&&lf.value||'').trim();if(!u)return;
  if(u.indexOf('maps.app.goo.gl')>=0||u.indexOf('goo.gl/')>=0){toast('\u26A0\uFE0F Short link \u2014 open it in a tab first, then copy the FULL google.com/maps URL here');return;}
@@ -1115,7 +1121,7 @@ function t69GeoFromLink(){var lf=document.getElementById('t69GeoLinkIn');var u=(
  if(_t69GeoMk)_t69GeoMk.setLatLng([la,ln]);if(_t69GeoMap)_t69GeoMap.setView([la,ln],16);
  document.getElementById('t69GeoCoords').textContent=la.toFixed(5)+', '+ln.toFixed(5)+' (from link)';t69GeoLink();toast('\u2705 Pin moved to link position');}
 function t69GeoClear(){var c=_t69GeoCur;if(!c)return;if(!confirm('Remove GPS from "'+c.loc.name+'"?'))return;
- callFn('fsSaveLocation',{state:currentState,id:c.id,patch:{lat:null,lng:null}}).then(function(r){if(r&&r.success){c.loc.lat=null;c.loc.lng=null;toast('\uD83D\uDDD1 GPS removed');if(typeof applyFilters==='function')applyFilters();t69RenderTable();}else toast('\u274C '+(r&&r.message||'Failed'));t69GeoClose();t69GeoNext();}).catch(function(e){toast('\u274C '+(e.message||e));t69GeoClose();t69GeoNext();});}
+ callFn('fsSaveLocation',{state:t69RS(c.loc)||t69RSById(c.id),id:c.id,patch:{lat:null,lng:null}}).then(function(r){if(r&&r.success){c.loc.lat=null;c.loc.lng=null;toast('\uD83D\uDDD1 GPS removed');if(typeof applyFilters==='function')applyFilters();t69RenderTable();}else toast('\u274C '+(r&&r.message||'Failed'));t69GeoClose();t69GeoNext();}).catch(function(e){toast('\u274C '+(e.message||e));t69GeoClose();t69GeoNext();});}
 function t69GeoLink(){var c=_t69GeoCur;if(!c)return;var _gl=document.getElementById('t69GeoGmaps');if(_gl)_gl.href='https://www.google.com/maps?q='+c.lat+','+c.lng;}
 function t69GeoCancel(){t69GeoClose();t69GeoNext();}
 function t69GeoClose(){document.getElementById('t69Geo').classList.remove('open');_t69GeoCur=null;}
@@ -1213,7 +1219,7 @@ function t69FetchGoogle(force,silent){
  t69Prog('\u2B50 Google ratings + websites',0,list.length);var done=0,fail=0,webs=0,total=list.length;
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' updated'+(webs?(' \u00b7 '+webs+' website(s)'):'')+(fail?(' \u00b7 '+fail+' not found'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();
-  callFn('fsGoogleRating',{state:currentState,rowIndex:l.rowIndex,name:l.name,address:l.address||'',lat:l.lat||null,lng:l.lng||null})
+  callFn('fsGoogleRating',{state:t69RS(l),rowIndex:l.rowIndex,name:l.name,address:l.address||'',lat:l.lat||null,lng:l.lng||null})
    .then(function(r){if(r&&r.success){
       if(r.rating){l.googleRating=r.rating;l.googleReviews=r.reviews;}
       if(r.website){l.website=r.website;webs++;}if(r.websiteSuggest)l.websiteSuggest=r.websiteSuggest;if(r.closed)l.closed=true;
@@ -1225,8 +1231,8 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  t69Prog('\uD83D\uDCCD Geocoding',0,list.length);var done=0,fail=0,total=list.length;
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
-  t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v169 ===== */
+  t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
+/* ===== end F0 v170 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1237,12 +1243,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v169</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v170</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v169</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v170</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1680,7 +1686,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v169</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v170</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2465,16 +2471,16 @@ function openDetail(idx){
   if(loc.website&&loc.website!=='N/A'&&loc.website)html+='<a class="d-link" href="'+loc.website+'" target="_blank">🔗 '+loc.website.replace(/https?:\/\/(www\.)?/,'').split('/')[0]+'</a>';
   html+='<button class="d-pin-btn'+(isPinned?' pinned':'')+'" id="dcPinBtn" onclick="togglePinDetail()">'+( isPinned?'📌 Pinned — click to unpin':'📌 Pin this location')+'</button>';
   html+='<button class="d-pin-btn" onclick="openSegPickerFromDetail()" style="margin-top:5px;background:rgba(91,200,245,.08);border-color:var(--accent);color:var(--accent)">➕ Add to Route</button>';
-  html+='<button class="d-act" style="margin-top:6px;opacity:.75" onclick="t69DeleteLocation('+idx+')">\uD83D\uDDD1 Delete this location</button>';
+  html+='<button class="d-pin-btn" onclick="t69DeleteLocation('+idx+')" style="margin-top:5px">\uD83D\uDDD1 Delete this location</button>';
   document.getElementById('dcBody').innerHTML=html;
   (function(){
     var ss=document.getElementById('dcStatusSel');
-    if(ss)ss.onchange=function(){var v=this.value;updateLocField('status',v,loc.rowIndex,currentState);if(filteredLocs[idx]){filteredLocs[idx].status=v;refreshCard(idx);}};
+    if(ss)ss.onchange=function(){var v=this.value;updateLocField('status',v,loc.rowIndex,t69RS(loc));if(filteredLocs[idx]){filteredLocs[idx].status=v;refreshCard(idx);}};
     var cs=document.getElementById('dcCatSel');
-    if(cs)cs.onchange=function(){var v=this.value;updateLocField('category',v,loc.rowIndex,currentState);if(filteredLocs[idx]){filteredLocs[idx].category=v;filteredLocs[idx].subcategory='';refreshCard(idx);}openDetail(idx);};
+    if(cs)cs.onchange=function(){var v=this.value;updateLocField('category',v,loc.rowIndex,t69RS(loc));if(filteredLocs[idx]){filteredLocs[idx].category=v;filteredLocs[idx].subcategory='';refreshCard(idx);}openDetail(idx);};
     var sbs=document.getElementById('dcSubSel');
     if(sbs)sbs.onchange=function(){var v=(this.value==='\u2014'?'':this.value);
-      updateLocField('subcategory',v,loc.rowIndex,currentState);
+      updateLocField('subcategory',v,loc.rowIndex,t69RS(loc));
       if(filteredLocs[idx]){filteredLocs[idx].subcategory=v;refreshCard(idx);}
       var _m=(window.allLocations||[]).find(function(x){return x.rowIndex===loc.rowIndex;});if(_m)_m.subcategory=v;
       try{applyFilters();buildCatFilters(window.allLocations||[]);}catch(e){}};
@@ -4712,7 +4718,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v169 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v170 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -6306,7 +6312,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v169: ready');
+  console.log('T1969 v170: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
