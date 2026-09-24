@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v168  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v169  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -550,7 +550,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v168: Firestore preview mode ===== */
+/* ===== F0 v169: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -708,10 +708,17 @@ function t69Rows(text){
    while(k+1<cells.length&&(cells[k+1]||'').trim()==='')k++;}}
  if(cur.length>4)out.push(cur.join('\t'));
  return (out.length>=2)?out:lines;}
+function t69CoordFrom(raw,which){
+  var t=String(raw||'').trim();if(!t)return null;
+  var m=t.match(/@?(-?\d{1,3}\.\d{3,}),\s*(-?\d{1,3}\.\d{3,})/);
+  if(!m)return null;
+  var v=parseFloat(which?m[2]:m[1]);
+  return isNaN(v)?null:v;}
 function t69ParseRows(text,opts){var out=[];var lines=t69Rows(text);var _multi=!!(opts&&opts.multi);
  lines.forEach(function(ln){if(!ln.trim())return;if(/^\s*\[?\d+\]:\s*http/.test(ln))return;var cells=ln.split('\t');if(cells.length<2&&/\S\s{2,}\S/.test(ln))cells=ln.split(/\s{2,}/);if(cells.length<2){if(ln.indexOf(';')>=0)cells=ln.split(';');else if(ln.indexOf(',')>=0)cells=ln.split(',');}
   if(!cells[0]||!cells[0].trim())return;var low=cells[0].trim().toLowerCase();if(low==='naam'||low==='name')return;
-  function t69Md(x){x=(x||'').trim();var m=x.match(/\]\(([^)]+)\)/);if(m)return m[1].trim();m=x.match(/(https?:\/\/[^\s\]]+)/);return m?m[1].trim():x;}out.push({name:(cells[0]||'').trim().replace(/^\[|\]$/g,''),website:t69Md(cells[1]),mapsUrl:t69Md(cells[2]),adres:(cells[3]||'').trim(),category:(cells[7]||'Bizarre').trim(),status:(cells[8]||'Planning').trim(),budget:(cells[9]||'0').trim(),season:(cells[10]||'Year-round').trim(),notes:(cells[11]||'').replace(/\(\[[^\]]*\]\[\d+\]\)/g,'').trim(),reservation:(cells[12]||'No').trim(),subcategory:(cells[13]||'').trim(),state:(cells[14]||'').trim()});});
+  function t69Md(x){x=(x||'').trim();var m=x.match(/\]\(([^)]+)\)/);if(m)return m[1].trim();m=x.match(/(https?:\/\/[^\s\]]+)/);return m?m[1].trim():x;}out.push({name:(cells[0]||'').trim().replace(/^\[|\]$/g,''),website:t69Md(cells[1]),mapsUrl:t69Md(cells[2]),adres:(cells[3]||'').trim(),category:(cells[7]||'Bizarre').trim(),status:(cells[8]||'Planning').trim(),budget:(cells[9]||'0').trim(),season:(cells[10]||'Year-round').trim(),notes:(cells[11]||'').replace(/\(\[[^\]]*\]\[\d+\]\)/g,'').trim(),reservation:(cells[12]||'No').trim(),subcategory:(cells[13]||'').trim(),state:(cells[14]||'').trim(),
+   lat:t69CoordFrom(cells[2],0),lng:t69CoordFrom(cells[2],1)});});
  return out;}
 function t69Prog(label,done,total){var p=document.getElementById('t69Prog');
  if(!p){p=document.createElement('div');p.id='t69Prog';p.style.cssText='position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9700;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:10px 16px;min-width:260px;box-shadow:0 8px 30px rgba(0,0,0,.5);font-size:12px';p.innerHTML='<div id="t69ProgL" style="font-weight:700;margin-bottom:6px"></div><div style="background:var(--card);border-radius:6px;height:8px;overflow:hidden"><div id="t69ProgB" style="height:8px;width:0%;background:var(--accent);transition:width .3s"></div></div>';document.body.appendChild(p);}
@@ -781,17 +788,18 @@ function t69ImportPaste(){if((typeof currentState==='undefined'||!currentState)&
   var skipDup=document.getElementById('t69ImpSkip').checked;var doGeo=document.getElementById('t69ImpGeo').checked;var repDup=document.getElementById('t69ImpRep').checked;
   var toImport=parsed.filter(function(r){if(!r._dup)return true;if(repDup&&r._dupId)return true;return !skipDup;});
   if(!toImport.length){toast('Nothing to import');return;}
+  var toImportAll=toImport.slice();
   imp.disabled=true;var totalN=toImport.length;t69Prog('\uD83D\uDCE5 Importing',0,totalN);var done=0,okN=0,failN=0,firstErr='',failList=[];
   (function nextRow(){if(!toImport.length){t69ProgHide();
    toast((failN?'\u26A0 ':'\u2705 ')+'Imported '+okN+(failN?(', failed '+failN):'')+(firstErr?(' \u2014 '+firstErr):''));
    if(failList.length){setTimeout(function(){alert('These '+failList.length+' row(s) did not save:\n\n'
      +failList.slice(0,60).join('\n')+(failList.length>60?('\n\u2026and '+(failList.length-60)+' more'):'')
      +'\n\nFix the cause and import the file again \u2014 the rows that did save will be skipped as duplicates.');},400);}
-   ov.remove();loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);if(doGeo)setTimeout(t69GeocodeAll,4500);
-   var gEl=document.getElementById('t69ImpG');if(gEl&&gEl.checked){var _rg={};(parsed||[]).forEach(function(x){var k=(x.state&&x.state.trim())||currentState;if(k)_rg[k]=1;});setTimeout(function(){t69FetchGoogleRegions(Object.keys(_rg));},4000);}return;}
+   ov.remove();loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);
+   var gEl=document.getElementById('t69ImpG');var _names={};(toImportAll||[]).forEach(function(x){var k=((x.state&&x.state.trim())||currentState)+'|'+String(x.name||'').toLowerCase();_names[k]=1;});if((gEl&&gEl.checked)||doGeo){setTimeout(function(){t69FixImported(_names);},3500);}return;}
    var r=toImport.shift();
    var _st=(r.state&&r.state.trim())?r.state.trim():currentState;
-   var call=(r._dup&&repDup&&r._dupId)?callFn('fsSaveLocation',{state:_st,id:r._dupId,patch:{name:r.name,website:r.website,mapsUrl:r.mapsUrl,address:r.adres,category:r.category,subcategory:r.subcategory||'',status:r.status,budget:r.budget,season:r.season,notes:r.notes,reservation:r.reservation}}):callFn('fsAddLocation',{state:_st,naam:r.name,website:r.website,mapsUrl:r.mapsUrl,adres:r.adres,category:r.category,status:r.status,budget:r.budget,season:r.season,notes:r.notes});
+   var call=(r._dup&&repDup&&r._dupId)?callFn('fsSaveLocation',{state:_st,id:r._dupId,patch:{name:r.name,website:r.website,mapsUrl:r.mapsUrl,address:r.adres,category:r.category,subcategory:r.subcategory||'',status:r.status,budget:r.budget,season:r.season,notes:r.notes,reservation:r.reservation}}):callFn('fsAddLocation',{state:_st,naam:r.name,website:r.website,mapsUrl:r.mapsUrl,adres:r.adres,category:r.category,subcategory:r.subcategory||'',status:r.status,budget:r.budget,season:r.season,notes:r.notes,reservation:r.reservation||'No',lat:r.lat,lng:r.lng});
    call.then(function(){done++;t69Prog('\uD83D\uDCE5 Importing',done,totalN);setTimeout(nextRow,120);}).catch(function(){done++;t69Prog('\uD83D\uDCE5 Importing',done,totalN);setTimeout(nextRow,120);});})();});
  var cl=document.createElement('button');cl.className='t69t-btn';cl.textContent='\u2715 Close';cl.addEventListener('click',function(){ov.remove();});
  row.appendChild(imp);row.appendChild(cl);card.appendChild(row);
@@ -907,8 +915,17 @@ function t69SortVal(loc,k){
  if(k==='google'){var g=t69GVal(loc);return g?g.v:-1;}
  if(k.indexOf('r:')===0){var r=locRatings(loc);var v=parseFloat(r[k.slice(2)]);return isNaN(v)?-1:v;}
  return String(loc[k]||'').toLowerCase();}
-function t69SortedList(){if(!window.t69SortKey)return allLocations;var k=window.t69SortKey,d=window.t69SortDir;
- return allLocations.slice().sort(function(a,b){var va=t69SortVal(a,k),vb=t69SortVal(b,k);
+function t69TblFilter(list){
+  var q=String(window.T69_TBLQ||'').toLowerCase().trim();
+  var nogps=!!window.T69_TBLNOGPS;
+  if(!q&&!nogps)return list;
+  return list.filter(function(l){
+    if(nogps&&l.lat!=null)return false;
+    if(!q)return true;
+    return [l.name,l.state,l.category,l.subcategory,l.address,l.notes,l.website]
+      .some(function(v){return String(v||'').toLowerCase().indexOf(q)>=0;});});}
+function t69SortedList(){if(!window.t69SortKey)return t69TblFilter(allLocations);var k=window.t69SortKey,d=window.t69SortDir;
+ return t69TblFilter(allLocations).slice().sort(function(a,b){var va=t69SortVal(a,k),vb=t69SortVal(b,k);
   if(va<vb)return -1*d;if(va>vb)return 1*d;
   /* same region: keep it alphabetical by name */
   var na=String(a.name||'').toLowerCase(),nb=String(b.name||'').toLowerCase();
@@ -1148,6 +1165,28 @@ function t69FetchGoogleAll(){
   }
   nextState();
  }).catch(function(e){t69ProgHide();toast('\\u274C '+(e.message||e));});}
+window.t69FixImported=async function(nameSet){
+  var regs={};Object.keys(nameSet).forEach(function(k){regs[k.split('|')[0]]=1;});
+  var regions=Object.keys(regs),done=0,coords=0,webs=0,fail=0,total=0,todo=[];
+  for(var i=0;i<regions.length;i++){
+    var d=null;try{d=await callFn('fsGetStateData',regions[i]);}catch(e){continue;}
+    ((d&&d.locations)||[]).forEach(function(l){
+      if(!nameSet[regions[i]+'|'+String(l.name||'').toLowerCase()])return;
+      var w=l.website||'';
+      if(l.lat==null||!l.googleRating||!(w&&w.indexOf('http')===0))todo.push({st:regions[i],l:l});});
+  }
+  total=todo.length;
+  if(!total){toast('\u2705 Imported rows already complete');return;}
+  for(var j=0;j<todo.length;j+=3){
+    t69Prog('\uD83D\uDCCD Completing imported rows',done+fail,total);
+    await Promise.all(todo.slice(j,j+3).map(function(o){
+      return callFn('fsGoogleRating',{state:o.st,rowIndex:o.l.rowIndex,name:o.l.name,address:o.l.address||'',lat:o.l.lat||null,lng:o.l.lng||null})
+        .then(function(r){if(r&&r.success){done++;if(o.l.lat==null)coords++;if(r.website)webs++;}else fail++;})
+        .catch(function(){fail++;});}));
+  }
+  t69ProgHide();
+  toast('\u2705 '+done+' completed \u00b7 '+coords+' placed on map \u00b7 '+webs+' websites'+(fail?(' \u00b7 '+fail+' not found'):''));
+  try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}};
 window.t69FetchGoogleRegions=async function(regions){
   var done=0,webs=0,coords=0,fail=0,total=0;
   for(var ri=0;ri<regions.length;ri++){
@@ -1187,7 +1226,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:currentState,rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v168 ===== */
+/* ===== end F0 v169 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1198,12 +1237,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v168</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v169</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v168</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v169</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1231,6 +1270,8 @@ function signIn(){
     <span style="flex:1"></span>
     <button class="t69t-btn" onclick="t69AiPrompt()">🤖 AI prompt</button>
     <button class="t69t-btn" onclick="t69ImportPaste()">📥 Paste AI results</button>
+    <input id="t69TblQ" placeholder="Filter table…" oninput="window.T69_TBLQ=this.value;t69RenderTable()" style="background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:4px 8px;width:150px">
+    <button class="t69t-btn" id="t69NoGpsBtn" onclick="window.T69_TBLNOGPS=!window.T69_TBLNOGPS;this.classList.toggle('active',window.T69_TBLNOGPS);t69RenderTable()" title="Show only rows without coordinates">📍 No GPS</button>
     <button class="t69t-btn" onclick="t69ReviewToggle()" id="t69RevBtn">👁 Review mode</button>
     <button class="t69t-btn" onclick="t69BulkToggle()" id="t69BulkBtn">☑ Bulk edit</button>
     <button class="t69t-btn" onclick="t69GeocodeAll()">📍 Geocode all missing</button>
@@ -1639,7 +1680,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v168</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v169</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2424,7 +2465,7 @@ function openDetail(idx){
   if(loc.website&&loc.website!=='N/A'&&loc.website)html+='<a class="d-link" href="'+loc.website+'" target="_blank">🔗 '+loc.website.replace(/https?:\/\/(www\.)?/,'').split('/')[0]+'</a>';
   html+='<button class="d-pin-btn'+(isPinned?' pinned':'')+'" id="dcPinBtn" onclick="togglePinDetail()">'+( isPinned?'📌 Pinned — click to unpin':'📌 Pin this location')+'</button>';
   html+='<button class="d-pin-btn" onclick="openSegPickerFromDetail()" style="margin-top:5px;background:rgba(91,200,245,.08);border-color:var(--accent);color:var(--accent)">➕ Add to Route</button>';
-  html+='<button class="d-act" style="border-color:#E74C3C;color:#E74C3C" onclick="t69DeleteLocation('+idx+')">\uD83D\uDDD1 Delete this location</button>';
+  html+='<button class="d-act" style="margin-top:6px;opacity:.75" onclick="t69DeleteLocation('+idx+')">\uD83D\uDDD1 Delete this location</button>';
   document.getElementById('dcBody').innerHTML=html;
   (function(){
     var ss=document.getElementById('dcStatusSel');
@@ -4671,7 +4712,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v168 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v169 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -6265,7 +6306,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v168: ready');
+  console.log('T1969 v169: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
