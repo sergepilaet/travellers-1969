@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v177  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v178  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -550,7 +550,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v177: Firestore preview mode ===== */
+/* ===== F0 v178: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -1016,145 +1016,146 @@ window.t69ZoomClipFor=function(loc){
 function t69ZcProg(m){var el=document.getElementById('t69ZcProg');if(el)el.textContent=m;}
 async function t69ZoomClipRun(loc,isV,caption){
   window._t69ZcCancel=false;
-  var T69EX={get cancel(){return !!window._t69ZcCancel;}};
-  function t69Lng2x(lng,z){return (lng+180)/360*Math.pow(2,z)*256;}
-  function t69Lat2y(lat,z){var r=lat*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*Math.pow(2,z)*256;}
-  var T69PIN=new Image();T69PIN.src='/pin-travellers.png';
-  await new Promise(function(r){if(T69PIN.complete)return r();T69PIN.onload=r;T69PIN.onerror=r;setTimeout(r,3000);});
-  var W=isV?1080:1920,H=isV?1920:1080,M=Math.min(W,H);
+  function cancelled(){return !!window._t69ZcCancel;}
+  function LX(lng,z){return (lng+180)/360*Math.pow(2,z)*256;}
+  function LY(lat,z){var r=lat*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*Math.pow(2,z)*256;}
+  var PIN=new Image();PIN.src='/pin-travellers.png';
+  await new Promise(function(r){if(PIN.complete)return r();PIN.onload=r;PIN.onerror=r;setTimeout(r,3000);});
+  var W=isV?1080:1920,H=isV?1920:1080,M=Math.min(W,H),FPS=30;
   var LAT=+loc.lat,LNG=+loc.lng;
-  var zA=isV?3.3:3.8,zB=15.6;
-  /* timeline (s): wide hold · pin drop · zoom in · close-up hold */
-  var T_HOLD=1.0,T_DROP=0.6,T_ZOOM=5.4,T_END=2.4;
+  /* country level → close-up; near-constant zoom speed with soft ends */
+  var zA=isV?4.2:4.5,zB=15.4;
+  var T_HOLD=1.2,T_DROP=0.7,T_ZOOM=7.0,T_END=2.6;
   var t1=T_HOLD,t2=t1+T_DROP,t3=t2+T_ZOOM,totalT=t3+T_END;
   function clamp(x){return x<0?0:x>1?1:x;}
-  function easeIO(x){x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;}
   function easeOut(x){x=clamp(x);return 1-Math.pow(1-x,3);}
+  /* linear in the middle, 15% ease at each end: peak ~1.9 levels/s instead of 3.5 */
+  function prog(x){x=clamp(x);var e=0.15,v=1/(1-e);
+    if(x<e)return v*x*x/(2*e);
+    if(x>1-e)return 1-v*(1-x)*(1-x)/(2*e);
+    return v*(x-e/2);}
   function zoomAt(t){
     if(t<t2)return zA;
-    if(t<t3)return zA+(zB-zA)*easeIO((t-t2)/T_ZOOM);
-    return zB+0.35*easeOut((t-t3)/T_END);}
+    if(t<t3)return zA+(zB-zA)*prog((t-t2)/T_ZOOM);
+    return zB+0.3*easeOut((t-t3)/T_END);}
   function labelAlpha(z){return z<10.5?1:z>13?0:1-(z-10.5)/2.5;}
+  /* blend window: the next level fades in over the last half of each level */
+  function upAlpha(z){var f=z-Math.floor(z);return f<0.5?0:(f-0.5)/0.5;}
   var SAT='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/';
   var LBL='https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/';
   window._t69TileCache=window._t69TileCache||{};
   var C=window._t69TileCache,order=[],want={};
-  function need(z,withLabels){
-    var zi=Math.floor(z),scl=Math.pow(2,z-zi);
-    var cx=t69Lng2x(LNG,zi),cy=t69Lat2y(LAT,zi);
-    var hw=W/2/scl+96,hh=H/2/scl+96,mx=Math.pow(2,zi)-1;
-    var x0=Math.floor((cx-hw)/256),x1=Math.floor((cx+hw)/256),y0=Math.floor((cy-hh)/256),y1=Math.floor((cy+hh)/256);
-    for(var x=x0;x<=x1;x++)for(var y=Math.max(0,y0);y<=Math.min(mx,y1);y++){
-      var xx=((x%(mx+1))+(mx+1))%(mx+1);
-      ['s'].concat(withLabels?['l']:[]).forEach(function(L){
-        var k=L+':'+zi+'/'+xx+'/'+y;
-        if(!want[k]){want[k]=1;if(!C[k])order.push(k);}});
-    }}
+  function span(zl,scl){var cx=LX(LNG,zl),cy=LY(LAT,zl),hw=W/2/scl+48,hh=H/2/scl+48,mx=Math.pow(2,zl)-1;
+    return {cx:cx,cy:cy,mx:mx,x0:Math.floor((cx-hw)/256),x1:Math.floor((cx+hw)/256),y0:Math.max(0,Math.floor((cy-hh)/256)),y1:Math.min(mx,Math.floor((cy+hh)/256))};}
+  function need(zl,scl,lab){var S=span(zl,scl);
+    for(var x=S.x0;x<=S.x1;x++)for(var y=S.y0;y<=S.y1;y++){
+      var xx=((x%(S.mx+1))+(S.mx+1))%(S.mx+1);
+      ['s'].concat(lab?['l']:[]).forEach(function(L){var k=L+':'+zl+'/'+xx+'/'+y;if(!want[k]){want[k]=1;if(!C[k])order.push(k);}});}}
   t69ZcProg('Collecting satellite tiles\u2026');
-  for(var ts=0;ts<=totalT;ts+=0.08){var zz=zoomAt(ts);need(zz,labelAlpha(zz)>0);}
-  /* parents for the fallback so a slow tile never leaves a hole */
-  need(Math.max(2,Math.floor(zA)-1),true);
+  var NF=Math.ceil(totalT*FPS);
+  for(var f=0;f<=NF;f++){var z=zoomAt(f/FPS),zi=Math.floor(z),fr=z-zi,lab=labelAlpha(z)>0;
+    need(zi,Math.pow(2,fr),lab);
+    if(upAlpha(z)>0)need(zi+1,Math.pow(2,fr-1),lab);}
+  need(Math.max(2,Math.floor(zA)-1),1,true);
   var loaded=0,failed=0;
   function url(k){var L=k.charAt(0),p=k.slice(2).split('/');return (L==='s'?SAT:LBL)+p[0]+'/'+p[2]+'/'+p[1];}
-  function fetchTile(k){return new Promise(function(res){
-    var tries=0;
+  function fetchTile(k){return new Promise(function(res){var tries=0;
     function go(){var im=new Image();im.crossOrigin='anonymous';var done=false;
       var tm=setTimeout(function(){if(!done){done=true;im.src='';retry();}},9000);
       im.onload=function(){if(done)return;done=true;clearTimeout(tm);C[k]=im;loaded++;
-        if(loaded%12===0)t69ZcProg('Loading imagery '+Math.round(loaded/order.length*100)+'%');res();};
+        if(loaded%15===0)t69ZcProg('Loading imagery '+Math.round(loaded/order.length*100)+'%');res();};
       im.onerror=function(){if(done)return;done=true;clearTimeout(tm);retry();};
       im.src=url(k);}
     function retry(){tries++;if(tries<4)setTimeout(go,400*tries);else{failed++;loaded++;res();}}
     go();});}
-  for(var bi=0;bi<order.length;bi+=8){
-    if(T69EX.cancel)return;
-    await Promise.all(order.slice(bi,bi+8).map(fetchTile));}
+  for(var bi=0;bi<order.length;bi+=10){if(cancelled())return;await Promise.all(order.slice(bi,bi+10).map(fetchTile));}
   if(failed)toast('\u26A0 '+failed+' tile(s) unavailable \u2014 small soft patches possible');
-  if(T69EX.cancel)return;
+  if(cancelled())return;
+
   var cv=document.createElement('canvas');cv.width=W;cv.height=H;
-  var ctx=cv.getContext('2d');
-  var mimes=['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm'];
-  var mime=mimes.find(function(m){return window.MediaRecorder&&MediaRecorder.isTypeSupported(m);});
-  if(!mime)throw new Error('This browser cannot record video');
-  var stream=cv.captureStream(30);
-  var rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:14000000});
-  var chunks=[];rec.ondataavailable=function(e){if(e.data.size)chunks.push(e.data);};
-  var stopped=new Promise(function(res){rec.onstop=res;});
-  function layer(L,z,alpha){
-    if(alpha<=0)return;
-    var zi=Math.floor(z),scl=Math.pow(2,z-zi);
-    var cx=t69Lng2x(LNG,zi),cy=t69Lat2y(LAT,zi);
-    var hw=W/2/scl+96,hh=H/2/scl+96,mx=Math.pow(2,zi)-1;
-    var x0=Math.floor((cx-hw)/256),x1=Math.floor((cx+hw)/256),y0=Math.floor((cy-hh)/256),y1=Math.floor((cy+hh)/256);
-    ctx.globalAlpha=alpha;
-    for(var x=x0;x<=x1;x++)for(var y=Math.max(0,y0);y<=Math.min(mx,y1);y++){
-      var xx=((x%(mx+1))+(mx+1))%(mx+1);
-      var dx=(x*256-cx)*scl+W/2,dy=(y*256-cy)*scl+H/2,dw=256*scl+0.8;
-      var im=C[L+':'+zi+'/'+xx+'/'+y];
+  var ctx=cv.getContext('2d');ctx.imageSmoothingQuality='high';
+  /* caption rendered once, then just stamped on every frame */
+  var capImg=null;
+  if(caption){
+    var fs=Math.round(M*(isV?0.052:0.042)),cc=document.createElement('canvas'),c2=cc.getContext('2d');
+    c2.font='800 '+fs+'px Poppins,Arial';
+    var words=caption.split(/\s+/),lines=[],cur='';
+    words.forEach(function(w){var tt=cur?cur+' '+w:w;if(c2.measureText(tt).width>W*0.78&&cur){lines.push(cur);cur=w;}else cur=tt;});
+    if(cur)lines.push(cur);lines=lines.slice(0,4);
+    var lh=fs*1.22,padX=fs*0.6,padY=fs*0.45,bw=0;
+    lines.forEach(function(l){bw=Math.max(bw,c2.measureText(l).width);});
+    bw+=padX*2;var bh=lines.length*lh+padY*2,sh=fs*0.5;
+    cc.width=Math.ceil(bw+sh*2);cc.height=Math.ceil(bh+sh*2);
+    c2=cc.getContext('2d');c2.font='800 '+fs+'px Poppins,Arial';c2.textAlign='center';c2.textBaseline='middle';
+    c2.shadowColor='rgba(0,0,0,.28)';c2.shadowBlur=sh*0.8;c2.fillStyle='#fff';
+    c2.beginPath();c2.roundRect(sh,sh,bw,bh,fs*0.35);c2.fill();
+    c2.shadowBlur=0;c2.fillStyle='#111';
+    lines.forEach(function(l,i){c2.fillText(l,sh+bw/2,sh+padY+lh*(i+0.5));});
+    capImg=cc;}
+  function layer(L,zl,scl,alpha){
+    if(alpha<=0.001)return;
+    var S=span(zl,scl);ctx.globalAlpha=alpha;
+    for(var x=S.x0;x<=S.x1;x++)for(var y=S.y0;y<=S.y1;y++){
+      var xx=((x%(S.mx+1))+(S.mx+1))%(S.mx+1);
+      var dx=(x*256-S.cx)*scl+W/2,dy=(y*256-S.cy)*scl+H/2,dw=256*scl+0.6;
+      var im=C[L+':'+zl+'/'+xx+'/'+y];
       if(im&&im.naturalWidth){ctx.drawImage(im,dx,dy,dw,dw);continue;}
       if(L!=='s')continue;
-      var pz=zi-1,px2=xx,py2=y,pim=null;
-      while(pz>=1&&zi-pz<=5){px2=Math.floor(px2/2);py2=Math.floor(py2/2);pim=C['s:'+pz+'/'+px2+'/'+py2];if(pim&&pim.naturalWidth)break;pim=null;pz--;}
-      if(pim){var f=Math.pow(2,zi-pz),ss=256/f;try{ctx.drawImage(pim,(xx%f)*ss,(y%f)*ss,ss,ss,dx,dy,dw,dw);}catch(e){}}
-    }
+      var pz=zl-1,px2=xx,py2=y,pim=null;
+      while(pz>=1&&zl-pz<=5){px2=Math.floor(px2/2);py2=Math.floor(py2/2);pim=C['s:'+pz+'/'+px2+'/'+py2];if(pim&&pim.naturalWidth)break;pim=null;pz--;}
+      if(pim){var q=Math.pow(2,zl-pz),ss=256/q;try{ctx.drawImage(pim,(xx%q)*ss,(y%q)*ss,ss,ss,dx,dy,dw,dw);}catch(e){}}}
     ctx.globalAlpha=1;}
-  function wrap(text,maxW){
-    var words=String(text||'').split(/\s+/),lines=[],cur='';
-    words.forEach(function(w){var t=cur?cur+' '+w:w;if(ctx.measureText(t).width>maxW&&cur){lines.push(cur);cur=w;}else cur=t;});
-    if(cur)lines.push(cur);return lines.slice(0,4);}
   function draw(t){
-    var z=zoomAt(t);
+    var z=zoomAt(t),zi=Math.floor(z),fr=z-zi,up=upAlpha(z),la=labelAlpha(z);
     ctx.fillStyle='#0b1a2e';ctx.fillRect(0,0,W,H);
-    layer('s',z,1);
-    layer('l',z,labelAlpha(z));
-    /* pin: drops in, lands with a small bounce */
+    layer('s',zi,Math.pow(2,fr),1);
+    layer('s',zi+1,Math.pow(2,fr-1),up);
+    layer('l',zi,Math.pow(2,fr),la*(1-up));
+    layer('l',zi+1,Math.pow(2,fr-1),la*up);
     var R=M*0.05;
     if(t>=t1){
-      var d=clamp((t-t1)/T_DROP),bounce=d<1?(1-easeOut(d))*(-H*0.25)+Math.sin(d*Math.PI)*M*0.01:0;
-      var px=W/2,py=H/2+bounce;
+      var d=clamp((t-t1)/T_DROP),py=H/2-(1-easeOut(d))*H*0.25;
       ctx.globalAlpha=clamp(d*3);
-      if(T69PIN.complete&&T69PIN.naturalWidth){ctx.drawImage(T69PIN,px-R,py-2*R,2*R,2*R);}
-      else{ctx.fillStyle='#e53935';ctx.beginPath();ctx.arc(px,py-R*1.2,R*0.8,0,7);ctx.fill();
-        ctx.beginPath();ctx.moveTo(px-R*0.55,py-R*0.9);ctx.lineTo(px+R*0.55,py-R*0.9);ctx.lineTo(px,py);ctx.closePath();ctx.fill();
-        ctx.fillStyle='#7f1d1d';ctx.beginPath();ctx.arc(px,py-R*1.2,R*0.3,0,7);ctx.fill();}
+      if(PIN.complete&&PIN.naturalWidth)ctx.drawImage(PIN,W/2-R,py-2*R,2*R,2*R);
+      else{ctx.fillStyle='#e53935';ctx.beginPath();ctx.arc(W/2,py-R*1.2,R*0.8,0,7);ctx.fill();
+        ctx.beginPath();ctx.moveTo(W/2-R*0.55,py-R*0.9);ctx.lineTo(W/2+R*0.55,py-R*0.9);ctx.lineTo(W/2,py);ctx.closePath();ctx.fill();}
       ctx.globalAlpha=1;}
-    /* caption: white card, black bold text — the social-video look */
-    if(caption&&t>=t1+0.2){
-      var a=clamp((t-t1-0.2)/0.4);
-      var fs=Math.round(M*(isV?0.052:0.042));
-      ctx.font='800 '+fs+'px Poppins,Arial';ctx.textAlign='center';ctx.textBaseline='middle';
-      var lines=wrap(caption,W*0.78),lh=fs*1.22,padX=fs*0.6,padY=fs*0.45;
-      var bw=0;lines.forEach(function(l){bw=Math.max(bw,ctx.measureText(l).width);});
-      bw+=padX*2;var bh=lines.length*lh+padY*2;
+    if(capImg&&t>=t1+0.2){
+      ctx.globalAlpha=clamp((t-t1-0.2)/0.4);
       var cy2=isV?H*0.36:H*0.22;
-      ctx.globalAlpha=a;
-      ctx.fillStyle='#ffffff';ctx.shadowColor='rgba(0,0,0,.25)';ctx.shadowBlur=fs*0.4;
-      ctx.beginPath();ctx.roundRect(W/2-bw/2,cy2-bh/2,bw,bh,fs*0.35);ctx.fill();
-      ctx.shadowBlur=0;ctx.fillStyle='#111';
-      lines.forEach(function(l,i){ctx.fillText(l,W/2,cy2-bh/2+padY+lh*(i+0.5));});
+      ctx.drawImage(capImg,Math.round(W/2-capImg.width/2),Math.round(cy2-capImg.height/2));
       ctx.globalAlpha=1;}
     ctx.font='600 '+Math.round(M*0.022)+'px Poppins,Arial';ctx.textAlign='right';ctx.textBaseline='bottom';
     ctx.lineWidth=3;ctx.strokeStyle='rgba(0,0,0,.45)';ctx.strokeText('@travellers1969',W-M*0.03,H-M*0.03);
     ctx.fillStyle='#fff';ctx.fillText('@travellers1969',W-M*0.03,H-M*0.03);
     ctx.font=Math.round(M*0.012)+'px Arial';ctx.textAlign='left';
-    ctx.fillStyle='rgba(255,255,255,.75)';ctx.fillText('Imagery \u00A9 Esri, Maxar, Earthstar Geographics',M*0.02,H-M*0.014);
-  }
-  t69ZcProg('Recording\u2026 keep this tab in the foreground');
-  rec.start(250);
-  var start=performance.now();
-  await new Promise(function(res){
-    function loop(){
-      if(T69EX.cancel){res();return;}
-      var t=(performance.now()-start)/1000;
-      if(t>=totalT){res();return;}
-      draw(t);t69ZcProg('Recording\u2026 '+Math.round(t/totalT*100)+'%');
-      requestAnimationFrame(loop);}
-    loop();});
-  for(var fi=0;fi<20;fi++){if(T69EX.cancel)break;draw(totalT-0.001);await new Promise(function(r){setTimeout(r,50);});}
+    ctx.fillStyle='rgba(255,255,255,.75)';ctx.fillText('Imagery \u00A9 Esri, Maxar, Earthstar Geographics',M*0.02,H-M*0.014);}
+
+  var mimes=['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm'];
+  var mime=mimes.find(function(m){return window.MediaRecorder&&MediaRecorder.isTypeSupported(m);});
+  if(!mime)throw new Error('This browser cannot record video');
+  /* frame-by-frame: each frame is drawn at an exact time step, then handed to the
+     recorder at a steady pace — a slow frame can no longer make the zoom jump */
+  var stream=cv.captureStream(0),track=stream.getVideoTracks()[0];
+  var manual=typeof track.requestFrame==='function';
+  if(!manual){stream=cv.captureStream(FPS);track=stream.getVideoTracks()[0];}
+  var rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:16000000});
+  var chunks=[];rec.ondataavailable=function(e){if(e.data.size)chunks.push(e.data);};
+  var stopped=new Promise(function(res){rec.onstop=res;});
+  draw(0);rec.start(500);
+  var step=1000/FPS,next=performance.now();
+  for(var fi=0;fi<=NF;fi++){
+    if(cancelled())break;
+    draw(Math.min(totalT-0.001,fi/FPS));
+    if(manual)track.requestFrame();
+    if(fi%10===0)t69ZcProg('Recording\u2026 '+Math.round(fi/NF*100)+'% \u2014 keep this tab in front');
+    next+=step;var wait=next-performance.now();
+    await new Promise(function(r){setTimeout(r,Math.max(0,wait));});
+    if(wait<-step*4)next=performance.now();}
+  for(var k2=0;k2<8;k2++){draw(totalT-0.001);if(manual)track.requestFrame();await new Promise(function(r){setTimeout(r,step);});}
   rec.stop();await stopped;
-  if(T69EX.cancel){t69ZcProg('Cancelled');return;}
-  var blob=new Blob(chunks,{type:mime.split(';')[0]});
-  var ext=mime.indexOf('mp4')>=0?'mp4':'webm';
+  if(cancelled()){t69ZcProg('Cancelled');return;}
+  var blob=new Blob(chunks,{type:mime.split(';')[0]}),ext=mime.indexOf('mp4')>=0?'mp4':'webm';
   var base='T1969 '+String(loc.name||'').replace(/[^A-Za-z0-9 \-]/g,'').trim()+' zoom '+(isV?'9x16':'16x9');
   var seqKey='t69seq:'+base,seq=1;
   try{seq=(parseInt(localStorage.getItem(seqKey)||'0',10)||0)+1;localStorage.setItem(seqKey,String(seq));}catch(e){}
@@ -1179,6 +1180,13 @@ window.t69RateRowHtml=function(loc,key){
       h+='<span onclick="t69RateDetail(\''+key+'\',\''+String(nm).replace(/'/g,"\\'")+'\','+n+')" title="'+n+' / 5 \u2014 click again to clear"'
         +' style="cursor:pointer;font-size:17px;line-height:1;padding:0 1px;color:'+(n<=v?'#F59E0B':'var(--border)')+'">\u2605</span>';}
     h+='</span></div>';});
+  var vals=Object.keys(r).map(function(k){return parseFloat(r[k]);}).filter(function(v){return !isNaN(v)&&v>0;});
+  var avg=vals.length?vals.reduce(function(a,b){return a+b;},0)/vals.length:0;
+  h+='<div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);padding-top:4px;margin-top:2px">'
+    +'<span style="flex:1;font-size:11px;font-weight:700;color:var(--text)">Average</span>'
+    +'<span style="font-size:12px;font-weight:700;color:'+(avg?'#F59E0B':'var(--muted)')+'">'
+    +(avg?('\u2605 '+(Math.round(avg*10)/10).toFixed(1)+' <span style="font-size:10px;color:var(--muted);font-weight:400">('+vals.length+' of '+trav.length+')</span>'):'not rated yet')
+    +'</span></div>';
   return h+'</div>';};
 window.t69RateDetail=function(key,nm,n){
   var loc=window._t69RateLocs[key];if(!loc)return;
@@ -1453,7 +1461,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v177 ===== */
+/* ===== end F0 v178 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1464,12 +1472,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v177</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v178</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v177</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v178</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1907,7 +1915,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v177</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v178</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -4975,7 +4983,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v177 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v178 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -6570,7 +6578,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v177: ready');
+  console.log('T1969 v178: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
