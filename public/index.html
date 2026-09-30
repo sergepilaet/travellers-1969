@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v178  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v179  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -550,7 +550,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v178: Firestore preview mode ===== */
+/* ===== F0 v179: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -1073,6 +1073,8 @@ async function t69ZoomClipRun(loc,isV,caption){
   if(cancelled())return;
 
   var cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  cv.style.cssText='position:fixed;left:0;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1';
+  document.body.appendChild(cv);
   var ctx=cv.getContext('2d');ctx.imageSmoothingQuality='high';
   /* caption rendered once, then just stamped on every frame */
   var capImg=null;
@@ -1136,9 +1138,7 @@ async function t69ZoomClipRun(loc,isV,caption){
   if(!mime)throw new Error('This browser cannot record video');
   /* frame-by-frame: each frame is drawn at an exact time step, then handed to the
      recorder at a steady pace — a slow frame can no longer make the zoom jump */
-  var stream=cv.captureStream(0),track=stream.getVideoTracks()[0];
-  var manual=typeof track.requestFrame==='function';
-  if(!manual){stream=cv.captureStream(FPS);track=stream.getVideoTracks()[0];}
+  var stream=cv.captureStream(FPS);
   var rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:16000000});
   var chunks=[];rec.ondataavailable=function(e){if(e.data.size)chunks.push(e.data);};
   var stopped=new Promise(function(res){rec.onstop=res;});
@@ -1147,19 +1147,19 @@ async function t69ZoomClipRun(loc,isV,caption){
   for(var fi=0;fi<=NF;fi++){
     if(cancelled())break;
     draw(Math.min(totalT-0.001,fi/FPS));
-    if(manual)track.requestFrame();
     if(fi%10===0)t69ZcProg('Recording\u2026 '+Math.round(fi/NF*100)+'% \u2014 keep this tab in front');
     next+=step;var wait=next-performance.now();
     await new Promise(function(r){setTimeout(r,Math.max(0,wait));});
     if(wait<-step*4)next=performance.now();}
-  for(var k2=0;k2<8;k2++){draw(totalT-0.001);if(manual)track.requestFrame();await new Promise(function(r){setTimeout(r,step);});}
+  for(var k2=0;k2<8;k2++){draw(totalT-0.001);await new Promise(function(r){setTimeout(r,step);});}
   rec.stop();await stopped;
+  try{cv.remove();}catch(e){}
   if(cancelled()){t69ZcProg('Cancelled');return;}
   var blob=new Blob(chunks,{type:mime.split(';')[0]}),ext=mime.indexOf('mp4')>=0?'mp4':'webm';
   var base='T1969 '+String(loc.name||'').replace(/[^A-Za-z0-9 \-]/g,'').trim()+' zoom '+(isV?'9x16':'16x9');
-  var seqKey='t69seq:'+base,seq=1;
-  try{seq=(parseInt(localStorage.getItem(seqKey)||'0',10)||0)+1;localStorage.setItem(seqKey,String(seq));}catch(e){}
-  var fname=base+' ('+('0'+seq).slice(-2)+').'+ext;
+  var dn=new Date(),p2=function(n){return ('0'+n).slice(-2);};
+  var stamp=dn.getFullYear()+'-'+p2(dn.getMonth()+1)+'-'+p2(dn.getDate())+' '+p2(dn.getHours())+p2(dn.getMinutes())+p2(dn.getSeconds());
+  var fname=base+' '+stamp+'.'+ext;
   var aEl=document.createElement('a');aEl.href=URL.createObjectURL(blob);aEl.download=fname;aEl.click();
   t69ZcProg('\u2705 Done \u2014 '+fname);
 }
@@ -1461,7 +1461,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v178 ===== */
+/* ===== end F0 v179 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1472,12 +1472,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v178</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v179</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v178</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v179</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1915,7 +1915,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v178</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v179</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -4983,7 +4983,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v178 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v179 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -5994,9 +5994,8 @@ async function t69ExportRun(stops,dur,W,H,tag,wide,waypoints){
   function clean(s){return (s||'').replace(/[^A-Za-z0-9 \-]/g,'').trim();}
   var base=single?('T1969 '+clean(stops[0].name)+' '+tag)
     :('T1969 '+clean(stops[0].name)+' - '+clean(stops[stops.length-1].name)+' '+tag);
-  var seqKey='t69seq:'+base;var seq=1;
-  try{seq=(parseInt(localStorage.getItem(seqKey)||'0',10)||0)+1;localStorage.setItem(seqKey,String(seq));}catch(e){}
-  var fname=base+' ('+('0'+seq).slice(-2)+').'+ext;
+  var dn=new Date(),p2=function(n){return ('0'+n).slice(-2);};
+  var fname=base+' '+dn.getFullYear()+'-'+p2(dn.getMonth()+1)+'-'+p2(dn.getDate())+' '+p2(dn.getHours())+p2(dn.getMinutes())+p2(dn.getSeconds())+'.'+ext;
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
   t69ExProg('\u2705 Done \u2014 '+fname);
   var g=document.getElementById('t69exGo');if(g)g.disabled=false;
@@ -6578,7 +6577,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v178: ready');
+  console.log('T1969 v179: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
