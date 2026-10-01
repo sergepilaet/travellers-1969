@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v182  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v184  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -524,7 +524,22 @@ firebase.auth().getRedirectResult().then(function(result){
   }
 }).catch(function(e){console.error('T1969 redirect result error',e);});
 var _fbFn=firebase.app().functions("europe-west1");
-function callFn(n,d){return _fbFn.httpsCallable(n)(d===undefined?null:d).then(function(r){return r.data;});}
+function callFn(n,d){
+  var G=(n==='fsGoogleRating'||n==='resolveLocationFromUrl'),today=new Date().toISOString().slice(0,10);
+  if(G&&window._t69GQuota&&window._t69GQuota.day===today)
+    return Promise.resolve({success:false,quota:true,message:window._t69GQuota.msg});
+  return _fbFn.httpsCallable(n)(d===undefined?null:d).then(function(r){
+    var x=r.data;if(x&&x.quota)t69QuotaHit(x.message);return x;});}
+function t69QuotaHit(msg){
+  var today=new Date().toISOString().slice(0,10);
+  if(window._t69GQuota&&window._t69GQuota.day===today)return;
+  window._t69GQuota={day:today,msg:msg};
+  var b=document.createElement('div');
+  b.style.cssText='position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9900;background:#3a2a0b;border:1px solid #F59E0B;color:#FCD34D;'
+    +'border-radius:10px;padding:10px 14px;font-size:12px;max-width:92vw;box-shadow:0 6px 24px rgba(0,0,0,.45);display:flex;gap:12px;align-items:center';
+  b.innerHTML='<span>\u26A0 '+msg+'. Lookups that were still queued are skipped \u2014 run the same button again tomorrow and it picks up only what is still missing.</span>';
+  var ok=document.createElement('button');ok.className='t69t-btn';ok.textContent='OK';ok.onclick=function(){b.remove();};
+  b.appendChild(ok);document.body.appendChild(b);}
 var google={script:{}};
 Object.defineProperty(google.script,'run',{get:function(){
   var _s=null,_f=null;
@@ -550,7 +565,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v182: Firestore preview mode ===== */
+/* ===== F0 v184: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -714,6 +729,25 @@ function t69RS(loc){
   if(currentState&&String(currentState).indexOf('__ALL_')!==0)return currentState;
   return null;}
 function t69RSById(id){var l=(window.allLocations||[]).find(function(x){return String(x.rowIndex)===String(id);});return t69RS(l);}
+function t69GRate(v){var m=String(v||'').replace(',','.').match(/\d(?:\.\d+)?/);var x=m?parseFloat(m[0]):NaN;return (x>0&&x<=5)?x:null;}
+function t69GRevs(q,p){var t=String(q||'').replace(/[^\d]/g,'');if(!t){var m=String(p||'').match(/\(([\d.,\s]+)\)/);t=m?m[1].replace(/[^\d]/g,''):'';}return t?parseInt(t,10):0;}
+window.t69GapPatch=function(ex,r){
+  var p={},web=function(w){return /^https?:\/\//i.test(String(w||''));};
+  if(web(r.website)&&!web(ex.website))p.website=r.website;
+  if(r.lat!=null&&r.lng!=null&&(ex.lat==null||ex.lng==null)){p.lat=r.lat;p.lng=r.lng;}
+  if(r.googleRating&&!ex.googleRating){p.googleRating=r.googleRating;p.googleReviews=r.googleReviews||0;p.googleRatingAt=Date.now();p.googleRatingSource='import';}
+  if(r.adres&&/\d/.test(r.adres)&&(!ex.address||!/\d/.test(ex.address)))p.address=r.adres;
+  if(r.notes&&!String(ex.notes||'').trim())p.notes=r.notes;
+  return p;};
+window.t69FillGaps=async function(list){
+  var ok=0,fail=0;
+  for(var i=0;i<list.length;i++){
+    t69Prog('\uD83E\uDDE9 Filling gaps in existing locations',i,list.length);
+    try{var r=await callFn('fsSaveLocation',{state:t69RS(list[i].ex),id:list[i].ex.rowIndex,patch:list[i].patch});
+      if(r&&r.success===false)fail++;else ok++;}catch(e){fail++;}}
+  t69ProgHide();
+  toast('\uD83E\uDDE9 Filled gaps in '+ok+' existing location'+(ok===1?'':'s')+(fail?(' \u00b7 '+fail+' failed'):''));
+  try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}};
 function t69CoordFrom(raw,which){
   var t=String(raw||'').trim();if(!t)return null;
   var m=t.match(/(-?\d{1,3}[.,]\d{2,})\s*[,;\s\/|]\s*(-?\d{1,3}[.,]\d{2,})/);
@@ -725,7 +759,8 @@ function t69ParseRows(text,opts){var out=[];var lines=t69Rows(text);var _multi=!
  lines.forEach(function(ln){if(!ln.trim())return;if(/^\s*\[?\d+\]:\s*http/.test(ln))return;var cells=ln.split('\t');if(cells.length<2&&/\S\s{2,}\S/.test(ln))cells=ln.split(/\s{2,}/);if(cells.length<2){if(ln.indexOf(';')>=0)cells=ln.split(';');else if(ln.indexOf(',')>=0)cells=ln.split(',');}
   if(!cells[0]||!cells[0].trim())return;var low=cells[0].trim().toLowerCase();if(low==='naam'||low==='name')return;
   function t69Md(x){x=(x||'').trim();var m=x.match(/\]\(([^)]+)\)/);if(m)return m[1].trim();m=x.match(/(https?:\/\/[^\s\]]+)/);return m?m[1].trim():x;}out.push({name:(cells[0]||'').trim().replace(/^\[|\]$/g,''),website:t69Md(cells[1]),mapsUrl:t69Md(cells[2]),adres:(cells[3]||'').trim(),category:(cells[7]||'Bizarre').trim(),status:(cells[8]||'Planning').trim(),budget:(cells[9]||'0').trim(),season:(cells[10]||'Year-round').trim(),notes:(cells[11]||'').replace(/\(\[[^\]]*\]\[\d+\]\)/g,'').trim(),reservation:(cells[12]||'No').trim(),subcategory:(cells[13]||'').trim(),state:(cells[14]||'').trim(),
-   lat:t69CoordFrom(cells[2],0),lng:t69CoordFrom(cells[2],1)});});
+   lat:t69CoordFrom(cells[2],0),lng:t69CoordFrom(cells[2],1),
+   googleRating:t69GRate(cells[15]),googleReviews:t69GRevs(cells[16],cells[15])});});
  return out;}
 function t69Prog(label,done,total){var p=document.getElementById('t69Prog');
  if(!p){p=document.createElement('div');p.id='t69Prog';p.style.cssText='position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9700;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:10px 16px;min-width:260px;box-shadow:0 8px 30px rgba(0,0,0,.5);font-size:12px';p.innerHTML='<div id="t69ProgL" style="font-weight:700;margin-bottom:6px"></div><div style="background:var(--card);border-radius:6px;height:8px;overflow:hidden"><div id="t69ProgB" style="height:8px;width:0%;background:var(--accent);transition:width .3s"></div></div>';document.body.appendChild(p);}
@@ -746,7 +781,7 @@ function t69ImportPaste(){if((typeof currentState==='undefined'||!currentState)&
   function nkey(name,region){return na(name)+'|'+na(region||'');}
   (allLocations||[]).forEach(function(l){if(l.mapsUrl)mk[n(l.mapsUrl)]=l.rowIndex;if(l.website&&l.website!=='N/A')wk[n(l.website)]=l.rowIndex;if(l.address&&na(l.address).length>8)ak[na(l.address)]=l.rowIndex;
     if(l.name)nk[nkey(l.name,l.state||currentState)]=l.rowIndex;});
-  (window._t69NameIdx||[]).forEach(function(e){if(!nk[nkey(e.n,e.s)])nk[nkey(e.n,e.s)]='other-region';});
+  (window._t69NameIdx||[]).forEach(function(e,ix){if(!nk[nkey(e.n,e.s)])nk[nkey(e.n,e.s)]='x:'+ix;});
   return{mk:mk,wk:wk,ak:ak,nk:nk,n:n,na:na,nkey:nkey};}
  /* pull just the names of regions this file targets but that are not loaded */
  window.t69LoadNameIndex=async function(states){
@@ -758,7 +793,7 @@ function t69ImportPaste(){if((typeof currentState==='undefined'||!currentState)&
    for(var i=0;i<need.length;i+=8){
      var d=await callFn('fsGetMultiStateData',need.slice(i,i+8));
      ((d&&d.locations)||[]).forEach(function(l){
-       if(l&&l.name)window._t69NameIdx.push({n:l.name,s:l.state||''});});
+       if(l&&l.name)window._t69NameIdx.push({n:l.name,s:l.state||'',loc:l});});
    }};
  prevBtn.addEventListener('click',async function(){
   parsed=t69ParseRows(ta.value);
@@ -786,7 +821,10 @@ function t69ImportPaste(){if((typeof currentState==='undefined'||!currentState)&
    if(_rs&&Object.keys(_regs).length&&!_regs[_rs.toLowerCase()])_badReg[_rs]=(_badReg[_rs]||0)+1;
    var byName=K.nk[K.nkey(r.name,(r.state&&r.state.trim())||currentState)];
    var dup=(r.mapsUrl&&K.mk[K.n(r.mapsUrl)])||(r.website&&K.wk[K.n(r.website)])||(r.adres&&K.ak[K.na(r.adres)])||byName;
-   r._dup=!!dup;r._dupId=(dup&&dup!=='other-region')?dup:null;if(dup)dupN++;
+   r._dup=!!dup;r._dupId=(dup&&String(dup).indexOf('x:')!==0)?dup:null;if(dup)dupN++;
+   r._dupLoc=null;
+   if(r._dupId)r._dupLoc=(allLocations||[]).find(function(l){return String(l.rowIndex)===String(r._dupId);})||null;
+   else if(dup&&String(dup).indexOf('x:')===0){var _e=(window._t69NameIdx||[])[+String(dup).slice(2)];r._dupLoc=_e?_e.loc:null;}
    var d=document.createElement('div');d.style.cssText='padding:2px 0;'+(dup?'opacity:.55':'');d.innerHTML=(dup?'\u26A0\uFE0F ':'\u2795 ')+t69Esc(r.name)+' <span style="color:var(--muted);font-size:10px">- '+t69Esc(r.category)+(r.adres?' - '+t69Esc(r.adres):'')+(dup?' - already in list':'')+'</span>';preview.appendChild(d);});
   var sum=document.createElement('div');sum.style.cssText='margin-top:6px;font-weight:700';sum.textContent=parsed.length+' rows - '+(parsed.length-dupN)+' new, '+dupN+' duplicates';preview.insertBefore(sum,preview.firstChild);});
  var row=document.createElement('div');row.style.cssText='display:flex;gap:8px;justify-content:flex-end';
@@ -796,17 +834,21 @@ function t69ImportPaste(){if((typeof currentState==='undefined'||!currentState)&
   var toImport=parsed.filter(function(r){if(!r._dup)return true;if(repDup&&r._dupId)return true;return !skipDup;});
   if(!toImport.length){toast('Nothing to import');return;}
   var toImportAll=toImport.slice();
+  var _fill=[];
+  parsed.forEach(function(r){if(r._dup&&r._dupLoc&&!(repDup&&r._dupId)&&skipDup){
+    var pt=t69GapPatch(r._dupLoc,r);if(Object.keys(pt).length)_fill.push({ex:r._dupLoc,patch:pt});}});
   imp.disabled=true;var totalN=toImport.length;t69Prog('\uD83D\uDCE5 Importing',0,totalN);var done=0,okN=0,failN=0,firstErr='',failList=[];
   (function nextRow(){if(!toImport.length){t69ProgHide();
    toast((failN?'\u26A0 ':'\u2705 ')+'Imported '+okN+(failN?(', failed '+failN):'')+(firstErr?(' \u2014 '+firstErr):''));
    if(failList.length){setTimeout(function(){alert('These '+failList.length+' row(s) did not save:\n\n'
      +failList.slice(0,60).join('\n')+(failList.length>60?('\n\u2026and '+(failList.length-60)+' more'):'')
      +'\n\nFix the cause and import the file again \u2014 the rows that did save will be skipped as duplicates.');},400);}
+   if(_fill.length)t69FillGaps(_fill);
    ov.remove();loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);
    var gEl=document.getElementById('t69ImpG');var _names={};(toImportAll||[]).forEach(function(x){var k=((x.state&&x.state.trim())||currentState)+'|'+String(x.name||'').toLowerCase();_names[k]=1;});if((gEl&&gEl.checked)||doGeo){setTimeout(function(){t69FixImported(_names);},3500);}return;}
    var r=toImport.shift();
    var _st=(r.state&&r.state.trim())?r.state.trim():currentState;
-   var call=(r._dup&&repDup&&r._dupId)?callFn('fsSaveLocation',{state:_st,id:r._dupId,patch:{name:r.name,website:r.website,mapsUrl:r.mapsUrl,address:r.adres,category:r.category,subcategory:r.subcategory||'',status:r.status,budget:r.budget,season:r.season,notes:r.notes,reservation:r.reservation}}):callFn('fsAddLocation',{state:_st,naam:r.name,website:r.website,mapsUrl:r.mapsUrl,adres:r.adres,category:r.category,subcategory:r.subcategory||'',status:r.status,budget:r.budget,season:r.season,notes:r.notes,reservation:r.reservation||'No',lat:r.lat,lng:r.lng});
+   var call=(r._dup&&repDup&&r._dupId)?callFn('fsSaveLocation',{state:_st,id:r._dupId,patch:{name:r.name,website:r.website,mapsUrl:r.mapsUrl,address:r.adres,category:r.category,subcategory:r.subcategory||'',status:r.status,budget:r.budget,season:r.season,notes:r.notes,reservation:r.reservation}}):callFn('fsAddLocation',{state:_st,naam:r.name,website:r.website,mapsUrl:r.mapsUrl,adres:r.adres,category:r.category,subcategory:r.subcategory||'',status:r.status,budget:r.budget,season:r.season,notes:r.notes,reservation:r.reservation||'No',lat:r.lat,lng:r.lng,googleRating:r.googleRating||'',googleReviews:r.googleReviews||0});
    call.then(function(){done++;t69Prog('\uD83D\uDCE5 Importing',done,totalN);setTimeout(nextRow,120);}).catch(function(){done++;t69Prog('\uD83D\uDCE5 Importing',done,totalN);setTimeout(nextRow,120);});})();});
  var cl=document.createElement('button');cl.className='t69t-btn';cl.textContent='\u2715 Close';cl.addEventListener('click',function(){ov.remove();});
  row.appendChild(imp);row.appendChild(cl);card.appendChild(row);
@@ -1473,6 +1515,7 @@ window.t69FixImported=async function(nameSet){
   total=todo.length;
   if(!total){toast('\u2705 Imported rows already complete');return;}
   for(var j=0;j<todo.length;j+=3){
+    if(window._t69GQuota)break;
     t69Prog('\uD83D\uDCCD Completing imported rows',done+fail,total);
     await Promise.all(todo.slice(j,j+3).map(function(o){
       return callFn('fsGoogleRating',{state:o.st,rowIndex:o.l.rowIndex,name:o.l.name,address:o.l.address||'',lat:o.l.lat||null,lng:o.l.lng||null})
@@ -1491,6 +1534,7 @@ window.t69FetchGoogleRegions=async function(regions){
       return !l.googleRating||!(w&&w.indexOf('http')===0)||l.lat==null;});
     total+=list.length;
     for(var i=0;i<list.length;i+=3){
+      if(window._t69GQuota)break;
       t69Prog('\u2B50 Google: '+st+' ('+(ri+1)+'/'+regions.length+')',done+fail,total);
       await Promise.all(list.slice(i,i+3).map(function(l){
         return callFn('fsGoogleRating',{state:st,rowIndex:l.rowIndex,name:l.name,address:l.address||'',lat:l.lat||null,lng:l.lng||null})
@@ -1521,7 +1565,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v182 ===== */
+/* ===== end F0 v184 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1532,12 +1576,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v182</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v184</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v182</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v184</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1974,7 +2018,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v182</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v184</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -1993,6 +2037,8 @@ function signIn(){
         
         <div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:6px">FROM REPO</div>
         <button class="settings-btn" style="margin-bottom:10px" onclick="t69ApplyRenames()">✏ Apply renames from repo</button>
+        <button class="settings-btn" style="margin-bottom:10px" onclick="t69MissingForAI()">🤖 Missing data → AI (free)</button>
+        <button class="settings-btn" style="margin-bottom:10px" onclick="t69GoogleUsage()">📊 Google usage — today and this month</button>
         <button class="settings-btn" style="margin-bottom:10px" onclick="t69FixMissing()">📍 Fix missing map pins / ratings — all regions</button>
         <button class="settings-btn" style="margin-bottom:10px" onclick="t69DupNames()">🔍 Find duplicate names — all regions</button>
         <button class="settings-btn" style="margin-bottom:10px" onclick="t69UnpinRouteStops()">📌 Unpin route stops — one-time cleanup</button>
@@ -2021,11 +2067,7 @@ function signIn(){
         <span class="s-icon">🔍</span>
         <span><strong>Scan for duplicates</strong><span class="s-desc">Across all states in Firestore · delete straight from the results</span></span>
       </button>
-      <button class="settings-btn" onclick="t69FetchGoogleAll()">
-        <span class="s-icon">⭐</span>
-        <span><strong>Fetch Google ratings — all states</strong><span class="s-desc">One-off run across every state &amp; country · only fills locations that have none</span></span>
-      </button>
-    </div></div>
+      </div></div>
 <div class="settings-section">
       <div class="settings-section-title">🚪 Account</div>
       <button class="settings-btn" onclick="t69SignOut()" style="width:100%">🚪 Sign out</button>
@@ -5092,7 +5134,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v182 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v184 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -5369,6 +5411,57 @@ function createCountry(){
 
   function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+window.t69MissingForAI=async function(){
+  try{
+    toast('\u23F3 Collecting locations with missing data\u2026');
+    var states=await callFn('fsGetStates',null),names=[],all=[];
+    (states||[]).forEach(function(x){var n=(typeof x==='string')?x:(x.name||x.state||'');if(n)names.push(n);});
+    for(var i=0;i<names.length;i+=8){
+      t69Prog('\uD83E\uDD16 Reading regions',i,names.length);
+      var d=await callFn('fsGetMultiStateData',names.slice(i,i+8));all=all.concat((d&&d.locations)||[]);}
+    t69ProgHide();
+    var web=function(w){return /^https?:\/\//i.test(String(w||''));};
+    var miss=all.filter(function(l){return l&&l.name&&(!l.googleRating||!web(l.website)||l.lat==null||l.lng==null);});
+    if(!miss.length){toast('\u2705 Nothing missing \u2014 every location has a rating, website and pin');return;}
+    var clean=function(v){return String(v==null?'':v).replace(/[\t\r\n]+/g,' ').trim();};
+    var rows=miss.map(function(l){return [clean(l.name),web(l.website)?clean(l.website):'',
+      (l.lat!=null&&l.lng!=null)?(+l.lat).toFixed(5)+','+(+l.lng).toFixed(5):'',clean(l.address),'','','',
+      clean(l.category),clean(l.status),clean(l.budget),clean(l.season),'',clean(l.reservation||'No'),clean(l.subcategory),clean(l.state),
+      l.googleRating?String(l.googleRating):'',l.googleReviews?String(l.googleReviews):''].join('\t')+' ~#~';});
+    var head='Fill in missing data for these places. Use web search; values a few months old are fine.\n'
+      +'Each row has 17 tab-separated columns and ends with ~#~. Keep every column exactly as given, EXCEPT fill these when empty:\n'
+      +'  B = official website (full https:// URL)\n  C = coordinates "lat,lng" with 4+ decimals\n'
+      +'  P = Google Maps star rating, e.g. 4.6\n  Q = number of Google reviews, digits only\n'
+      +'If you cannot find a value, leave it empty \u2014 never guess.\n'
+      +'Output ONLY the rows, same 17 columns, each ending with ~#~. No header, no markdown, no commentary.\n\n';
+    var SIZE=60,parts=[];for(var k=0;k<rows.length;k+=SIZE)parts.push(rows.slice(k,k+SIZE));
+    var ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;z-index:9800;background:rgba(4,10,20,.6);display:flex;align-items:center;justify-content:center;padding:16px';
+    var box=document.createElement('div');
+    box.style.cssText='background:var(--surface2,#1e2538);border:1px solid var(--border);border-radius:12px;padding:16px;width:440px;max-width:94vw;max-height:80vh;overflow:auto';
+    box.innerHTML='<div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:4px">\uD83E\uDD16 Missing data \u2192 AI</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5">'+miss.length+' locations miss a rating, website or pin. Copy a part, paste it into ChatGPT or Claude, '
+      +'then paste the answer into <b>\uD83D\uDCE5 Import locations</b>. Matching rows only get their empty fields filled \u2014 nothing is overwritten, and no Google calls are used.</div>';
+    parts.forEach(function(pt,ix){
+      var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px';
+      row.innerHTML='<span style="flex:1">Part '+(ix+1)+' of '+parts.length+' \u00b7 '+pt.length+' rows</span>';
+      var b=document.createElement('button');b.className='t69t-btn';b.textContent='\uD83D\uDCCB Copy';
+      b.onclick=function(){var txt=head+pt.join('\n')+'\n';
+        (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){b.textContent='\u2705 Copied';})
+          .catch(function(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
+            try{document.execCommand('copy');b.textContent='\u2705 Copied';}catch(e){toast('Copy failed');}ta.remove();});};
+      row.appendChild(b);box.appendChild(row);});
+    var cl=document.createElement('button');cl.className='btn-primary';cl.textContent='Close';
+    cl.style.cssText='margin-top:12px;padding:7px 14px;font-size:12px';cl.onclick=function(){ov.remove();};
+    box.appendChild(cl);ov.appendChild(box);document.body.appendChild(ov);
+  }catch(e){t69ProgHide();toast('\u274C '+(e.message||e));}};
+window.t69GoogleUsage=function(){
+  callFn('fsGoogleUsage',null).then(function(r){
+    if(!r||!r.success){toast('\u274C Could not read usage');return;}
+    alert('Google lookups (paid API calls)\n\nToday:       '+r.day+' of '+r.limits.day
+      +'\nThis month:  '+r.month+' of '+r.limits.month
+      +'\n\nWhen a limit is reached, lookups stop until the next day or month instead of costing money.');
+  }).catch(function(e){toast('\u274C '+(e.message||e));});};
 window.t69FixMissing=async function(){
   if(!confirm('Look up every location that has no coordinates, rating or website?\n\nRuns across all regions and may take a few minutes.'))return;
   try{
@@ -6687,7 +6780,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v182: ready');
+  console.log('T1969 v184: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});

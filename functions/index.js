@@ -3,6 +3,33 @@ const functions = require('firebase-functions/v1');
 const admin     = require('firebase-admin');
 const { google } = require('googleapis');
 admin.initializeApp();
+
+/* ===== Google Maps budget — every paid Google call passes through here ===== */
+const G_DEFAULT_LIMITS={day:30,month:900};
+async function gLimits(){
+  try{const c=(await admin.firestore().collection('config').doc('appSettings').get()).data()||{};
+    return {day:+c.googleDailyLimit||G_DEFAULT_LIMITS.day,month:+c.googleMonthlyLimit||G_DEFAULT_LIMITS.month};}
+  catch(e){return G_DEFAULT_LIMITS;}}
+async function gBudget(){
+  const L=await gLimits(),ref=admin.firestore().collection('config').doc('googleUsage');
+  const day=new Date().toISOString().slice(0,10),mon=day.slice(0,7);
+  return admin.firestore().runTransaction(async tx=>{
+    const d=(await tx.get(ref)).data()||{};
+    const dc=d.day===day?(d.dayCount||0):0,mc=d.month===mon?(d.monthCount||0):0;
+    if(dc>=L.day)return {ok:false,why:'day',limit:L.day};
+    if(mc>=L.month)return {ok:false,why:'month',limit:L.month};
+    tx.set(ref,{day:day,dayCount:dc+1,month:mon,monthCount:mc+1},{merge:true});
+    return {ok:true};});}
+const _nativeFetch=global.fetch;
+global.fetch=async function(url,opts){
+  if(typeof url==='string'&&(url.indexOf('maps.googleapis.com')>=0||url.indexOf('places.googleapis.com')>=0)){
+    const b=await gBudget();
+    if(!b.ok){const e=new Error(b.why==='day'
+        ?('Daily Google limit reached ('+b.limit+' calls) \u2014 the rest continues tomorrow')
+        :('Monthly Google limit reached ('+b.limit+' calls) \u2014 continues next month'));
+      e.quota=true;throw e;}}
+  return _nativeFetch(url,opts);};
+
 const SPREADSHEET_ID  = '1DvyWFEdmAceaRJ7oHYTA7VyqQLNcyFHLChBw2i08GgA';
 const ALLOWED_EMAILS  = ['sergepilaet@gmail.com', 'elsvrijsen8@gmail.com'];
 const REGION          = 'europe-west1';
@@ -17,7 +44,7 @@ function getSheets(){const sa=require('./service-account-key.json');const auth=n
 function extractCoordsFromUrl(url){if(!url||url==='N/A')return null;const patterns=[/@(-?\d+\.?\d+),(-?\d+\.?\d+)/,/[?&]q=(-?\d+\.?\d+),(-?\d+\.?\d+)/,/ll=(-?\d+\.?\d+),(-?\d+\.?\d+)/,/\/place\/[^/]+\/@(-?\d+\.?\d+),(-?\d+\.?\d+)/,/!3d(-?\d+\.?\d+)!4d(-?\d+\.?\d+)/];for(const p of patterns){const m=url.match(p);if(m){const lat=parseFloat(m[1]),lng=parseFloat(m[2]);if(lat>=17&&lat<=84&&lng>=-180&&lng<=-50)return{lat,lng};}}return null;}
 function parseRow(row,rowIndex){while(row.length<16)row.push('');const naam=(row[COL.NAAM]||'').toString().trim();const category=(row[COL.CATEGORY]||'').toString().trim();if(!naam)return null;if(naam==='Naam')return null;if(naam===naam.toUpperCase()&&naam.length>2&&!/\d/.test(naam))return null;if(!category)return null;let lat=parseFloat(String(row[COL.LAT]||'').replace(',','.'));let lng=parseFloat(String(row[COL.LNG]||'').replace(',','.'));if(isNaN(lat)||isNaN(lng)){const coords=extractCoordsFromUrl((row[COL.MAPS]||'').toString());if(coords){lat=coords.lat;lng=coords.lng;}}return{name:naam,website:(row[COL.LINK]||'').toString(),mapsUrl:(row[COL.MAPS]||'').toString(),address:(row[COL.ADRES]||'').toString(),elsRating:parseFloat(row[COL.ELS])||null,sergeRating:parseFloat(row[COL.SERGE])||null,category,status:(row[COL.STATUS]||'Planning').toString(),budget:parseFloat(row[COL.BUDGET])||0,season:(row[COL.SEASON]||'Year-round').toString(),notes:(row[COL.OPMERKINGEN]||'').toString(),reservation:(row[COL.RESERVATION]||'No').toString(),pinned:(row[COL.PINNED]||'').toString().trim()==='Yes',lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,rowIndex};}
 function parseSheetRows(values){if(!values||values.length<3)return[];const locs=[];for(let i=2;i<values.length;i++){const loc=parseRow(Array.from(values[i]||[]),i+1);if(loc)locs.push(loc);}return locs;}
-function fn(handler){return functions.region(REGION).https.onCall(async(data,context)=>{checkAuth(context);try{return await handler(data,context);}catch(e){if(e instanceof functions.https.HttpsError)throw e;console.error(e);throw new functions.https.HttpsError('internal',e.message||'Internal error');}});}
+function fn(handler){return functions.region(REGION).https.onCall(async(data,context)=>{checkAuth(context);try{return await handler(data,context);}catch(e){if(e&&e.quota)return {success:false,quota:true,message:e.message};if(e instanceof functions.https.HttpsError)throw e;console.error(e);throw new functions.https.HttpsError('internal',e.message||'Internal error');}});}
 function hexToRgb(hex){hex=(hex||'#1a3a5c').replace('#','');return{red:parseInt(hex.slice(0,2),16)/255,green:parseInt(hex.slice(2,4),16)/255,blue:parseInt(hex.slice(4,6),16)/255};}
 exports.getAvailableStates=fn(async()=>{const sheets=getSheets();const res=await sheets.spreadsheets.get({spreadsheetId:SPREADSHEET_ID,fields:'sheets.properties.title'});const tabNames=res.data.sheets.map(s=>s.properties.title);return ALL_STATES.filter(s=>tabNames.includes(s));});
 exports.getOtherCountryTabs=fn(async()=>{const sheets=getSheets();const res=await sheets.spreadsheets.get({spreadsheetId:SPREADSHEET_ID,fields:'sheets.properties.title'});const tabNames=res.data.sheets.map(s=>s.properties.title);return tabNames.filter(n=>!US_STATES.includes(n)&&!CA_PROVINCES.includes(n)&&!SKIP_TABS.includes(n));});
@@ -227,6 +254,11 @@ exports.fsValuesInUse = functions.region('europe-west1').https.onCall(async (dat
   return {success:true,used:out};
 });
 
+exports.fsGoogleUsage=fn(async()=>{
+  const L=await gLimits(),d=(await admin.firestore().collection('config').doc('googleUsage').get()).data()||{};
+  const day=new Date().toISOString().slice(0,10),mon=day.slice(0,7);
+  return {success:true,day:d.day===day?(d.dayCount||0):0,month:d.month===mon?(d.monthCount||0):0,limits:L};});
+
 exports.fsRenameValue = functions.region('europe-west1').https.onCall(async (data,context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated','Login required');
   const type=(data&&data.type)||'', from=((data&&data.from)||'').trim(), to=((data&&data.to)||'').trim();
@@ -341,29 +373,32 @@ exports.renameTrip = functions.region('europe-west1').https.onCall(async (data,c
 const GPLACES_KEY=process.env.GPLACES_KEY||'';
 exports.fsGoogleRating = functions.region('europe-west1').https.onCall(async (data,context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated','Login required');
-  const d=data||{};
+  try{return await t69GoogleLookup(data||{});}
+  catch(e){if(e&&e.quota)return {success:false,quota:true,message:e.message};
+    console.error(e);return {success:false,message:(e&&e.message)||'lookup failed'};}
+});
+/* Places API (New): rating, reviews, website, status, location and address in ONE call */
+async function t69GoogleLookup(d){
   const q=[d.name,d.address].filter(Boolean).join(', ');
   if(!q) return {success:false,message:'no query'};
-  let url='https://maps.googleapis.com/maps/api/place/textsearch/json?query='+encodeURIComponent(q)+'&key='+GPLACES_KEY;
-  if(d.lat&&d.lng) url+='&location='+d.lat+','+d.lng+'&radius=20000';
-  const res=await fetch(url);
+  const body={textQuery:q,maxResultCount:1};
+  if(d.lat&&d.lng)body.locationBias={circle:{center:{latitude:+d.lat,longitude:+d.lng},radius:20000}};
+  const res=await fetch('https://places.googleapis.com/v1/places:searchText',{method:'POST',
+    headers:{'Content-Type':'application/json','X-Goog-Api-Key':GPLACES_KEY,
+      'X-Goog-FieldMask':'places.rating,places.userRatingCount,places.websiteUri,places.businessStatus,places.location,places.formattedAddress'},
+    body:JSON.stringify(body)});
   const j=await res.json();
-  const r=(j&&j.results&&j.results[0])||null;
+  if(j&&j.error)return {success:false,message:'Google: '+(j.error.status||'')+' \u2014 '+(j.error.message||'')};
+  const r=(j&&j.places&&j.places[0])||null;
   if(!r) return {success:false,message:'not found'};
   const rating=(typeof r.rating==='number')?r.rating:null;
-  const reviews=r.user_ratings_total||0;
-  const businessStatus=r.business_status||'';
+  const reviews=r.userRatingCount||0;
+  const businessStatus=r.businessStatus||'';
   const closed=businessStatus==='CLOSED_PERMANENTLY';
-  /* ask Places for the official website too, so dead links can be replaced */
-  let website='';
-  if(r.place_id&&(d.wantWebsite!==false)){
-    try{
-      const du='https://maps.googleapis.com/maps/api/place/details/json?place_id='+encodeURIComponent(r.place_id)
-        +'&fields=website,url&key='+GPLACES_KEY;
-      const dj=await (await fetch(du)).json();
-      website=(dj&&dj.result&&(dj.result.website||''))||'';
-    }catch(e){}
-  }
+  const website=r.websiteUri||'';
+  const gLat=(r.location&&typeof r.location.latitude==='number')?r.location.latitude:null;
+  const gLng=(r.location&&typeof r.location.longitude==='number')?r.location.longitude:null;
+  const gAddr=r.formattedAddress||'';
   let filled='',suggest='';
   if(d.state&&d.rowIndex){
     try{
@@ -374,9 +409,9 @@ exports.fsGoogleRating = functions.region('europe-west1').https.onCall(async (da
       const curOk=/^https?:\/\//i.test(cur);
       const patch={googleRatingAt:Date.now(),businessStatus:businessStatus,closed:closed};
       if(rating!==null){patch.googleRating=rating;patch.googleReviews=reviews;}
-      if((curDoc.lat==null||curDoc.lng==null)&&r.geometry&&r.geometry.location){patch.lat=r.geometry.location.lat;patch.lng=r.geometry.location.lng;}
+      if((curDoc.lat==null||curDoc.lng==null)&&gLat!=null&&gLng!=null){patch.lat=gLat;patch.lng=gLng;}
       /* a town-only address (no house number) gets Google's full address */
-      if(r.formatted_address&&(!curDoc.address||!/\d/.test(curDoc.address)))patch.address=r.formatted_address;
+      if(gAddr&&(!curDoc.address||!/\d/.test(curDoc.address)))patch.address=gAddr;
       /* fill gaps only; a different site next to a valid one becomes a suggestion */
       if(website&&!curOk){patch.website=website;patch.websiteSuggest='';filled=website;}
       else if(website&&curOk&&dom(website)!==dom(cur)){patch.websiteSuggest=website;suggest=website;}
@@ -388,7 +423,8 @@ exports.fsGoogleRating = functions.region('europe-west1').https.onCall(async (da
   if(rating===null&&!website&&!businessStatus) return {success:false,message:'not found'};
   return {success:true,rating:rating,reviews:reviews,
     website:(d.state&&d.rowIndex)?filled:website,websiteSuggest:suggest,closed:closed,businessStatus:businessStatus};
-});
+}
+
 exports.archiveTrip = functions.region('europe-west1').https.onCall(async (data,context) => {
   if (!context.auth) throw new functions.https.HttpsError('unauthenticated','Login required');
   const {tripId,archived} = data||{};
@@ -466,10 +502,12 @@ exports.fsGetAllPinnedLocations=fn(async()=>{const states=await FSDB.collection(
 exports.fsGetNearbyLocations=fn(async(data)=>{const{lat,lng,radiusKm}=data||{};if(!lat||!lng||!radiusKm)return[];const snap=await FSDB.collectionGroup('items').get();const R=6371,out=[];snap.docs.forEach(d=>{const o=fsLocOut(d);if(o.lat===null||o.lng===null)return;const dLat=(o.lat-lat)*Math.PI/180,dLng=(o.lng-lng)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat*Math.PI/180)*Math.cos(o.lat*Math.PI/180)*Math.sin(dLng/2)**2;const dist=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));if(dist<=radiusKm)out.push({name:o.name,state:o.state,lat:o.lat,lng:o.lng,category:o.category,status:o.status,budget:o.budget,notes:o.notes,rowIndex:o.id,dist:Math.round(dist*10)/10});});out.sort((a,b)=>a.dist-b.dist);return out.slice(0,100);});
 exports.fsSetPinnedState=fn(async(data)=>{const{stateName,rowIndex,pinned}=data||{};if(!stateName||!rowIndex)return{success:false,message:'Missing state or id'};await FSDB.collection('locations').doc(t69slug(stateName)).collection('items').doc(String(rowIndex)).update({pinned:!!pinned});return{success:true};});
 exports.fsUpdateLocationField=fn(async(data)=>{const d=data||{};const state=d.state;const rowIndex=d.rowIndex||d.id;const field=d.field;let value=d.value;if(!state||!rowIndex)return{success:false,message:'Missing state or id'};if(!(await FSDB.collection('locations').doc(t69slug(state)).collection('items').doc(String(rowIndex)).get()).exists)return{success:false,message:'Not found in '+state+' (id '+rowIndex+')'};const OK=['status','category','subcategory','season','reservation','notes','budget','lat','lng','pinned'];if(OK.indexOf(field)<0)return{success:false,message:'Unknown field: '+field};if(field==='lat'||field==='lng'||field==='budget')value=Number(value);if(field==='pinned')value=(value===true||value==='true');const p={};p[field]=value;await FSDB.collection('locations').doc(t69slug(state)).collection('items').doc(String(rowIndex)).update(p);return{success:true};});
-const FS_SAVE_KEYS=new Set(['name','website','mapsUrl','address','category','subcategory','status','budget','season','notes','reservation','pinned','lat','lng','ratings','websiteSuggest','closed','businessStatus']);
+const FS_SAVE_KEYS=new Set(['name','website','mapsUrl','address','category','subcategory','status','budget','season','notes','reservation','pinned','lat','lng','ratings','websiteSuggest','closed','businessStatus','googleRating','googleReviews','googleRatingAt','googleRatingSource']);
 exports.fsSaveLocation=fn(async(data)=>{const{state,id,patch}=data||{};if(!state||!id||!patch)return{success:false,message:'Missing state, id or patch'};if(!(await FSDB.collection('locations').doc(t69slug(state)).collection('items').doc(String(id)).get()).exists)return{success:false,message:'Not found in '+state+' (id '+id+')'};const clean={};Object.keys(patch).forEach(k=>{if(FS_SAVE_KEYS.has(k))clean[k]=patch[k];});if(clean.budget!==undefined)clean.budget=parseFloat(clean.budget)||0;if(clean.lat!==undefined)clean.lat=(clean.lat===null)?null:parseFloat(clean.lat);if(clean.lng!==undefined)clean.lng=(clean.lng===null)?null:parseFloat(clean.lng);if(clean.ratings!==undefined){const r={};Object.keys(clean.ratings||{}).forEach(n=>{const v=parseFloat(clean.ratings[n]);if(!isNaN(v)&&v>0)r[n]=Math.min(5,v);});clean.ratings=r;}if(!Object.keys(clean).length)return{success:false,message:'Nothing to save'};await FSDB.collection('locations').doc(t69slug(state)).collection('items').doc(String(id)).update(clean);return{success:true};});
 exports.fsAddLocation=fn(async(data)=>{if(!data||!data.state||!data.naam)return{success:false,message:'Missing state or name'};const stRef=FSDB.collection('locations').doc(t69slug(data.state));const stDoc=await stRef.get();if(!stDoc.exists){if(!data.allowNewRegion)return{success:false,message:'Unknown region "'+data.state+'" \u2014 create it first in Countries & regions'};const tp=US_STATES.includes(data.state)?'us':(CA_PROVINCES.includes(data.state)?'ca':'other');await stRef.set({name:data.state,country:tp==='us'?'USA':(tp==='ca'?'Canada':data.state),type:tp,createdAt:admin.firestore.FieldValue.serverTimestamp()});}
+  const _gr=parseFloat(data.googleRating);
   const item={name:data.naam,website:data.website||'N/A',mapsUrl:data.mapsUrl||'',address:data.adres||'',ratings:{},category:data.category||'Bizarre',subcategory:data.subcategory||'',status:data.status||'Planning',budget:parseFloat(data.budget)||0,season:data.season||'Year-round',notes:data.notes||'',reservation:data.reservation||'No',pinned:false,lat:(data.lat===''||data.lat===undefined||data.lat===null)?null:parseFloat(data.lat),lng:(data.lng===''||data.lng===undefined||data.lng===null)?null:parseFloat(data.lng),state:data.state,createdAt:admin.firestore.FieldValue.serverTimestamp()};
+  if(_gr>0&&_gr<=5){item.googleRating=_gr;item.googleReviews=parseInt(data.googleReviews,10)||0;item.googleRatingAt=Date.now();item.googleRatingSource='import';}
   if(isNaN(item.lat))item.lat=null;if(isNaN(item.lng))item.lng=null;
   const ref=await stRef.collection('items').add(item);return{success:true,message:'"'+data.naam+'" added to '+data.state+' (Firestore)',rowIndex:ref.id};});
 exports.fsDeleteLocation=fn(async(data)=>{const{state,id}=data||{};if(!state||!id)return{success:false,message:'Missing state or id'};const _ref=FSDB.collection('locations').doc(t69slug(state)).collection('items').doc(String(id));if(!(await _ref.get()).exists)return{success:false,message:'Not found in '+state+' (id '+id+')'};await _ref.delete();return{success:true};});
