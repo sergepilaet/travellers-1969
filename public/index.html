@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v184  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v185  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -565,9 +565,9 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v184: Firestore preview mode ===== */
+/* ===== F0 v185: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
-function isFsMode(){try{return localStorage.getItem('t69_datasource')==='firestore';}catch(e){return false;}}
+function isFsMode(){try{localStorage.setItem('t69_datasource','firestore');return true;}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
 function t69Route(nm){return(isFsMode()&&T69_FSMAP[nm])?T69_FSMAP[nm]:nm;}
 function t69Invoke(n,d){return(isFsMode()&&typeof T69REST==='object'&&T69REST[n])?T69REST[n](d):callFn(n,d);}
@@ -642,9 +642,19 @@ function t69TripCtx(){try{return localStorage.getItem('t69_tripctx')||'A couple 
 function t69BuildPrompt(place,cats,ctx,count){
  return 'Research "'+place+'" for the following travellers:\n'+ctx+'\n\n'
  +'Suggest up to '+count+' places. Use ONLY these categories: '+cats+'.\n\n'
- +'Output ONLY a plain tab-separated table, no header row, data rows only, these EXACT 16 columns in order:\n'
- +'Naam <TAB> Link <TAB> Maps <TAB> Adres <TAB> Els <TAB> Serge <TAB> Avg <TAB> Category <TAB> Status <TAB> Budget <TAB> Season <TAB> Opmerkingen <TAB> Reservation <TAB> Latitude <TAB> Longitude <TAB> Pinned\n\n'
- +'Rules:\n- Naam: short plain name only.\n- Link: full website URL or blank.\n- Maps: ONLY https://www.google.com/maps?q=Name+Street+City+State (never maps.app.goo.gl).\n- Adres: street, city, state/region + ZIP if available.\n- Els, Serge, Avg: leave BLANK.\n- Category: exactly one from the list above.\n- Status: always Planning.\n- Budget: number USD per person, 0 if free.\n- Season: Year-round / Spring / Summer / Fall / Winter (or combos).\n- Opmerkingen: 2-4 sentences in ENGLISH - what it is, why it fits, practical info, nearby combos.\n- Reservation: Yes or No.\n- Latitude, Longitude, Pinned: leave BLANK.\n- END EVERY ROW with the marker ~#~ as the very last characters of that row, after the Pinned column. This marker is REQUIRED on every row.\nOutput the rows immediately, no markdown, no code block, no commentary.';}
+ +'Output ONLY a plain tab-separated table, no header row, data rows only, these EXACT 17 columns in order:\n'
+ +'Name <TAB> Website <TAB> Coordinates <TAB> Address <TAB> (blank) <TAB> (blank) <TAB> (blank) <TAB> Category <TAB> Status <TAB> Budget <TAB> Season <TAB> Notes <TAB> Reservation <TAB> Subcategory <TAB> Region <TAB> Google rating <TAB> Google reviews\n\n'
+ +'Rules:\n- Name: short plain name only.\n- Website: official site, full https:// URL. Leave blank if not found.\n'
+ +'- Coordinates: "lat,lng" with at least 4 decimals, e.g. 43.6962,-114.3531. Look it up; leave blank only if truly not found.\n'
+ +'- Address: street, city, state/region + ZIP if available.\n- The three (blank) columns: leave BLANK.\n'
+ +'- Category: exactly one from the list above.\n- Status: always Planning.\n- Budget: number USD per person, 0 if free.\n'
+ +'- Season: Year-round / Spring / Summer / Fall / Winter (or combos).\n'
+ +'- Notes: 2-4 sentences in ENGLISH - what it is, why it fits, practical info, nearby combos.\n- Reservation: Yes or No.\n'
+ +'- Subcategory: leave blank.\n- Region: "'+place+'" (spelled exactly like that).\n'
+ +'- Google rating: the Google Maps star rating, e.g. 4.6 (a few months old is fine). Blank if not found - never guess.\n'
+ +'- Google reviews: number of Google reviews, digits only. Blank if not found.\n'
+ +'- END EVERY ROW with the marker ~#~ as the very last characters of that row. This marker is REQUIRED on every row.\n'
+ +'Output the rows immediately, no markdown, no code block, no commentary.';}
 function t69ExistingForAI(){var out=[];(allLocations||[]).forEach(function(l){out.push({name:l.name,address:l.address||'',category:l.category||''});});return out;}
 function t69AiPrompt(){var place=(typeof currentState!=='undefined'&&currentState)?currentState:'this region';
  var allCats=((window.T69SET&&window.T69SET.categories)||(window.settings&&settings.categories)||['Bizarre','Nature','Restaurant','Museum','Historic']);
@@ -773,7 +783,12 @@ function t69ImportPaste(){if((typeof currentState==='undefined'||!currentState)&
  card.innerHTML='<div style="font-weight:700">\uD83D\uDCE5 Paste AI results - '+currentState+'</div><div style="font-size:11px;color:var(--muted)">Paste the table from your AI. Rows matching existing Maps link / website / address are flagged as duplicates.</div>';
  var ta=document.createElement('textarea');ta.placeholder='Paste the AI table here...';ta.style.cssText='min-height:150px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;padding:8px;font-family:monospace;resize:vertical';card.appendChild(ta);
  var opts=document.createElement('div');opts.style.cssText='display:flex;gap:16px;font-size:12px;align-items:center;flex-wrap:wrap';
- opts.innerHTML='<label style="cursor:pointer"><input type="checkbox" id="t69ImpGeo" checked> Geocode addresses automatically after import</label><label style="cursor:pointer"><input type="checkbox" id="t69ImpSkip" checked> Skip rows flagged as duplicates</label><label style="cursor:pointer"><input type="checkbox" id="t69ImpRep"> Replace duplicates (overwrite existing)</label><label style="cursor:pointer"><input type="checkbox" id="t69ImpG" checked> Fetch Google ratings after import</label>';card.appendChild(opts);
+ opts.innerHTML='<div style="font-weight:700;margin:2px 0 3px">Places that already exist:</div>'
+  +'<label style="cursor:pointer;display:block"><input type="radio" name="t69ImpMode" value="fill" checked> Update empty fields only <span style="color:var(--muted)">(recommended)</span></label>'
+  +'<label style="cursor:pointer;display:block"><input type="radio" name="t69ImpMode" value="over"> Overwrite with the file</label>'
+  +'<label style="cursor:pointer;display:block;margin-bottom:6px"><input type="radio" name="t69ImpMode" value="leave"> Leave untouched</label>'
+  +'<label style="cursor:pointer;display:block"><input type="checkbox" id="t69ImpGeo" checked> \uD83D\uDCCD Place pins for rows without coordinates <span style="color:var(--muted)">(free)</span></label>'
+  +'<label style="cursor:pointer;display:block"><input type="checkbox" id="t69ImpG"> \u2B50 Look up anything still missing with Google <span style="color:#F59E0B">(paid \u00b7 max 30 a day)</span></label>';card.appendChild(opts);
  var prevBtn=document.createElement('button');prevBtn.className='t69t-btn';prevBtn.textContent='\uD83D\uDD0D Preview';var repoBtn=document.createElement('button');repoBtn.className='t69t-btn';repoBtn.textContent='\u2B07 Load data/import.tsv from repo';repoBtn.onclick=function(){repoBtn.disabled=true;repoBtn.textContent='Loading\u2026';fetch('https://raw.githubusercontent.com/sergepilaet/travellers-1969/main/data/import.tsv?t='+Date.now()).then(function(x){if(!x.ok)throw new Error('No data/import.tsv in the repo');return x.text();}).then(function(t){ta.value=t;repoBtn.textContent='\u2705 Loaded '+(t.split('~#~').length-1)+' rows \u2014 press Preview';}).catch(function(e){repoBtn.disabled=false;repoBtn.textContent='\u2B07 Load data/import.tsv from repo';toast('\u274C '+e.message);});};card.appendChild(repoBtn);card.appendChild(prevBtn);
  var preview=document.createElement('div');preview.style.cssText='font-size:11px;max-height:34vh;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px;display:none';card.appendChild(preview);
  var parsed=[];
@@ -830,13 +845,15 @@ function t69ImportPaste(){if((typeof currentState==='undefined'||!currentState)&
  var row=document.createElement('div');row.style.cssText='display:flex;gap:8px;justify-content:flex-end';
  var imp=document.createElement('button');imp.className='t69t-btn';imp.style.cssText='background:var(--accent);color:#0D1B2E;font-weight:700';imp.textContent='\u2705 Import';
  imp.addEventListener('click',function(){if(!parsed.length){toast('Preview first');return;}
-  var skipDup=document.getElementById('t69ImpSkip').checked;var doGeo=document.getElementById('t69ImpGeo').checked;var repDup=document.getElementById('t69ImpRep').checked;
+  var _mode=(document.querySelector('input[name=t69ImpMode]:checked')||{}).value||'fill';var skipDup=true,repDup=(_mode==='over'),fillDup=(_mode==='fill');var doGeo=document.getElementById('t69ImpGeo').checked;parsed.forEach(function(r){if(r._dup&&!r._dupId&&r._dupLoc)r._dupId=r._dupLoc.rowIndex;});
   var toImport=parsed.filter(function(r){if(!r._dup)return true;if(repDup&&r._dupId)return true;return !skipDup;});
-  if(!toImport.length){toast('Nothing to import');return;}
   var toImportAll=toImport.slice();
   var _fill=[];
-  parsed.forEach(function(r){if(r._dup&&r._dupLoc&&!(repDup&&r._dupId)&&skipDup){
+  parsed.forEach(function(r){if(r._dup&&r._dupLoc&&fillDup){
     var pt=t69GapPatch(r._dupLoc,r);if(Object.keys(pt).length)_fill.push({ex:r._dupLoc,patch:pt});}});
+  if(!toImport.length){
+    if(_fill.length){ov.remove();t69FillGaps(_fill);return;}
+    toast('Nothing new to import \u2014 and nothing missing to fill');return;}
   imp.disabled=true;var totalN=toImport.length;t69Prog('\uD83D\uDCE5 Importing',0,totalN);var done=0,okN=0,failN=0,firstErr='',failList=[];
   (function nextRow(){if(!toImport.length){t69ProgHide();
    toast((failN?'\u26A0 ':'\u2705 ')+'Imported '+okN+(failN?(', failed '+failN):'')+(firstErr?(' \u2014 '+firstErr):''));
@@ -845,7 +862,7 @@ function t69ImportPaste(){if((typeof currentState==='undefined'||!currentState)&
      +'\n\nFix the cause and import the file again \u2014 the rows that did save will be skipped as duplicates.');},400);}
    if(_fill.length)t69FillGaps(_fill);
    ov.remove();loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);
-   var gEl=document.getElementById('t69ImpG');var _names={};(toImportAll||[]).forEach(function(x){var k=((x.state&&x.state.trim())||currentState)+'|'+String(x.name||'').toLowerCase();_names[k]=1;});if((gEl&&gEl.checked)||doGeo){setTimeout(function(){t69FixImported(_names);},3500);}return;}
+   var gEl=document.getElementById('t69ImpG');var _names={};(toImportAll||[]).forEach(function(x){var k=((x.state&&x.state.trim())||currentState)+'|'+String(x.name||'').toLowerCase();_names[k]=1;});if(gEl&&gEl.checked){setTimeout(function(){t69FixImported(_names);},3500);}else if(doGeo){setTimeout(function(){t69PinsFreeImported(_names);},3500);}return;}
    var r=toImport.shift();
    var _st=(r.state&&r.state.trim())?r.state.trim():currentState;
    var call=(r._dup&&repDup&&r._dupId)?callFn('fsSaveLocation',{state:_st,id:r._dupId,patch:{name:r.name,website:r.website,mapsUrl:r.mapsUrl,address:r.adres,category:r.category,subcategory:r.subcategory||'',status:r.status,budget:r.budget,season:r.season,notes:r.notes,reservation:r.reservation}}):callFn('fsAddLocation',{state:_st,naam:r.name,website:r.website,mapsUrl:r.mapsUrl,adres:r.adres,category:r.category,subcategory:r.subcategory||'',status:r.status,budget:r.budget,season:r.season,notes:r.notes,reservation:r.reservation||'No',lat:r.lat,lng:r.lng,googleRating:r.googleRating||'',googleReviews:r.googleReviews||0});
@@ -1267,6 +1284,23 @@ async function t69ZoomClipRun(loc,isV,caption,style){
 }
 
 window._t69RateLocs={};
+window.t69WebRowHtml=function(loc,key){
+  var w=(loc.website&&loc.website!=='N/A')?loc.website:'';
+  return '<div class="d-row" style="flex-direction:column;align-items:stretch;gap:4px"><strong>Website</strong>'
+    +'<div style="display:flex;gap:6px"><input id="t69Web-'+key+'" value="'+t69Esc(w)+'" placeholder="https://\u2026" '
+    +'onkeydown="if(event.key===\'Enter\')t69SaveWeb(\''+key+'\')" '
+    +'style="flex:1;min-width:0;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:5px 7px">'
+    +'<button class="t69t-btn" onclick="t69SaveWeb(\''+key+'\')">Save</button></div></div>';};
+window.t69SaveWeb=function(key){
+  var loc=window._t69RateLocs[key],el=document.getElementById('t69Web-'+key);if(!loc||!el)return;
+  var v=el.value.trim();
+  if(v&&!/^https?:\/\//i.test(v))v='https://'+v;
+  var st=t69RS(loc);if(!st){toast('Open the location\u2019s region first');return;}
+  callFn('fsSaveLocation',{state:st,id:loc.rowIndex,patch:{website:v||'N/A',websiteSuggest:''}}).then(function(r){
+    if(r&&r.success===false){toast('\u274C '+(r.message||'Save failed'));return;}
+    loc.website=v||'N/A';el.value=v;
+    (window.allLocations||[]).forEach(function(x){if(String(x.rowIndex)===String(loc.rowIndex)&&(x.state||'')===(loc.state||''))x.website=loc.website;});
+    toast('\u2705 Website saved');}).catch(function(e){toast('\u274C '+(e.message||e));});};
 window.t69RateRowHtml=function(loc,key){
   window._t69RateLocs[key]=loc;
   var trav=(typeof T69_TRAVELLERS!=='undefined'&&T69_TRAVELLERS&&T69_TRAVELLERS.length)?T69_TRAVELLERS:['Els','Serge'];
@@ -1502,6 +1536,36 @@ function t69FetchGoogleAll(){
   }
   nextState();
  }).catch(function(e){t69ProgHide();toast('\\u274C '+(e.message||e));});}
+/* free pins for imported rows without coordinates — OpenStreetMap, one per second */
+window.t69FixMenu=function(btn){
+  var old=document.getElementById('t69FixPop');if(old){old.remove();return;}
+  var r=btn.getBoundingClientRect(),m=document.createElement('div');m.id='t69FixPop';
+  m.style.cssText='position:fixed;z-index:9850;top:'+(r.bottom+4)+'px;left:'+Math.max(8,r.right-290)+'px;width:290px;background:var(--surface2,#1e2538);'
+    +'border:1px solid var(--border);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.45)';
+  [['\uD83E\uDD16 Missing data \u2192 AI','Free \u00b7 fill websites, pins and ratings via ChatGPT','t69MissingForAI'],
+   ['\uD83D\uDCCD Place missing pins','Free \u00b7 OpenStreetMap, this region','t69GeocodeAll'],
+   ['\u2B50 Google ratings for this region','Paid \u00b7 max 30 a day','t69FetchGoogle']].forEach(function(it){
+    var b=document.createElement('button');b.className='settings-btn';b.style.cssText='width:100%;margin:2px 0;text-align:left';
+    b.innerHTML='<span><strong>'+it[0]+'</strong><span class="s-desc">'+it[1]+'</span></span>';
+    b.onclick=function(){m.remove();window[it[2]]();};m.appendChild(b);});
+  document.body.appendChild(m);
+  setTimeout(function(){document.addEventListener('mousedown',function h(e){if(!m.contains(e.target)&&e.target!==btn){m.remove();document.removeEventListener('mousedown',h);}});},0);};
+window.t69PinsFreeImported=async function(nameSet){
+  var regs={};Object.keys(nameSet).forEach(function(k){regs[k.split('|')[0]]=1;});
+  var todo=[];
+  for(var r in regs){var d=null;try{d=await callFn('fsGetStateData',r);}catch(e){continue;}
+    ((d&&d.locations)||[]).forEach(function(l){if(nameSet[r+'|'+String(l.name||'').toLowerCase()]&&(l.lat==null||l.lng==null))todo.push({st:r,l:l});});}
+  if(!todo.length)return;
+  var ok=0;
+  for(var i=0;i<todo.length;i++){
+    t69Prog('\uD83D\uDCCD Placing pins (free)',i,todo.length);
+    var o=todo[i],q=[o.l.name,o.l.address||'',o.st].filter(Boolean).join(', ');
+    try{var c=await t69GeoLookup(q);
+      if(c&&c.lat!=null){var res=await callFn('fsSaveLocation',{state:o.st,id:o.l.rowIndex,patch:{lat:c.lat,lng:c.lng}});if(!res||res.success!==false)ok++;}}catch(e){}
+    await new Promise(function(x){setTimeout(x,1100);});}
+  t69ProgHide();
+  toast('\uD83D\uDCCD Placed '+ok+' of '+todo.length+' pins'+(ok<todo.length?' \u2014 the rest need coordinates in the file':''));
+  try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}};
 window.t69FixImported=async function(nameSet){
   var regs={};Object.keys(nameSet).forEach(function(k){regs[k.split('|')[0]]=1;});
   var regions=Object.keys(regs),done=0,coords=0,webs=0,fail=0,total=0,todo=[];
@@ -1565,7 +1629,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v184 ===== */
+/* ===== end F0 v185 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1576,12 +1640,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v184</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v185</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v184</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v185</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1613,8 +1677,8 @@ function signIn(){
     <button class="t69t-btn" id="t69NoGpsBtn" onclick="window.T69_TBLNOGPS=!window.T69_TBLNOGPS;this.classList.toggle('active',window.T69_TBLNOGPS);t69RenderTable()" title="Show only rows without coordinates">📍 No GPS</button>
     <button class="t69t-btn" onclick="t69ReviewToggle()" id="t69RevBtn">👁 Review mode</button>
     <button class="t69t-btn" onclick="t69BulkToggle()" id="t69BulkBtn">☑ Bulk edit</button>
-    <button class="t69t-btn" onclick="t69GeocodeAll()">📍 Geocode all missing</button>
-    <button class="t69t-btn" onclick="t69FetchGoogle()" id="t69GBtn">⭐ Google ratings</button>
+    
+    <button class="t69t-btn" onclick="t69FixMenu(this)" id="t69GBtn">🛠 Fix data ▾</button>
     <button class="t69t-btn" id="t69AddBtn" onclick="t69AddRow()">➕ Add location</button>
     <button class="t69t-btn" id="t69TblClose" onclick="closeTableView()">✕ Close</button>
   </div>
@@ -2018,7 +2082,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v184</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v185</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2035,38 +2099,14 @@ function signIn(){
       <div style="padding:2px 4px 10px">
         
         
-        <div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:6px">FROM REPO</div>
-        <button class="settings-btn" style="margin-bottom:10px" onclick="t69ApplyRenames()">✏ Apply renames from repo</button>
+        <div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:6px">DATA</div>
         <button class="settings-btn" style="margin-bottom:10px" onclick="t69MissingForAI()">🤖 Missing data → AI (free)</button>
+        <button class="settings-btn" style="margin-bottom:10px" onclick="t69DupNames()">🔍 Find duplicates — all regions</button>
         <button class="settings-btn" style="margin-bottom:10px" onclick="t69GoogleUsage()">📊 Google usage — today and this month</button>
-        <button class="settings-btn" style="margin-bottom:10px" onclick="t69FixMissing()">📍 Fix missing map pins / ratings — all regions</button>
-        <button class="settings-btn" style="margin-bottom:10px" onclick="t69DupNames()">🔍 Find duplicate names — all regions</button>
         <button class="settings-btn" style="margin-bottom:10px" onclick="t69UnpinRouteStops()">📌 Unpin route stops — one-time cleanup</button>
         <div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:6px">CALENDAR</div>
         <button class="settings-btn" style="margin-bottom:10px" onclick="t69SetCalId()">📅 Which calendar to sync into…</button>
-        <div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:6px">DATA SOURCE</div>
-        <label style="display:block;font-size:12px;margin:3px 0;cursor:pointer"><input type="radio" name="t69ds" value="sheets"> 📋 Google Sheets (live)</label>
-        <label style="display:block;font-size:12px;margin:3px 0;cursor:pointer"><input type="radio" name="t69ds" value="firestore"> 🔥 Firestore (preview)</label>
       </div>
-      <button class="settings-btn" onclick="t69ImportAll()">
-        <span class="s-icon">⬇️</span>
-        <span><strong>F1 — Import ALL states from Sheet</strong><span class="s-desc">Wipes &amp; re-imports every state tab into Firestore · repeatable · Sheet untouched · Mexico safe</span></span>
-      </button>
-      <div style="font-size:10px;color:var(--muted);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.05em">🔍 Duplicate scan — match on:</div>
-      <div style="display:flex;gap:12px;font-size:11px;margin-bottom:6px">
-        <label style="cursor:pointer"><input type="checkbox" id="t69DupM" checked> Maps link</label>
-        <label style="cursor:pointer"><input type="checkbox" id="t69DupW" checked> Website</label>
-        <label style="cursor:pointer"><input type="checkbox" id="t69DupA" checked> Address</label>
-      </div>
-      <select id="t69DupScope" style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:5px 7px;margin-bottom:6px">
-        <option value="all">Scope: all states &amp; countries</option>
-        <option value="country">Scope: current country</option>
-        <option value="state">Scope: current state/region</option>
-      </select>
-      <button class="settings-btn" onclick="t69ScanDups()">
-        <span class="s-icon">🔍</span>
-        <span><strong>Scan for duplicates</strong><span class="s-desc">Across all states in Firestore · delete straight from the results</span></span>
-      </button>
       </div></div>
 <div class="settings-section">
       <div class="settings-section-title">🚪 Account</div>
@@ -2793,6 +2833,7 @@ function openDetail(idx){
   html+='<div class="d-row"><strong>Status</strong><select class="d-edit-sel" id="dcStatusSel">'+['Planning',"Don't Skip",'Booked','Maybe','Visited'].map(function(s){return '<option'+(( loc.status||'Planning')===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div>';
   html+='<div class="d-row"><strong>Category</strong><select class="d-edit-sel" id="dcCatSel">'+t69Cats().map(function(cat){return '<option'+(loc.category===cat?' selected':'')+'>'+cat+'</option>';}).join('')+'</select></div>';
   html+=t69RateRowHtml(loc,'d');
+  html+=t69WebRowHtml(loc,'d');
   (function(){var _subs=t69SubsFor(normalizeCat(loc.category));
     if(_subs.length||loc.subcategory)
       html+='<div class="d-row"><strong>Sub</strong><select class="d-edit-sel" id="dcSubSel">'
@@ -2843,6 +2884,7 @@ function openCrossStateDetail(loc){
   html+='<div class="d-row"><strong>Season</strong><span class="d-val">'+(loc.season||'—')+'</span></div>';
   if(avgStr){html+='<div class="d-row"><strong>Rating</strong><div><span style="color:var(--accent);letter-spacing:-1px;font-size:13px">'+stars+'</span> <span style="color:var(--accent);font-weight:700;font-size:11px">'+avgStr+'</span>';if(ratingsInline(loc))html+='<br><span style="font-size:10px;color:var(--muted)">'+ratingsInline(loc)+'</span>';html+='</div></div>';}
   html+=t69RateRowHtml(loc,'x');
+  html+=t69WebRowHtml(loc,'x');
   (function(){var _subs=t69SubsFor(normalizeCat(loc.category));
     if(_subs.length||loc.subcategory)
       html+='<div class="d-row"><strong>Sub</strong><select class="d-edit-sel" id="dcSubSel">'
@@ -5134,7 +5176,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v184 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v185 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -5424,17 +5466,17 @@ window.t69MissingForAI=async function(){
     var miss=all.filter(function(l){return l&&l.name&&(!l.googleRating||!web(l.website)||l.lat==null||l.lng==null);});
     if(!miss.length){toast('\u2705 Nothing missing \u2014 every location has a rating, website and pin');return;}
     var clean=function(v){return String(v==null?'':v).replace(/[\t\r\n]+/g,' ').trim();};
-    var rows=miss.map(function(l){return [clean(l.name),web(l.website)?clean(l.website):'',
+    var rows=miss.map(function(l){return {reg:l.state||'',line:[clean(l.name),web(l.website)?clean(l.website):'',
       (l.lat!=null&&l.lng!=null)?(+l.lat).toFixed(5)+','+(+l.lng).toFixed(5):'',clean(l.address),'','','',
       clean(l.category),clean(l.status),clean(l.budget),clean(l.season),'',clean(l.reservation||'No'),clean(l.subcategory),clean(l.state),
-      l.googleRating?String(l.googleRating):'',l.googleReviews?String(l.googleReviews):''].join('\t')+' ~#~';});
+      l.googleRating?String(l.googleRating):'',l.googleReviews?String(l.googleReviews):''].join('\t')+' ~#~'};});
     var head='Fill in missing data for these places. Use web search; values a few months old are fine.\n'
       +'Each row has 17 tab-separated columns and ends with ~#~. Keep every column exactly as given, EXCEPT fill these when empty:\n'
       +'  B = official website (full https:// URL)\n  C = coordinates "lat,lng" with 4+ decimals\n'
       +'  P = Google Maps star rating, e.g. 4.6\n  Q = number of Google reviews, digits only\n'
       +'If you cannot find a value, leave it empty \u2014 never guess.\n'
       +'Output ONLY the rows, same 17 columns, each ending with ~#~. No header, no markdown, no commentary.\n\n';
-    var SIZE=60,parts=[];for(var k=0;k<rows.length;k+=SIZE)parts.push(rows.slice(k,k+SIZE));
+    var SIZE=150;
     var ov=document.createElement('div');
     ov.style.cssText='position:fixed;inset:0;z-index:9800;background:rgba(4,10,20,.6);display:flex;align-items:center;justify-content:center;padding:16px';
     var box=document.createElement('div');
@@ -5442,15 +5484,22 @@ window.t69MissingForAI=async function(){
     box.innerHTML='<div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:4px">\uD83E\uDD16 Missing data \u2192 AI</div>'
       +'<div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5">'+miss.length+' locations miss a rating, website or pin. Copy a part, paste it into ChatGPT or Claude, '
       +'then paste the answer into <b>\uD83D\uDCE5 Import locations</b>. Matching rows only get their empty fields filled \u2014 nothing is overwritten, and no Google calls are used.</div>';
-    parts.forEach(function(pt,ix){
+    var counts={};rows.forEach(function(r){counts[r.reg]=(counts[r.reg]||0)+1;});
+    var sel=document.createElement('select');sel.style.cssText='width:100%;margin-bottom:8px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:5px 7px';
+    sel.innerHTML='<option value="">All regions ('+rows.length+')</option>'+Object.keys(counts).sort().map(function(r){return '<option value="'+t69Esc(r)+'">'+t69Esc(r)+' ('+counts[r]+')</option>';}).join('');
+    box.appendChild(sel);var list=document.createElement('div');box.appendChild(list);
+    function render(){list.innerHTML='';var src=rows.filter(function(r){return !sel.value||r.reg===sel.value;}),parts=[];
+      for(var k=0;k<src.length;k+=SIZE)parts.push(src.slice(k,k+SIZE));
+      parts.forEach(function(pt,ix){
       var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px';
       row.innerHTML='<span style="flex:1">Part '+(ix+1)+' of '+parts.length+' \u00b7 '+pt.length+' rows</span>';
       var b=document.createElement('button');b.className='t69t-btn';b.textContent='\uD83D\uDCCB Copy';
-      b.onclick=function(){var txt=head+pt.join('\n')+'\n';
+      b.onclick=function(){var txt=head+pt.map(function(x){return x.line;}).join('\n')+'\n';
         (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){b.textContent='\u2705 Copied';})
           .catch(function(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
             try{document.execCommand('copy');b.textContent='\u2705 Copied';}catch(e){toast('Copy failed');}ta.remove();});};
-      row.appendChild(b);box.appendChild(row);});
+      row.appendChild(b);list.appendChild(row);});}
+    sel.onchange=render;render();
     var cl=document.createElement('button');cl.className='btn-primary';cl.textContent='Close';
     cl.style.cssText='margin-top:12px;padding:7px 14px;font-size:12px';cl.onclick=function(){ov.remove();};
     box.appendChild(cl);ov.appendChild(box);document.body.appendChild(ov);
@@ -5470,6 +5519,31 @@ window.t69FixMissing=async function(){
     if(!names.length){toast('No regions');return;}
     await t69FetchGoogleRegions(names);
   }catch(e){toast('\u274C '+(e.message||e));}};
+/* keep the original (in a route, or the oldest), give it whatever the copies know, delete the copies */
+window.t69MergeDupGroups=async function(groups,ov){
+  if(!confirm('Merge '+groups.length+' duplicate group(s)?\n\nFor each name, one location is kept (the one in your route, otherwise the oldest). Empty fields are filled from the copies, then the copies are deleted.'))return;
+  var inRoute={};
+  (window.routeSegments||[]).forEach(function(sg){(sg.stops||[]).forEach(function(st){if(st.sourceSheet)inRoute[st.sourceSheet+'|'+st.sourceRow]=1;});});
+  var kept=0,deleted=0,fail=0;
+  for(var gi=0;gi<groups.length;gi++){
+    var g=groups[gi],rows=g.rows.slice().sort(function(a,b){return (parseInt(a.rowIndex,10)||0)-(parseInt(b.rowIndex,10)||0);});
+    var keep=rows.find(function(r){return inRoute[g.region+'|'+r.rowIndex];})||rows[0];
+    var patch={};
+    rows.forEach(function(r){if(r===keep)return;var p=t69GapPatch(keep,{website:r.website,lat:r.lat,lng:r.lng,googleRating:r.googleRating,googleReviews:r.googleReviews,adres:r.address,notes:r.notes});
+      Object.keys(p).forEach(function(k){if(!(k in patch))patch[k]=p[k];});
+      if((!keep.ratings||!Object.keys(keep.ratings).length)&&r.ratings&&Object.keys(r.ratings).length&&!patch.ratings)patch.ratings=r.ratings;});
+    t69Prog('\uD83E\uDDE9 Merging duplicates',gi,groups.length);
+    try{
+      if(Object.keys(patch).length){var sv=await callFn('fsSaveLocation',{state:g.region,id:keep.rowIndex,patch:patch});if(sv&&sv.success===false)throw new Error(sv.message);}
+      kept++;
+      for(var ri=0;ri<rows.length;ri++){if(rows[ri]===keep)continue;
+        var d=await callFn('fsDeleteLocation',{state:g.region,id:rows[ri].rowIndex});
+        if(d&&d.success===false)fail++;else deleted++;}
+    }catch(e){fail++;}}
+  t69ProgHide();
+  toast('\uD83E\uDDE9 Merged '+kept+' group(s) \u00b7 removed '+deleted+' copies'+(fail?(' \u00b7 '+fail+' failed'):''));
+  try{ov.remove();}catch(e){}
+  try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}};
 window.t69DupNames=async function(){
   try{
     toast('\u23F3 Scanning for duplicate names\u2026');
@@ -5489,6 +5563,7 @@ window.t69DupNames=async function(){
     var box=document.createElement('div');
     box.style.cssText='background:var(--surface2,#1e2538);border:1px solid var(--border);border-radius:12px;padding:14px;width:620px;max-width:95vw;max-height:80vh;overflow:auto';
     box.innerHTML='<div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:2px">\uD83D\uDD0D '+groups.length+' duplicate name(s)</div>'
+      +'<button class="btn-primary" id="t69MergeAll" style="margin:6px 0 8px;padding:7px 12px;font-size:12px">\uD83E\uDDE9 Merge all automatically</button>'
       +'<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Keep the richer row \u2014 \u2713 means it has that field. Delete removes it from the database.</div>';
     groups.forEach(function(g){
       var h=document.createElement('div');h.style.cssText='border-top:1px solid rgba(255,255,255,.08);padding:7px 0';
@@ -5517,6 +5592,7 @@ window.t69DupNames=async function(){
     var cl=document.createElement('button');cl.className='btn-primary';cl.textContent='Close';
     cl.style.cssText='margin-top:12px;padding:7px 14px;font-size:12px';
     cl.onclick=function(){ov.remove();try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}};
+    setTimeout(function(){var mb=document.getElementById('t69MergeAll');if(mb)mb.onclick=function(){t69MergeDupGroups(groups,ov);};},0);
     box.appendChild(cl);ov.appendChild(box);document.body.appendChild(ov);
   }catch(e){t69ProgHide();toast('\u274C '+(e.message||e));}};
 window.t69ApplyRenames=async function(){
@@ -6780,7 +6856,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v184: ready');
+  console.log('T1969 v185: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
