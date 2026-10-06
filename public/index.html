@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v193  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v195  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -565,7 +565,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v193: Firestore preview mode ===== */
+/* ===== F0 v195: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{localStorage.setItem('t69_datasource','firestore');return true;}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -639,6 +639,24 @@ function t69RefreshCats(){try{var src=(typeof allLocations!=='undefined'&&allLoc
  try{applyFilters();}catch(e){}
  try{var tb=document.getElementById('t69Tbl');if(tb&&tb.classList.contains('open')&&typeof t69RenderTable==='function')t69RenderTable();}catch(e){}}
 function t69TripCtx(){try{return localStorage.getItem('t69_tripctx')||'A couple travelling in a Ford F-150 with foldable e-bikes, tent camping and a National Parks pass. Mid-range budget, unique experiences over luxury. Already visited (skip these): San Francisco, Yosemite, South Rim Grand Canyon, Antelope Canyon, Monument Valley.';}catch(e){return'';}}
+/* v195: ONE place for the import columns + rules. Change the structure here and every AI prompt follows. */
+var T69_IMPORT_COLS=['Name','Website','Coordinates','Address','(blank)','(blank)','(blank)','Category','Status','Budget','Season','Notes','Reservation','Subcategory','Region','Google rating','Google reviews'];
+var T69_FOCUS='Focus on: bizarre roadside attractions, quirky museums, ghost towns, aviation experiences, unique non-chain restaurants, scenic routes, state parks. Naturist resorts only if family-friendly (AANR).';
+function t69ImportSpec(o){o=o||{};
+  return 'Output ONLY a plain tab-separated table, no header row, data rows only, these EXACT '+T69_IMPORT_COLS.length+' columns in order:\n'
+   +T69_IMPORT_COLS.join(' <TAB> ')+'\n\n'
+   +'Rules:\n- Name: short plain name only.\n- Website: official site, full https:// URL. Leave blank if not found.\n'
+   +(o.coords||'- Coordinates: "lat,lng" with at least 4 decimals, e.g. 43.6962,-114.3531. Look it up; leave blank only if truly not found.')+'\n'
+   +'- Address: street, city, state/region + ZIP if available.\n- The three (blank) columns: leave BLANK.\n'
+   +'- Category: exactly one from the list above.\n- Status: always Planning.\n- Budget: number USD per person, 0 if free.\n'
+   +'- Season: Year-round / Spring / Summer / Fall / Winter (or combos).\n'
+   +(o.notes||'- Notes: 2-4 sentences in ENGLISH \u2014 what it is, why it fits, practical info, nearby combos.')+'\n- Reservation: Yes or No.\n'
+   +t69SubRule()
+   +(o.region||'- Region: the US state, Canadian province or country where the place is, spelled out in full (e.g. Idaho, British Columbia).')+'\n'
+   +'- Google rating: the Google Maps star rating, e.g. 4.6 (a few months old is fine). Blank if not found \u2014 never guess.\n'
+   +'- Google reviews: number of Google reviews, digits only. Blank if not found.\n'
+   +'- END EVERY ROW with the marker ~#~ as the very last characters of that row. This marker is REQUIRED on every row.\n'
+   +'Output the rows immediately, no markdown, no code block, no commentary.';}
 function t69BuildRoutePrompt(km){
   var stops=[];
   (window.routeSegments||[]).forEach(function(sg,si){(sg.stops||[]).forEach(function(st,i){if(si>0&&i===0)return;if(st.lat!=null)stops.push(st);});});
@@ -646,22 +664,15 @@ function t69BuildRoutePrompt(km){
   var cats=(t69Cats()||[]).join(', ');
   return 'We are driving this road trip, in this order:\n'+list+'\n\n'
    +'Find interesting places within '+km+' km of the DRIVING ROUTE between these stops \u2014 along the way, not only near the stops.\n'
-   +'Focus on: bizarre roadside attractions, quirky museums, ghost towns, aviation experiences, unique non-chain restaurants, scenic routes, state parks. Naturist resorts only if family-friendly (AANR). Skip the stops already listed above.\n'
+   +T69_FOCUS+' Skip the stops already listed above.\n'
    +'Use ONLY these categories: '+cats+'. Suggest up to 60 places, spread along the whole route.\n\n'
-   +'Output ONLY a plain tab-separated table, no header row, data rows only, these EXACT 17 columns in order:\n'
-   +'Name <TAB> Website <TAB> Coordinates <TAB> Address <TAB> (blank) <TAB> (blank) <TAB> (blank) <TAB> Category <TAB> Status <TAB> Budget <TAB> Season <TAB> Notes <TAB> Reservation <TAB> Subcategory <TAB> Region <TAB> Google rating <TAB> Google reviews\n\n'
-   +'Rules:\n- Name: short plain name only.\n- Website: official site, full https:// URL. Blank if not found.\n'
-   +'- Coordinates: "lat,lng" with at least 4 decimals. REQUIRED \u2014 this is how we check the distance to the route.\n'
-   +'- Address: street, city, state/region + ZIP if available.\n- The three (blank) columns: leave BLANK.\n'
-   +'- Category: exactly one from the list above.\n- Status: always Planning.\n- Budget: number USD per person, 0 if free.\n'
-   +'- Season: Year-round / Spring / Summer / Fall / Winter (or combos).\n'
-   +'- Notes: 2-4 sentences in ENGLISH \u2014 what it is, why it is worth the detour, practical info.\n- Reservation: Yes or No.\n'
-   +t69SubRule()
-   +'- Region: the US state or Canadian province where the place is, spelled out in full (e.g. Idaho, British Columbia).\n'
-   +'- Google rating: the Google Maps star rating, e.g. 4.6 (a few months old is fine). Blank if not found \u2014 never guess.\n'
-   +'- Google reviews: number of Google reviews, digits only. Blank if not found.\n'
-   +'- END EVERY ROW with the marker ~#~ as the very last characters of that row.\n'
-   +'Output the rows immediately, no markdown, no code block, no commentary.';}
+   +t69ImportSpec({coords:'- Coordinates: "lat,lng" with at least 4 decimals. REQUIRED \u2014 this is how we check the distance to the route.',
+     notes:'- Notes: 2-4 sentences in ENGLISH \u2014 what it is, why it is worth the detour, practical info.'});}
+function t69BuildFormatPrompt(){
+  var cats=(t69Cats()||[]).join(', ');
+  return 'For the rest of this conversation: whenever you give me places, give them ONLY in the format below, so I can paste them straight into my travel app. '
+   +'Any area is fine (a region, a whole country, a theme) \u2014 just always use this format.\n\n'
+   +'Use ONLY these categories: '+cats+'.\n\n'+t69ImportSpec({});}
 function t69SubRule(){
   var m={};try{m=t69AllSubs()||{};}catch(e){}
   var parts=Object.keys(m).filter(function(c){return (m[c]||[]).length;}).sort().map(function(c){return c+': '+m[c].join(', ');});
@@ -670,19 +681,7 @@ function t69SubRule(){
 function t69BuildPrompt(place,cats,ctx,count){
  return 'Research "'+place+'" for the following travellers:\n'+ctx+'\n\n'
  +'Suggest up to '+count+' places. Use ONLY these categories: '+cats+'.\n\n'
- +'Output ONLY a plain tab-separated table, no header row, data rows only, these EXACT 17 columns in order:\n'
- +'Name <TAB> Website <TAB> Coordinates <TAB> Address <TAB> (blank) <TAB> (blank) <TAB> (blank) <TAB> Category <TAB> Status <TAB> Budget <TAB> Season <TAB> Notes <TAB> Reservation <TAB> Subcategory <TAB> Region <TAB> Google rating <TAB> Google reviews\n\n'
- +'Rules:\n- Name: short plain name only.\n- Website: official site, full https:// URL. Leave blank if not found.\n'
- +'- Coordinates: "lat,lng" with at least 4 decimals, e.g. 43.6962,-114.3531. Look it up; leave blank only if truly not found.\n'
- +'- Address: street, city, state/region + ZIP if available.\n- The three (blank) columns: leave BLANK.\n'
- +'- Category: exactly one from the list above.\n- Status: always Planning.\n- Budget: number USD per person, 0 if free.\n'
- +'- Season: Year-round / Spring / Summer / Fall / Winter (or combos).\n'
- +'- Notes: 2-4 sentences in ENGLISH - what it is, why it fits, practical info, nearby combos.\n- Reservation: Yes or No.\n'
- +t69SubRule()+'- Region: "'+place+'" (spelled exactly like that).\n'
- +'- Google rating: the Google Maps star rating, e.g. 4.6 (a few months old is fine). Blank if not found - never guess.\n'
- +'- Google reviews: number of Google reviews, digits only. Blank if not found.\n'
- +'- END EVERY ROW with the marker ~#~ as the very last characters of that row. This marker is REQUIRED on every row.\n'
- +'Output the rows immediately, no markdown, no code block, no commentary.';}
+ +t69ImportSpec({region:'- Region: "'+place+'" (spelled exactly like that).'});}
 function t69ExistingForAI(){var out=[];(allLocations||[]).forEach(function(l){out.push({name:l.name,address:l.address||'',category:l.category||''});});return out;}
 function t69AiPrompt(){var place=(typeof currentState!=='undefined'&&currentState)?currentState:'this region';
  var allCats=((window.T69SET&&window.T69SET.categories)||(window.settings&&settings.categories)||['Bizarre','Nature','Restaurant','Museum','Historic']);
@@ -833,7 +832,13 @@ function t69ImportPaste(){if((typeof currentState==='undefined'||!currentState)&
      (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){pb.textContent='\u2705 Copied \u2014 paste it into ChatGPT';})
        .catch(function(){ta.value=txt;ta.select();toast('Prompt placed in the box \u2014 copy it from there');});
      var ro=document.getElementById('t69RouteOnly');if(ro)ro.checked=true;};})();
- var prevBtn=document.createElement('button');prevBtn.className='t69t-btn';prevBtn.textContent='\uD83D\uDD0D Preview';var repoBtn=document.createElement('button');repoBtn.className='t69t-btn';repoBtn.textContent='\u2B07 Load data/import.tsv from repo';repoBtn.onclick=function(){repoBtn.disabled=true;repoBtn.textContent='Loading\u2026';fetch('https://raw.githubusercontent.com/sergepilaet/travellers-1969/main/data/import.tsv?t='+Date.now()).then(function(x){if(!x.ok)throw new Error('No data/import.tsv in the repo');return x.text();}).then(function(t){ta.value=t;repoBtn.textContent='\u2705 Loaded '+(t.split('~#~').length-1)+' rows \u2014 press Preview';}).catch(function(e){repoBtn.disabled=false;repoBtn.textContent='\u2B07 Load data/import.tsv from repo';toast('\u274C '+e.message);});};card.appendChild(repoBtn);card.appendChild(prevBtn);
+ var prevBtn=document.createElement('button');prevBtn.className='t69t-btn';prevBtn.textContent='\uD83D\uDD0D Preview';(function(){var fb=document.createElement('button');fb.className='t69t-btn';fb.style.cssText='align-self:flex-start';
+   fb.textContent='\uD83D\uDCCB Copy import format for AI';fb.title='Paste this into ChatGPT, Gemini or Claude first \u2014 it will then answer only in the import format';
+   fb.onclick=function(){var txt=t69BuildFormatPrompt();
+     (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){fb.textContent='\u2705 Copied \u2014 paste it into your AI';})
+       .catch(function(){ta.value=txt;ta.select();toast('Format placed in the box \u2014 copy it from there');});};
+   card.appendChild(fb);})();
+ card.appendChild(prevBtn);
  var preview=document.createElement('div');preview.style.cssText='font-size:11px;max-height:34vh;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px;display:none';card.appendChild(preview);
  var parsed=[];
  function existKeys(){var mk={},wk={},ak={},nk={};function n(u){return String(u||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/\/+$/,'');}function na(a){return String(a||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
@@ -1754,7 +1759,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v193 ===== */
+/* ===== end F0 v195 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1765,12 +1770,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v193</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v195</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v193</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v195</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2211,7 +2216,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v193</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v195</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2566,7 +2571,7 @@ window.t69LoadAlongRoute=async function(){
   var regs={};hits.forEach(function(l){regs[l.state]=1;});
   toast('\u2705 '+hits.length+' locations within '+km+' km of the route, in '+Object.keys(regs).length+' regions'+(noPin?' ('+noPin+' without a map pin could not be checked)':''));};
 
-/* v193: leave the along-route view */
+/* v195: leave the along-route view */
 window.t69InAlongView=function(){return /Along route/.test(String((typeof currentState!=='undefined'&&currentState)||''));};
 window.t69SyncViewX=function(){var on=t69InAlongView();
   ['t69ViewX','t69ViewX2'].forEach(function(id){var b=document.getElementById(id);if(b)b.style.display=on?'':'none';});
@@ -5431,7 +5436,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v193 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v195 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -5772,7 +5777,7 @@ window.t69MissingForAI=async function(){
     cl.style.cssText='margin-top:12px;padding:7px 14px;font-size:12px';cl.onclick=function(){ov.remove();};
     box.appendChild(cl);ov.appendChild(box);document.body.appendChild(ov);
   }catch(e){t69ProgHide();toast('\u274C '+(e.message||e));}};
-/* v193: remember which parts went to the AI, so the import can ask about the ones still without a rating */
+/* v195: remember which parts went to the AI, so the import can ask about the ones still without a rating */
 window.t69MissNz=function(x){return String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');};
 window.t69MissLoad=function(){try{var a=JSON.parse(localStorage.getItem('t69_missParts')||'[]');var cut=Date.now()-21*864e5;return (Array.isArray(a)?a:[]).filter(function(p){return p&&p.at>cut&&p.rows&&p.rows.length;});}catch(e){return [];}};
 window.t69MissSave=function(a){try{localStorage.setItem('t69_missParts',JSON.stringify(a.slice(-30)));}catch(e){}};
@@ -7173,7 +7178,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v193: ready');
+  console.log('T1969 v195: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
