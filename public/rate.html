@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0D1B2E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="T1969 Rate">
+<title>T1969 Rate</title>
+<!-- Travellers 1969 · quick rating page · v1 (with app v195) -->
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0D1B2E;--surface:#112240;--card:#162B4A;--card2:#1E3459;--border:#2A4E78;--accent:#5BC8F5;--text:#F0F8FF;--muted:#7EAAC8;--star:#F59E0B;--green:#10B981}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:'Outfit',system-ui,sans-serif}
+button,select,input{font:inherit;color:inherit}
+#login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center}
+#login h1{margin:0;font-size:26px;letter-spacing:.02em}
+#login p{margin:0;color:var(--muted);font-size:14px;max-width:300px;line-height:1.5}
+.big{background:var(--accent);color:#06203A;border:none;border-radius:12px;padding:13px 22px;font-weight:700;font-size:16px;cursor:pointer}
+header{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--border);padding:calc(env(safe-area-inset-top) + 10px) 14px 10px}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.brand{font-weight:700;font-size:16px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand span{color:var(--accent)}
+.who{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:13px}
+.row{display:flex;gap:8px;margin-bottom:8px}
+select.f,input.f{flex:1;min-width:0;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 10px;font-size:15px}
+.seg{display:flex;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;flex-shrink:0}
+.seg button{background:none;border:none;padding:8px 12px;font-size:14px;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--accent);color:#06203A;font-weight:700}
+.prog{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.bar{flex:1;height:5px;background:var(--card);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green);width:0;transition:width .3s}
+main{padding:10px 12px calc(env(safe-area-inset-bottom) + 30px);max-width:720px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 13px;margin-bottom:10px}
+.card.done{border-color:rgba(16,185,129,.45)}
+.nm{display:flex;align-items:flex-start;gap:8px}
+.nm a.t,.nm b{flex:1;font-size:16px;font-weight:700;color:var(--text);text-decoration:none;line-height:1.3}
+.nm a.t{color:var(--accent)}
+.nm a.t::after{content:' \2197';font-size:12px;opacity:.7}
+.map{flex-shrink:0;background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:5px 9px;font-size:13px;color:var(--text);text-decoration:none;white-space:nowrap}
+.meta{margin-top:5px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.chip{background:rgba(91,200,245,.12);color:var(--accent);border-radius:20px;padding:2px 9px;font-weight:600}
+.note{margin-top:6px;font-size:13px;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.note.open{-webkit-line-clamp:unset}
+.rate{margin-top:9px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.stars{display:flex}
+.stars button{background:none;border:none;font-size:30px;line-height:1;padding:4px 4px;color:var(--border);cursor:pointer}
+.stars button.on{color:var(--star)}
+.stars.saving{opacity:.5}
+.others{font-size:13px;color:var(--muted);text-align:right}
+.others b{color:var(--star)}
+.empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:15px;line-height:1.6}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 18px);transform:translateX(-50%);background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:9px 14px;font-size:14px;display:none;z-index:9}
+.foot{text-align:center;margin-top:16px;font-size:12px}
+.foot a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="login" style="display:none">
+  <h1>Travellers <span style="color:var(--accent)">1969</span></h1>
+  <p>Quick rating page. Sign in once with your Google account — this device remembers you after that.</p>
+  <button class="big" onclick="signIn()">Sign in with Google</button>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <div class="top">
+      <div class="brand">⭐ Travellers <span>1969</span> · Rate</div>
+      <select class="who" id="who" onchange="setWho(this.value)" title="Who is rating"></select>
+    </div>
+    <div class="row"><select class="f" id="region" onchange="loadRegion(this.value)"></select></div>
+    <div class="row">
+      <input class="f" id="q" type="search" placeholder="Search…" oninput="render()">
+      <div class="seg"><button id="fTodo" class="on" onclick="setMode('todo')">To rate</button><button id="fAll" onclick="setMode('all')">All</button></div>
+    </div>
+    <div class="prog"><span id="progT">—</span><div class="bar"><i id="progB"></i></div></div>
+  </header>
+  <main id="list"><div class="empty">Loading…</div></main>
+</div>
+<div id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script>
+firebase.initializeApp({apiKey:"AIzaSyAxPJoDENiNy3wA2rFs-MFcJkUwBN1YwK8",authDomain:"travellers-1969-b3a8e.web.app",projectId:"travellers-1969-b3a8e",appId:"1:1096931085234:web:f086132b4daef9944db2ab"});
+var BASE='https://firestore.googleapis.com/v1/projects/travellers-1969-b3a8e/databases/(default)/documents';
+var EMAIL_WHO={'sergepilaet@gmail.com':'Serge','elsvrijsen8@gmail.com':'Els'};
+var TRAV=['Els','Serge'],WHO='',LOCS=[],REGION='',MODE='todo',SHOWN={};
+
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function toast(t){var e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toast._t);toast._t=setTimeout(function(){e.style.display='none';},2200);}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
+function slug(n){return String(n||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+
+function signIn(){firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());}
+function hdr(){var u=firebase.auth().currentUser;if(!u)return Promise.reject(new Error('Not signed in'));
+  return u.getIdToken().then(function(t){return{'Content-Type':'application/json','Authorization':'Bearer '+t};});}
+
+/* Firestore REST → plain objects */
+function val(v){if(!v)return null;if('stringValue' in v)return v.stringValue;if('integerValue' in v)return parseInt(v.integerValue,10);
+  if('doubleValue' in v)return v.doubleValue;if('booleanValue' in v)return v.booleanValue;
+  if('arrayValue' in v)return (v.arrayValue.values||[]).map(val);
+  if('mapValue' in v){var o={},f=v.mapValue.fields||{};Object.keys(f).forEach(function(k){o[k]=val(f[k]);});return o;}return null;}
+function doc(d){var o={};Object.keys(d.fields||{}).forEach(function(k){o[k]=val(d.fields[k]);});o._id=d.name.split('/').pop();return o;}
+function list(path){var acc=[];function page(tok){return hdr().then(function(h){
+    return fetch(BASE+path+'?pageSize=300'+(tok?'&pageToken='+encodeURIComponent(tok):''),{headers:h});})
+  .then(function(r){if(!r.ok)throw new Error(r.status===403?'No access with this Google account':'Read failed ('+r.status+')');return r.json();})
+  .then(function(j){acc=acc.concat((j.documents||[]).map(doc));return j.nextPageToken?page(j.nextPageToken):acc;});}
+  return page(null);}
+
+firebase.auth().onAuthStateChanged(function(u){
+  if(!u){$('login').style.display='flex';$('app').style.display='none';return;}
+  $('login').style.display='none';$('app').style.display='block';start(u);});
+
+function start(u){
+  hdr().then(function(h){return fetch(BASE+'/appSettings/travellers',{headers:h});})
+   .then(function(r){return r.ok?r.json():null;})
+   .then(function(d){var n=d?val((d.fields||{}).names):null;if(Array.isArray(n)&&n.length)TRAV=n;})
+   .catch(function(){})
+   .then(function(){
+     var saved=ls('t69r_who'),mine=EMAIL_WHO[String(u.email||'').toLowerCase()];
+     WHO=(saved&&TRAV.indexOf(saved)>=0)?saved:(mine&&TRAV.indexOf(mine)>=0?mine:TRAV[0]);
+     $('who').innerHTML=TRAV.map(function(n){return '<option'+(n===WHO?' selected':'')+'>'+esc(n)+'</option>';}).join('');
+     return list('/locations');})
+   .then(function(regs){
+     var grp={us:[],ca:[],other:[]};
+     regs.forEach(function(r){if(!r.name)return;(grp[r.type==='us'?'us':r.type==='ca'?'ca':'other']).push(r.name);});
+     var opt=function(lbl,a){return a.length?'<optgroup label="'+lbl+'">'+a.sort().map(function(n){return '<option>'+esc(n)+'</option>';}).join('')+'</optgroup>':'';};
+     $('region').innerHTML='<option value="">— Choose a region —</option>'+opt('USA',grp.us)+opt('Canada',grp.ca)+opt('Other countries',grp.other);
+     var last=ls('t69r_region'),all=grp.us.concat(grp.ca,grp.other);
+     if(last&&all.indexOf(last)>=0){$('region').value=last;loadRegion(last);}
+     else{$('list').innerHTML='<div class="empty">Pick a region above to start rating.</div>';prog();}})
+   .catch(function(e){$('list').innerHTML='<div class="empty">❌ '+esc(e.message)+'<br><br><a href="#" onclick="firebase.auth().signOut();return false" style="color:var(--accent)">Sign in with another account</a></div>';});}
+
+function setWho(n){WHO=n;ls('t69r_who',n);SHOWN={};render();}
+function setMode(m){MODE=m;$('fTodo').className=m==='todo'?'on':'';$('fAll').className=m==='all'?'on':'';SHOWN={};render();}
+
+function loadRegion(name){REGION=name;ls('t69r_region',name);SHOWN={};$('q').value='';
+  if(!name){LOCS=[];render();return;}
+  $('list').innerHTML='<div class="empty">Loading '+esc(name)+'…</div>';
+  list('/locations/'+slug(name)+'/items').then(function(ds){
+    if(REGION!==name)return;
+    LOCS=ds.filter(function(d){return d.name;}).map(function(d){d.ratings=d.ratings||{};return d;})
+      .sort(function(a,b){return a.name.localeCompare(b.name);});
+    render();window.scrollTo(0,0);})
+  .catch(function(e){$('list').innerHTML='<div class="empty">❌ '+esc(e.message)+'</div>';});}
+
+function score(l,n){var v=parseFloat((l.ratings||{})[n]);return (!isNaN(v)&&v>0)?v:0;}
+function web(l){var w=String(l.website||'');return /^https?:\/\//i.test(w)?w:'';}
+function mapsLink(l){if(/^https?:\/\//i.test(String(l.mapsUrl||'')))return l.mapsUrl;
+  if(typeof l.lat==='number'&&typeof l.lng==='number')return 'https://www.google.com/maps/search/?api=1&query='+l.lat+','+l.lng;
+  return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(l.name+' '+(l.address||REGION));}
+
+function prog(){var n=LOCS.length,d=LOCS.filter(function(l){return score(l,WHO);}).length;
+  $('progT').textContent=n?(WHO+': '+d+' of '+n+' rated'):'—';$('progB').style.width=(n?Math.round(d*100/n):0)+'%';}
+
+function render(){prog();
+  if(!REGION){$('list').innerHTML='<div class="empty">Pick a region above to start rating.</div>';return;}
+  var q=$('q').value.trim().toLowerCase();
+  var rows=LOCS.filter(function(l){
+    if(MODE==='todo'&&score(l,WHO)&&!SHOWN[l._id])return false;
+    if(q&&(l.name+' '+(l.category||'')+' '+(l.notes||'')).toLowerCase().indexOf(q)<0)return false;return true;});
+  if(!rows.length){$('list').innerHTML='<div class="empty">'+(MODE==='todo'&&!q?'🎉 All done — '+esc(WHO)+' rated everything in '+esc(REGION)+'.<br>Tap <b>All</b> to see the scores.':'Nothing matches.')+'</div>';return;}
+  $('list').innerHTML=rows.map(card).join('')+'<div class="foot"><a href="/">Open the full app</a> · <a href="#" onclick="firebase.auth().signOut();return false">Sign out</a></div>';}
+
+function card(l){
+  var mine=score(l,WHO),w=web(l),id=esc(l._id);
+  var stars='';for(var n=1;n<=5;n++)stars+='<button class="'+(n<=mine?'on':'')+'" onclick="rate(\''+id+'\','+n+')" aria-label="'+n+' stars">★</button>';
+  var oth=TRAV.filter(function(t){return t!==WHO;}).map(function(t){
+    if(!mine)return esc(t)+': <i>shown after you rate</i>';
+    var s=score(l,t);return esc(t)+': '+(s?'<b>'+'★'.repeat(s)+'</b>':'not yet');}).join('<br>');
+  return '<div class="card'+(mine?' done':'')+'" id="c-'+id+'">'
+   +'<div class="nm">'+(w?'<a class="t" href="'+esc(w)+'" target="_blank" rel="noopener">'+esc(l.name)+'</a>':'<b>'+esc(l.name)+'</b>')
+   +'<a class="map" href="'+esc(mapsLink(l))+'" target="_blank" rel="noopener">📍 Map</a></div>'
+   +'<div class="meta">'+(l.category?'<span class="chip">'+esc(l.category)+'</span>':'')
+   +(l.budget?'<span>$'+esc(l.budget)+'</span>':'')+(l.season&&l.season!=='Year-round'?'<span>'+esc(l.season)+'</span>':'')+'</div>'
+   +(l.notes?'<div class="note" onclick="this.classList.toggle(\'open\')">'+esc(l.notes)+'</div>':'')
+   +'<div class="rate"><div class="stars" id="s-'+id+'">'+stars+'</div><div class="others">'+oth+'</div></div></div>';}
+
+/* write only ratings.<me> — never touches anyone else's score */
+function rate(id,n){
+  var l=LOCS.filter(function(x){return x._id===id;})[0];if(!l)return;
+  var cur=score(l,WHO),next=(cur===n)?0:n,region=REGION;
+  var path='ratings.`'+WHO.replace(/[`\\]/g,'\\$&')+'`';
+  var fields={};if(next){var m={};m[WHO]={integerValue:String(next)};fields.ratings={mapValue:{fields:m}};}
+  var s=$('s-'+id);if(s)s.classList.add('saving');
+  hdr().then(function(h){
+    return fetch(BASE+'/locations/'+slug(region)+'/items/'+encodeURIComponent(id)+'?updateMask.fieldPaths='+encodeURIComponent(path)+'&currentDocument.exists=true',
+      {method:'PATCH',headers:h,body:JSON.stringify({fields:fields})});})
+  .then(function(r){if(!r.ok)throw new Error('Save failed ('+r.status+')');
+    if(next)l.ratings[WHO]=next;else delete l.ratings[WHO];
+    SHOWN[id]=true;
+    if(region!==REGION)return;
+    var c=$('c-'+id);if(c){var tmp=document.createElement('div');tmp.innerHTML=card(l);c.replaceWith(tmp.firstChild);}
+    prog();toast(next?('Saved: '+'★'.repeat(next)):'Rating cleared');})
+  .catch(function(e){if(s)s.classList.remove('saving');toast('❌ '+e.message);});}
+</script>
+</body>
+</html>
