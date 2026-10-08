@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="T1969 Rate">
 <title>T1969 Rate</title>
-<!-- Travellers 1969 · quick rating page · v4 (with app v195) -->
+<!-- Travellers 1969 · quick rating page · v6 (with app v195) -->
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/favicon.png">
 <link rel="manifest" href="/rate.webmanifest">
@@ -74,7 +74,7 @@ main{padding:10px 12px calc(env(safe-area-inset-bottom) + 30px);max-width:720px;
       <div class="brand">⭐ Travellers <span>1969</span> · Rate</div>
       <select class="who" id="who" onchange="setWho(this.value)" title="Who is rating"></select>
     </div>
-    <div class="row"><select class="f" id="region" onchange="loadRegion(this.value)"></select></div>
+    <div class="row"><select class="f" id="country" onchange="setCountry(this.value,true)" style="flex:0 0 40%"></select><select class="f" id="region" onchange="loadRegion(this.value)"></select></div>
     <div class="row">
       <input class="f" id="q" type="search" placeholder="Search…" oninput="render()">
       <div class="seg"><button id="fTodo" class="on" onclick="setMode('todo')">To rate</button><button id="fAll" onclick="setMode('all')">All</button></div>
@@ -95,10 +95,10 @@ window.addEventListener('error',function(e){showErr((e.message||'error')+(e.line
 window.addEventListener('unhandledrejection',function(e){showErr((e.reason&&e.reason.message)||e.reason||'error');});
 setTimeout(function(){var a=document.getElementById('app'),l=document.getElementById('login');
   if(a.style.display==='none'&&l.style.display==='none'){l.style.display='flex';}},8000);
-firebase.initializeApp({apiKey:"AIzaSyAxPJoDENiNy3wA2rFs-MFcJkUwBN1YwK8",authDomain:"travellers-1969-b3a8e.web.app",projectId:"travellers-1969-b3a8e",appId:"1:1096931085234:web:f086132b4daef9944db2ab"});
+firebase.initializeApp({apiKey:"AIzaSyAxPJoDENiNy3wA2rFs-MFcJkUwBN1YwK8",authDomain:(/^travellers-1969-b3a8e\.(web\.app|firebaseapp\.com)$/.test(location.hostname)?location.hostname:"travellers-1969-b3a8e.web.app"),projectId:"travellers-1969-b3a8e",appId:"1:1096931085234:web:f086132b4daef9944db2ab"});
 var BASE='https://firestore.googleapis.com/v1/projects/travellers-1969-b3a8e/databases/(default)/documents';
 var EMAIL_WHO={'sergepilaet@gmail.com':'Serge','elsvrijsen8@gmail.com':'Els'};
-var TRAV=['Els','Serge'],WHO='',LOCS=[],REGION='',MODE='todo',SHOWN={};
+var TREE={},TRAV=['Els','Serge'],WHO='',LOCS=[],REGION='',MODE='todo',SHOWN={};
 
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -143,18 +143,28 @@ function start(u){
      $('who').innerHTML=TRAV.map(function(n){return '<option'+(n===WHO?' selected':'')+'>'+esc(n)+'</option>';}).join('');
      return list('/locations');})
    .then(function(regs){
-     var grp={us:[],ca:[],other:[]};
-     regs.forEach(function(r){if(!r.name)return;r.name=String(r.name);(grp[r.type==='us'?'us':r.type==='ca'?'ca':'other']).push(r.name);});
-     var opt=function(lbl,a){return a.length?'<optgroup label="'+lbl+'">'+a.sort().map(function(n){return '<option>'+esc(n)+'</option>';}).join('')+'</optgroup>':'';};
-     $('region').innerHTML='<option value="">— Choose a region —</option>'+opt('USA',grp.us)+opt('Canada',grp.ca)+opt('Other countries',grp.other);
-     var last=ls('t69r_region'),all=grp.us.concat(grp.ca,grp.other);
-     if(last&&all.indexOf(last)>=0){$('region').value=last;loadRegion(last);}
-     else{$('list').innerHTML='<div class="empty">Pick a region above to start rating.</div>';prog();}})
+     /* same country logic as the main app: us → United States, ca → Canada, else the region's country field */
+     TREE={};
+     regs.forEach(function(r){if(!r.name)return;var nm=String(r.name),c;
+       if(r.type==='us')c='United States';else if(r.type==='ca')c='Canada';
+       else{c=r.country?String(r.country):'';if(!c||c==='USA'||c==='Canada')c=nm;}
+       (TREE[c]=TREE[c]||[]).push(nm);});
+     var cs=Object.keys(TREE).sort(function(a,b){var o=function(x){return x==='United States'?0:x==='Canada'?1:2;};return o(a)-o(b)||a.localeCompare(b);});
+     $('country').innerHTML='<option value="">— Country —</option>'+cs.map(function(c){return '<option>'+esc(c)+'</option>';}).join('');
+     var lastC=ls('t69r_country'),lastR=ls('t69r_region');
+     if(lastC&&TREE[lastC]){$('country').value=lastC;setCountry(lastC,false);
+       if(lastR&&TREE[lastC].indexOf(lastR)>=0){$('region').value=lastR;loadRegion(lastR);return;}}
+     else setCountry('',false);
+     $('list').innerHTML='<div class="empty">Pick a country and region above to start rating.</div>';prog();})
    .catch(function(e){$('list').innerHTML='<div class="empty">❌ '+esc(e.message)+'<br><br><a href="#" onclick="firebase.auth().signOut();return false" style="color:var(--accent)">Sign in with another account</a></div>';});}
 
 function setWho(n){WHO=n;ls('t69r_who',n);SHOWN={};render();}
 function setMode(m){MODE=m;$('fTodo').className=m==='todo'?'on':'';$('fAll').className=m==='all'?'on':'';SHOWN={};render();}
 
+function setCountry(c,user){ls('t69r_country',c||'');var rs=(TREE[c]||[]).slice().sort();
+  $('region').innerHTML='<option value="">'+(c?'— Region —':'— Pick a country first —')+'</option>'+rs.map(function(r){return '<option>'+esc(r)+'</option>';}).join('');
+  $('region').disabled=!c;
+  if(user){if(rs.length===1){$('region').value=rs[0];loadRegion(rs[0]);}else loadRegion('');}}
 function loadRegion(name){REGION=name;ls('t69r_region',name);SHOWN={};$('q').value='';
   if(!name){LOCS=[];render();return;}
   $('list').innerHTML='<div class="empty">Loading '+esc(name)+'…</div>';
@@ -177,7 +187,7 @@ function prog(){var n=LOCS.length,d=LOCS.filter(function(l){return score(l,WHO);
 
 function render(){try{render0();}catch(e){showErr(e.message||e);}}
 function render0(){prog();
-  if(!REGION){$('list').innerHTML='<div class="empty">Pick a region above to start rating.</div>';return;}
+  if(!REGION){$('list').innerHTML='<div class="empty">Pick a country and region above to start rating.</div>';return;}
   var q=$('q').value.trim().toLowerCase();
   var rows=LOCS.filter(function(l){
     if(MODE==='todo'&&score(l,WHO)&&!SHOWN[l._id])return false;
