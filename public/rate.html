@@ -8,9 +8,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="T1969 Rate">
 <title>T1969 Rate</title>
-<!-- Travellers 1969 · quick rating page · v1 (with app v195) -->
+<!-- Travellers 1969 · quick rating page · v3 (with app v195) -->
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/favicon.png">
+<link rel="manifest" href="/rate.webmanifest">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0D1B2E;--surface:#112240;--card:#162B4A;--card2:#1E3459;--border:#2A4E78;--accent:#5BC8F5;--text:#F0F8FF;--muted:#7EAAC8;--star:#F59E0B;--green:#10B981}
@@ -37,6 +38,7 @@ select.f,input.f{flex:1;min-width:0;background:var(--card);border:1px solid var(
 main{padding:10px 12px calc(env(safe-area-inset-bottom) + 30px);max-width:720px;margin:0 auto}
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 13px;margin-bottom:10px}
 .card.done{border-color:rgba(16,185,129,.45)}
+.card.bye{transition:opacity .35s,max-height .35s .3s,margin .35s .3s,padding .35s .3s;opacity:0;max-height:0!important;margin:0;padding-top:0;padding-bottom:0;overflow:hidden}
 .nm{display:flex;align-items:flex-start;gap:8px}
 .nm a.t,.nm b{flex:1;font-size:16px;font-weight:700;color:var(--text);text-decoration:none;line-height:1.3}
 .nm a.t{color:var(--accent)}
@@ -86,6 +88,13 @@ main{padding:10px 12px calc(env(safe-area-inset-bottom) + 30px);max-width:720px;
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script>
+function showErr(m){var el=document.getElementById('list');var app=document.getElementById('app'),lg=document.getElementById('login');
+  if(app&&app.style.display==='none'&&lg&&lg.style.display==='none'){app.style.display='block';}
+  if(el)el.innerHTML='<div class="empty">\u274C Something went wrong:<br><code style="font-size:12px;color:#F87171;word-break:break-word">'+String(m).replace(/[<>&]/g,'')+'</code><br><br><button class="big" onclick="location.reload()">Reload</button></div>';}
+window.addEventListener('error',function(e){showErr((e.message||'error')+(e.lineno?(' (line '+e.lineno+')'):''));});
+window.addEventListener('unhandledrejection',function(e){showErr((e.reason&&e.reason.message)||e.reason||'error');});
+setTimeout(function(){var a=document.getElementById('app'),l=document.getElementById('login');
+  if(a.style.display==='none'&&l.style.display==='none'){l.style.display='flex';}},8000);
 firebase.initializeApp({apiKey:"AIzaSyAxPJoDENiNy3wA2rFs-MFcJkUwBN1YwK8",authDomain:"travellers-1969-b3a8e.web.app",projectId:"travellers-1969-b3a8e",appId:"1:1096931085234:web:f086132b4daef9944db2ab"});
 var BASE='https://firestore.googleapis.com/v1/projects/travellers-1969-b3a8e/databases/(default)/documents';
 var EMAIL_WHO={'sergepilaet@gmail.com':'Serge','elsvrijsen8@gmail.com':'Els'};
@@ -113,6 +122,7 @@ function list(path){var acc=[];function page(tok){return hdr().then(function(h){
   .then(function(j){acc=acc.concat((j.documents||[]).map(doc));return j.nextPageToken?page(j.nextPageToken):acc;});}
   return page(null);}
 
+firebase.auth().getRedirectResult().catch(function(e){toast('Sign-in: '+(e.message||e));});
 firebase.auth().onAuthStateChanged(function(u){
   if(!u){$('login').style.display='flex';$('app').style.display='none';return;}
   $('login').style.display='none';$('app').style.display='block';start(u);});
@@ -129,7 +139,7 @@ function start(u){
      return list('/locations');})
    .then(function(regs){
      var grp={us:[],ca:[],other:[]};
-     regs.forEach(function(r){if(!r.name)return;(grp[r.type==='us'?'us':r.type==='ca'?'ca':'other']).push(r.name);});
+     regs.forEach(function(r){if(!r.name)return;r.name=String(r.name);(grp[r.type==='us'?'us':r.type==='ca'?'ca':'other']).push(r.name);});
      var opt=function(lbl,a){return a.length?'<optgroup label="'+lbl+'">'+a.sort().map(function(n){return '<option>'+esc(n)+'</option>';}).join('')+'</optgroup>':'';};
      $('region').innerHTML='<option value="">— Choose a region —</option>'+opt('USA',grp.us)+opt('Canada',grp.ca)+opt('Other countries',grp.other);
      var last=ls('t69r_region'),all=grp.us.concat(grp.ca,grp.other);
@@ -145,7 +155,8 @@ function loadRegion(name){REGION=name;ls('t69r_region',name);SHOWN={};$('q').val
   $('list').innerHTML='<div class="empty">Loading '+esc(name)+'…</div>';
   list('/locations/'+slug(name)+'/items').then(function(ds){
     if(REGION!==name)return;
-    LOCS=ds.filter(function(d){return d.name;}).map(function(d){d.ratings=d.ratings||{};return d;})
+    LOCS=ds.filter(function(d){return d.name;}).map(function(d){d.name=String(d.name);d.notes=d.notes==null?'':String(d.notes);d.category=d.category==null?'':String(d.category);
+        d.ratings=(d.ratings&&typeof d.ratings==='object')?d.ratings:{};return d;})
       .sort(function(a,b){return a.name.localeCompare(b.name);});
     render();window.scrollTo(0,0);})
   .catch(function(e){$('list').innerHTML='<div class="empty">❌ '+esc(e.message)+'</div>';});}
@@ -159,7 +170,8 @@ function mapsLink(l){if(/^https?:\/\//i.test(String(l.mapsUrl||'')))return l.map
 function prog(){var n=LOCS.length,d=LOCS.filter(function(l){return score(l,WHO);}).length;
   $('progT').textContent=n?(WHO+': '+d+' of '+n+' rated'):'—';$('progB').style.width=(n?Math.round(d*100/n):0)+'%';}
 
-function render(){prog();
+function render(){try{render0();}catch(e){showErr(e.message||e);}}
+function render0(){prog();
   if(!REGION){$('list').innerHTML='<div class="empty">Pick a region above to start rating.</div>';return;}
   var q=$('q').value.trim().toLowerCase();
   var rows=LOCS.filter(function(l){
@@ -173,7 +185,7 @@ function card(l){
   var stars='';for(var n=1;n<=5;n++)stars+='<button class="'+(n<=mine?'on':'')+'" onclick="rate(\''+id+'\','+n+')" aria-label="'+n+' stars">★</button>';
   var oth=TRAV.filter(function(t){return t!==WHO;}).map(function(t){
     if(!mine)return esc(t)+': <i>shown after you rate</i>';
-    var s=score(l,t);return esc(t)+': '+(s?'<b>'+'★'.repeat(s)+'</b>':'not yet');}).join('<br>');
+    var s=score(l,t);return esc(t)+': '+(s?'<b>'+'★'.repeat(Math.max(1,Math.min(5,Math.round(s))))+'</b>':'not yet');}).join('<br>');
   return '<div class="card'+(mine?' done':'')+'" id="c-'+id+'">'
    +'<div class="nm">'+(w?'<a class="t" href="'+esc(w)+'" target="_blank" rel="noopener">'+esc(l.name)+'</a>':'<b>'+esc(l.name)+'</b>')
    +'<a class="map" href="'+esc(mapsLink(l))+'" target="_blank" rel="noopener">📍 Map</a></div>'
@@ -197,7 +209,13 @@ function rate(id,n){
     SHOWN[id]=true;
     if(region!==REGION)return;
     var c=$('c-'+id);if(c){var tmp=document.createElement('div');tmp.innerHTML=card(l);c.replaceWith(tmp.firstChild);}
-    prog();toast(next?('Saved: '+'★'.repeat(next)):'Rating cleared');})
+    prog();toast(next?('Saved: '+'★'.repeat(next)):'Rating cleared');
+    /* in To rate: show the other score for a moment, then the card leaves the list */
+    if(next&&MODE==='todo')setTimeout(function(){
+      if(MODE!=='todo'||region!==REGION||!score(l,WHO))return;
+      var el=$('c-'+id);delete SHOWN[id];if(!el)return;
+      el.style.maxHeight=el.offsetHeight+'px';void el.offsetHeight;el.classList.add('bye');
+      setTimeout(function(){el.remove();if(!document.querySelector('#list .card'))render();},800);},1600);})
   .catch(function(e){if(s)s.classList.remove('saving');toast('❌ '+e.message);});}
 </script>
 </body>

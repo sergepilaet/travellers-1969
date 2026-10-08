@@ -1,0 +1,12 @@
+{
+  "name": "Travellers 1969 · Rate",
+  "short_name": "T1969 Rate",
+  "start_url": "/rate.html",
+  "scope": "/rate.html",
+  "display": "standalone",
+  "background_color": "#0D1B2E",
+  "theme_color": "#0D1B2E",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
