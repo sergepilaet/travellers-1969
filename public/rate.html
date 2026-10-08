@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="background:#0D1B2E">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -8,11 +8,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="T1969 Rate">
 <title>T1969 Rate</title>
-<!-- Travellers 1969 · quick rating page · v3 (with app v195) -->
+<!-- Travellers 1969 · quick rating page · v4 (with app v195) -->
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/favicon.png">
 <link rel="manifest" href="/rate.webmanifest">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
 :root{--bg:#0D1B2E;--surface:#112240;--card:#162B4A;--card2:#1E3459;--border:#2A4E78;--accent:#5BC8F5;--text:#F0F8FF;--muted:#7EAAC8;--star:#F59E0B;--green:#10B981}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -61,7 +61,7 @@ main{padding:10px 12px calc(env(safe-area-inset-bottom) + 30px);max-width:720px;
 .foot a{color:var(--muted)}
 </style>
 </head>
-<body>
+<body style="background:#0D1B2E">
 <div id="login" style="display:none">
   <h1>Travellers <span style="color:var(--accent)">1969</span></h1>
   <p>Quick rating page. Sign in once with your Google account — this device remembers you after that.</p>
@@ -122,6 +122,11 @@ function list(path){var acc=[];function page(tok){return hdr().then(function(h){
   .then(function(j){acc=acc.concat((j.documents||[]).map(doc));return j.nextPageToken?page(j.nextPageToken):acc;});}
   return page(null);}
 
+window.addEventListener('pageshow',function(e){
+  var a=document.getElementById('app'),l=document.getElementById('login');
+  if(e.persisted&&a&&l&&a.style.display==='none'&&l.style.display==='none')location.reload();});
+document.addEventListener('visibilitychange',function(){if(document.visibilityState!=='visible')return;
+  var a=document.getElementById('app');if(a&&a.style.display==='block'&&REGION&&!document.querySelector('#list .card,#list .empty'))render();});
 firebase.auth().getRedirectResult().catch(function(e){toast('Sign-in: '+(e.message||e));});
 firebase.auth().onAuthStateChanged(function(u){
   if(!u){$('login').style.display='flex';$('app').style.display='none';return;}
