@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#0D1B2E">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0D1B2E">
+<title>Travellers 1969 · Follow our trips</title>
+<meta name="description" content="Follow Serge & Els — Travellers 1969 — on the road.">
+<meta property="og:title" content="Travellers 1969 · Follow our trips">
+<meta property="og:image" content="/pin-travellers.png">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/pin-travellers.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<!-- Travellers 1969 · public follower page · v1 (with app v198) -->
+<style>
+:root{--ink:#0D1B2E;--deep:#112240;--card:#162B4A;--line:#2A4E78;--sky:#5BC8F5;--sand:#D8B07A;--text:#F0F8FF;--muted:#8FB3CF;--green:#10B981}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--ink);color:var(--text);font-family:'Outfit',system-ui,sans-serif}
+a{color:var(--sky)}
+.top{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 8px) 14px 8px;background:rgba(13,27,46,.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(91,200,245,.18)}
+.top img{width:38px;height:38px;border-radius:50%}
+.word{font-family:'Dancing Script',cursive;font-size:26px;line-height:1;color:#fff;text-decoration:none;white-space:nowrap}
+.word span{color:var(--sky)}
+.soc{margin-left:auto;display:flex;gap:6px}
+.soc a{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--line)}
+.soc svg{width:17px;height:17px;fill:var(--text)}
+.soc a:hover{border-color:var(--sky)}
+/* home */
+#home{display:none;padding:calc(env(safe-area-inset-top) + 76px) 16px 40px;max-width:980px;margin:0 auto}
+.hero{display:flex;align-items:center;gap:22px;margin:10px 0 26px}
+.hero img{width:118px;height:118px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 4px rgba(216,176,122,.35)}
+.hero h1{margin:0;font-family:'Dancing Script',cursive;font-size:46px;line-height:1.05;font-weight:700}
+.hero p{margin:6px 0 0;color:var(--muted);font-size:16px;line-height:1.5;max-width:46ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.trip{display:block;text-decoration:none;color:var(--text);background:var(--deep);border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:border-color .15s}
+.trip:hover{border-color:var(--sky)}
+.trip svg.mini{display:block;width:100%;height:150px;background:radial-gradient(120% 90% at 30% 20%,#1B3760,#0F213C)}
+.trip .b{padding:12px 14px 14px}
+.trip h3{margin:0 0 4px;font-size:18px}
+.chip{display:inline-block;font-size:12px;font-weight:600;border-radius:20px;padding:2px 10px;margin-bottom:6px}
+.chip.live{background:rgba(16,185,129,.16);color:#4ADE9F}
+.chip.done{background:rgba(91,200,245,.14);color:var(--sky)}
+.chip.soon{background:rgba(216,176,122,.18);color:var(--sand)}
+.trip .m{font-size:13px;color:var(--muted)}
+.empty{color:var(--muted);text-align:center;padding:50px 10px;font-size:16px;line-height:1.6}
+/* trip */
+#trip{display:none}
+#map{position:fixed;top:var(--hdr,62px);bottom:0;left:400px;right:0;background:#0F213C}
+#panel{position:fixed;top:0;bottom:0;left:0;width:400px;overflow:auto;padding:calc(env(safe-area-inset-top) + 70px) 18px 30px;background:var(--ink);border-right:1px solid var(--line);z-index:500}
+.back{font-size:13px;color:var(--muted);text-decoration:none}
+.back:hover{color:var(--sky)}
+#panel h2{margin:8px 0 2px;font-size:26px;line-height:1.15}
+.dates{color:var(--muted);font-size:13px;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0 16px}
+.stat{background:var(--deep);border:1px solid var(--line);border-radius:12px;padding:9px 6px;text-align:center}
+.stat b{display:block;font-size:20px;line-height:1.1}
+.stat span{font-size:11px;color:var(--muted)}
+.here{display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(91,200,245,.16),rgba(216,176,122,.12));border:1px solid rgba(91,200,245,.35);border-radius:14px;padding:12px;margin-bottom:16px;cursor:pointer}
+.here img{width:46px;height:46px;border-radius:50%}
+.here small{display:block;color:var(--muted);font-size:12px}
+.here b{font-size:17px}
+h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
+.next{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer}
+.num{width:24px;height:24px;border-radius:50%;border:2px solid var(--sand);color:var(--sand);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tl{position:relative;padding-left:20px}
+.tl::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:rgba(91,200,245,.3)}
+.st{position:relative;padding:4px 0 14px;cursor:pointer}
+.st::before{content:'';position:absolute;left:-19px;top:9px;width:12px;height:12px;border-radius:50%;background:var(--sky);border:2px solid var(--ink)}
+.st .n{font-weight:600;font-size:15px}
+.st .s{font-size:12px;color:var(--muted)}
+.posts{margin-top:6px;display:flex;flex-direction:column;gap:5px}
+.post{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);background:var(--deep);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px}
+.post:hover{border-color:var(--sky)}
+.post svg{width:16px;height:16px;fill:var(--text);flex-shrink:0}
+.post .pd{margin-left:auto;color:var(--muted);font-size:11px;white-space:nowrap}
+.foot{margin-top:24px;font-size:12px;color:var(--muted);line-height:1.6}
+/* map bits */
+.pulse{width:58px;height:58px;position:relative}
+.pulse img{position:absolute;inset:6px;width:46px;height:46px;border-radius:50%;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+.pulse::before{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(91,200,245,.45);animation:pl 2s ease-out infinite}
+@keyframes pl{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.5);opacity:0}}
+@media (prefers-reduced-motion:reduce){.pulse::before{animation:none}}
+.vdot{width:14px;height:14px;border-radius:50%;background:var(--sky);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.ndot{width:24px;height:24px;border-radius:50%;background:#0D1B2E;border:2px solid var(--sand);color:var(--sand);font:700 12px Outfit,sans-serif;display:flex;align-items:center;justify-content:center}
+.leaflet-popup-content-wrapper{background:var(--ink);color:var(--text);border-radius:14px;border:1px solid var(--line)}
+.leaflet-popup-tip{background:var(--ink)}
+.leaflet-popup-content{margin:12px 14px;font-family:Outfit,sans-serif;min-width:200px}
+.leaflet-container a.leaflet-popup-close-button{color:var(--muted)}
+.pp .n{font-weight:700;font-size:15px}.pp .s{font-size:12px;color:var(--muted);margin-bottom:6px}
+.leaflet-control-attribution{background:rgba(13,27,46,.75)!important;color:var(--muted)!important}
+.leaflet-control-attribution a{color:var(--sky)!important}
+/* phone: map on top, panel below as a sheet */
+@media (max-width:820px){
+  .word{font-size:22px}
+  .soc a{width:30px;height:30px}.soc svg{width:15px;height:15px}
+  #map{left:0;bottom:auto;top:var(--hdr,56px);height:calc(52vh - var(--hdr,56px))}
+  #panel{position:relative;top:auto;width:auto;margin-top:calc(52vh - 18px);border-right:none;border-radius:18px 18px 0 0;padding:16px 16px 40px;min-height:50vh;box-shadow:0 -10px 30px rgba(0,0,0,.4)}
+  #panel::before{content:'';display:block;width:40px;height:4px;border-radius:3px;background:var(--line);margin:0 auto 10px}
+  .hero{flex-direction:column;text-align:center}
+  .hero h1{font-size:38px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="/pin-travellers.png" alt="Serge & Els">
+  <a class="word" href="/follow">Travellers <span>1969</span></a>
+  <nav class="soc" id="soc"></nav>
+</header>
+
+<main id="home">
+  <section class="hero">
+    <img src="/pin-travellers.png" alt="Serge and Els">
+    <div><h1>Follow our trips</h1>
+    <p>Two Belgians born in 1969, on the road through the USA and Canada. Pick a trip to see where we've been, where we're heading next, and the posts from every stop.</p></div>
+  </section>
+  <div class="grid" id="trips"><div class="empty">Loading…</div></div>
+</main>
+
+<main id="trip">
+  <div id="map"></div>
+  <aside id="panel"><div class="empty">Loading…</div></aside>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+function setHdr(){var h=document.querySelector('.top');if(h)document.documentElement.style.setProperty('--hdr',h.offsetHeight+'px');}
+setHdr();window.addEventListener('resize',function(){setHdr();if(window.map&&map.invalidateSize)map.invalidateSize();});
+var BASE='https://firestore.googleapis.com/v1/projects/travellers-1969-b3a8e/databases/(default)/documents/public/';
+var KEY='AIzaSyAxPJoDENiNy3wA2rFs-MFcJkUwBN1YwK8';
+var SOC=[['ig','Instagram','https://www.instagram.com/travellers_1969/'],['tt','TikTok','https://www.tiktok.com/@travellers_1969'],
+         ['yt','YouTube','https://www.youtube.com/@Travellers_1969'],['fb','Facebook','https://www.facebook.com/travellers1969/']];
+var ICON={
+ ig:'<svg viewBox="0 0 24 24"><path d="M12 7a5 5 0 100 10 5 5 0 000-10zm0 8.2a3.2 3.2 0 110-6.4 3.2 3.2 0 010 6.4zM17.3 5.5a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4zM16.5 2h-9A5.5 5.5 0 002 7.5v9A5.5 5.5 0 007.5 22h9a5.5 5.5 0 005.5-5.5v-9A5.5 5.5 0 0016.5 2zm3.7 14.5a3.7 3.7 0 01-3.7 3.7h-9a3.7 3.7 0 01-3.7-3.7v-9a3.7 3.7 0 013.7-3.7h9a3.7 3.7 0 013.7 3.7z"/></svg>',
+ tt:'<svg viewBox="0 0 24 24"><path d="M16.6 2h-3.4v13.4a2.9 2.9 0 11-2.9-2.9c.3 0 .6 0 .9.1V9.1a6.3 6.3 0 105.4 6.3V8.6a7.9 7.9 0 004.4 1.4V6.6A4.5 4.5 0 0116.6 2z"/></svg>',
+ yt:'<svg viewBox="0 0 24 24"><path d="M21.6 7.2a2.6 2.6 0 00-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4a2.6 2.6 0 00-1.8 1.8C2 8.8 2 12 2 12s0 3.2.4 4.8a2.6 2.6 0 001.8 1.8c1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4a2.6 2.6 0 001.8-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15.1V8.9l5.2 3.1z"/></svg>',
+ fb:'<svg viewBox="0 0 24 24"><path d="M13.5 22v-8.2h2.8l.4-3.2h-3.2V8.5c0-.9.3-1.6 1.6-1.6h1.7V4.1a22 22 0 00-2.5-.1c-2.5 0-4.2 1.5-4.2 4.3v2.4H7.3v3.2h2.8V22z"/></svg>',
+ web:'<svg viewBox="0 0 24 24"><path d="M10.6 13.4a1 1 0 001.4 1.4l5.7-5.6V12a1 1 0 002 0V6.8a1 1 0 00-1-1H13.5a1 1 0 000 2h2.8zM18 15a1 1 0 00-1 1v2H6V7h2a1 1 0 000-2H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-2a1 1 0 00-1-1z"/></svg>'};
+var PNAME={ig:'Instagram',tt:'TikTok',yt:'YouTube',fb:'Facebook',web:'Link'};
+function $(i){return document.getElementById(i);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function safeUrl(u){u=String(u||'');return /^https:\/\//i.test(u)?u:'#';}
+function fmtD(d){if(!d)return '';var x=new Date(d+'T12:00:00');return isNaN(x)?d:x.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function fmtShort(d){if(!d)return '';var x=new Date(d+'T12:00:00');return isNaN(x)?d:x.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function num(n){return (n||0).toLocaleString('en-US');}
+function load(doc){return fetch(BASE+encodeURIComponent(doc)+'?key='+KEY).then(function(r){if(r.status===404)return null;if(!r.ok)throw new Error(r.status);return r.json();})
+  .then(function(d){if(!d||!d.fields||!d.fields.json)return null;return JSON.parse(d.fields.json.stringValue);});}
+$('soc').innerHTML=SOC.map(function(s){return '<a href="'+s[2]+'" target="_blank" rel="noopener" aria-label="'+s[1]+'" title="'+s[1]+'">'+ICON[s[0]]+'</a>';}).join('');
+var CHIP={live:['live','🟢 On the road now'],done:['done','✅ Trip completed'],soon:['soon','🔜 Coming soon']};
+function dateRange(t){if(t.status==='soon')return 'Starting soon';if(t.status==='live')return 'Since '+fmtD(t.from);return fmtD(t.from)+' – '+fmtD(t.to);}
+
+/* ---------- home: all published trips ---------- */
+function miniSvg(line){if(!line||line.length<2)return '<svg class="mini"></svg>';
+  var a=90,b=180,c=-90,d=-180;line.forEach(function(p){a=Math.min(a,p[0]);c=Math.max(c,p[0]);b=Math.min(b,p[1]);d=Math.max(d,p[1]);});
+  var W=300,H=150,pad=18,k=Math.cos((a+c)/2*Math.PI/180),w=(d-b)*k||1,h=(c-a)||1,s=Math.min((W-2*pad)/w,(H-2*pad)/h);
+  var ox=(W-w*s)/2,oy=(H-h*s)/2;
+  var pts=line.map(function(p){return (ox+(p[1]-b)*k*s).toFixed(1)+','+(oy+(c-p[0])*s).toFixed(1);});
+  var last=pts[pts.length-1].split(','),first=pts[0].split(',');
+  return '<svg class="mini" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" aria-hidden="true">'
+   +'<polyline points="'+pts.join(' ')+'" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>'
+   +'<polyline points="'+pts.join(' ')+'" fill="none" stroke="#5BC8F5" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'
+   +'<circle cx="'+first[0]+'" cy="'+first[1]+'" r="4.5" fill="#D8B07A"/><circle cx="'+last[0]+'" cy="'+last[1]+'" r="4.5" fill="#fff" stroke="#5BC8F5" stroke-width="2"/></svg>';}
+function showHome(){$('home').style.display='block';
+  load('index').then(function(list){list=(list||[]).filter(function(t){return t&&t.slug;});
+    if(!list.length){$('trips').innerHTML='<div class="empty">No trips shared yet — follow us on the socials above and check back soon.</div>';return;}
+    var rank={live:0,soon:1,done:2};
+    list.sort(function(x,y){return (rank[x.status]-rank[y.status])||String(y.from||'').localeCompare(String(x.from||''));});
+    $('trips').innerHTML=list.map(function(t){var c=CHIP[t.status]||CHIP.soon,s=t.stats||{};
+      return '<a class="trip" href="/follow/'+encodeURIComponent(t.slug)+'">'+miniSvg(t.line)+'<div class="b"><span class="chip '+c[0]+'">'+c[1]+'</span>'
+        +'<h3>'+esc(t.name)+'</h3><div class="m">'+esc(dateRange(t))+'</div>'
+        +'<div class="m" style="margin-top:4px">'+(s.visited||0)+' of '+(s.total||0)+' stops'+(s.km?(' · '+num(s.km)+' km'):'')+(s.states?(' · '+s.states+' state'+(s.states===1?'':'s')):'')+'</div></div></a>';}).join('');
+  }).catch(function(){$('trips').innerHTML='<div class="empty">Could not load the trips. Please try again in a moment.</div>';});}
+
+/* ---------- one trip ---------- */
+var map,marks=[];
+function divIcon(html,size){return L.divIcon({html:html,className:'',iconSize:[size,size],iconAnchor:[size/2,size/2],popupAnchor:[0,-size/2]});}
+function postsHtml(p){if(!p||!p.length)return '';
+  return '<div class="posts">'+p.slice().sort(function(a,b){return String(b.d||'').localeCompare(String(a.d||''));}).map(function(x){
+    return '<a class="post" href="'+esc(safeUrl(x.u))+'" target="_blank" rel="noopener">'+(ICON[x.t]||ICON.web)+'<span>'+esc(x.l||PNAME[x.t]||'Post')+'</span><span class="pd">'+esc(fmtShort(x.d))+'</span></a>';}).join('')+'</div>';}
+function showTrip(slug){$('trip').style.display='block';
+  map=L.map('map',{zoomControl:true,attributionControl:true,worldCopyJump:true}).setView([44,-100],4);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:18,subdomains:'abcd',
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'}).addTo(map);
+  load(slug).then(function(t){
+    if(!t){$('panel').innerHTML='<a class="back" href="/follow">← All trips</a><div class="empty">This trip isn’t shared (any more).<br><a href="/follow">See our other trips</a></div>';return;}
+    document.title=t.name+' · Travellers 1969';
+    var s=t.stats||{},c=CHIP[t.status]||CHIP.soon;
+    if(t.ahead&&t.ahead.length>1){L.polyline(t.ahead,{color:'#ffffff',weight:6,opacity:.55}).addTo(map);
+      L.polyline(t.ahead,{color:'#B08250',weight:3,opacity:.95,dashArray:'2 8',lineCap:'round'}).addTo(map);}
+    if(t.done&&t.done.length>1){L.polyline(t.done,{color:'#ffffff',weight:9,opacity:.95}).addTo(map);
+      L.polyline(t.done,{color:'#1D8FC4',weight:5,opacity:1}).addTo(map);}
+    var byKey={};
+    (t.visited||[]).forEach(function(v,k){
+      var m=L.marker([v.a,v.o],{icon:divIcon('<div class="vdot"></div>',14),keyboard:false}).addTo(map)
+        .bindPopup('<div class="pp"><div class="n">'+esc(v.n)+'</div><div class="s">'+esc(v.s)+(v.d?(' · '+esc(fmtD(v.d))):'')+'</div>'+(v.p&&v.p.length?postsHtml(v.p):'<div class="s">Posts coming soon</div>')+'</div>',{maxWidth:280});
+      byKey['v'+k]=m;});
+    (t.next||[]).forEach(function(n,k){
+      var m=L.marker([n.a,n.o],{icon:divIcon('<div class="ndot">'+(k+1)+'</div>',24)}).addTo(map)
+        .bindPopup('<div class="pp"><div class="n">'+esc(n.n)+'</div><div class="s">'+esc(n.s)+' · coming up</div></div>');
+      byKey['n'+k]=m;});
+    if(t.here){byKey.here=L.marker([t.here.a,t.here.o],{icon:divIcon('<div class="pulse"><img src="/pin-travellers.png" alt=""></div>',58),zIndexOffset:1000}).addTo(map)
+      .bindPopup('<div class="pp"><div class="n">'+(t.status==='done'?'Last stop':'We’re here')+'</div><div class="s">'+esc(t.here.n)+', '+esc(t.here.s)+'</div></div>');}
+    if(t.bbox)map.fitBounds([[t.bbox[0],t.bbox[1]],[t.bbox[2],t.bbox[3]]],{padding:[30,30]});
+    var mi=Math.round((s.km||0)/1.609344);
+    var h='<a class="back" href="/follow">← All trips</a><h2>'+esc(t.name)+'</h2>'
+      +'<span class="chip '+c[0]+'">'+c[1]+'</span><div class="dates">'+esc(dateRange(t))+'</div>'
+      +'<div class="stats"><div class="stat"><b>'+num(s.days)+'</b><span>'+(s.days===1?'day':'days')+'</span></div>'
+      +'<div class="stat"><b>'+num(s.km)+'</b><span>km · '+num(mi)+' mi</span></div>'
+      +'<div class="stat"><b>'+num(s.states)+'</b><span>'+(s.states===1?'state':'states')+'</span></div>'
+      +'<div class="stat"><b>'+num(s.visited)+'<small style="font-size:12px;color:var(--muted)">/'+num(s.total)+'</small></b><span>stops</span></div></div>';
+    if(t.here)h+='<div class="here" data-k="here"><img src="/pin-travellers.png" alt=""><div><small>'+(t.status==='done'?'Last stop':'We’re here')+'</small><b>'+esc(t.here.n)+'</b><small>'+esc(t.here.s)+'</small></div></div>';
+    if(t.next&&t.next.length)h+='<h4>Coming up</h4>'+t.next.map(function(n,k){return '<div class="next" data-k="n'+k+'"><span class="num">'+(k+1)+'</span><span>'+esc(n.n)+' <span style="color:var(--muted);font-size:12px">'+esc(n.s)+'</span></span></div>';}).join('');
+    var vis=(t.visited||[]).map(function(v,k){return {v:v,k:k};}).reverse();
+    if(vis.length)h+='<h4>Where we’ve been</h4><div class="tl">'+vis.map(function(o){var v=o.v;
+      return '<div class="st" data-k="v'+o.k+'"><div class="n">'+esc(v.n)+'</div><div class="s">'+esc(v.s)+(v.d?(' · '+esc(fmtD(v.d))):'')+(v.p&&v.p.length?(' · '+v.p.length+' post'+(v.p.length===1?'':'s')):'')+'</div>'+postsHtml(v.p)+'</div>';}).join('')+'</div>';
+    else if(t.status==='soon')h+='<div class="empty" style="padding:24px 0">The trip hasn’t started yet. The dashed line is the plan — follow us to see it come alive.</div>';
+    h+='<div class="foot">Updated '+esc(new Date(t.updated).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+'<br>Follow along on '
+      +SOC.map(function(x){return '<a href="'+x[2]+'" target="_blank" rel="noopener">'+x[1]+'</a>';}).join(' · ')+'</div>';
+    $('panel').innerHTML=h;
+    $('panel').querySelectorAll('[data-k]').forEach(function(el){el.addEventListener('click',function(e){
+      if(e.target.closest('a'))return;var m=byKey[el.getAttribute('data-k')];if(!m)return;
+      map.flyTo(m.getLatLng(),Math.max(map.getZoom(),9),{duration:.8});setTimeout(function(){m.openPopup();},850);
+      if(window.innerWidth<=820)window.scrollTo({top:0,behavior:'smooth'});});});
+  }).catch(function(){$('panel').innerHTML='<a class="back" href="/follow">← All trips</a><div class="empty">Could not load this trip. Please try again in a moment.</div>';});}
+
+var parts=location.pathname.replace(/\/+$/,'').split('/'),slug=parts[1]==='follow'&&parts[2]?decodeURIComponent(parts[2]):(new URLSearchParams(location.search).get('trip')||'');
+if(slug&&/^[a-z0-9-]{1,40}$/.test(slug))showTrip(slug);else showHome();
+</script>
+</body>
+</html>

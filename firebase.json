@@ -16,6 +16,16 @@
           }
         ]
       }
+    ],
+    "rewrites": [
+      {
+        "source": "/follow",
+        "destination": "/follow.html"
+      },
+      {
+        "source": "/follow/**",
+        "destination": "/follow.html"
+      }
     ]
   },
   "functions": {

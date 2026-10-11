@@ -5,5 +5,9 @@ service cloud.firestore {
       allow read, write: if request.auth != null &&
         request.auth.token.email in ['sergepilaet@gmail.com','elsvrijsen8@gmail.com'];
     }
+    // public follower map: anyone may read, only the two of you may write (rule above)
+    match /public/{doc} {
+      allow read: if true;
+    }
   }
 }
