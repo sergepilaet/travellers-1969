@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v204  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v205  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -566,7 +566,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v204: Firestore preview mode ===== */
+/* ===== F0 v205: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{localStorage.setItem('t69_datasource','firestore');return true;}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -640,7 +640,7 @@ function t69RefreshCats(){try{var src=(typeof allLocations!=='undefined'&&allLoc
  try{applyFilters();}catch(e){}
  try{var tb=document.getElementById('t69Tbl');if(tb&&tb.classList.contains('open')&&typeof t69RenderTable==='function')t69RenderTable();}catch(e){}}
 function t69TripCtx(){try{return localStorage.getItem('t69_tripctx')||'A couple travelling in a Ford F-150 with foldable e-bikes, tent camping and a National Parks pass. Mid-range budget, unique experiences over luxury. Already visited (skip these): San Francisco, Yosemite, South Rim Grand Canyon, Antelope Canyon, Monument Valley.';}catch(e){return'';}}
-/* v204: ONE place for the import columns + rules. Change the structure here and every AI prompt follows. */
+/* v205: ONE place for the import columns + rules. Change the structure here and every AI prompt follows. */
 var T69_IMPORT_COLS=['Name','Website','Coordinates','Address','(blank)','(blank)','(blank)','Category','Status','Budget','Season','Notes','Reservation','Subcategory','Region','Google rating','Google reviews'];
 var T69_FOCUS='Focus on: bizarre roadside attractions, quirky museums, ghost towns, aviation experiences, unique non-chain restaurants, scenic routes, state parks. Naturist resorts only if family-friendly (AANR).';
 function t69ImportSpec(o){o=o||{};
@@ -1760,7 +1760,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v204 ===== */
+/* ===== end F0 v205 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1771,12 +1771,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v204</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v205</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v204</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v205</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2040,6 +2040,7 @@ function signIn(){
       </div>
       <div style="padding:2px 8px 4px"><button class="route-btn" onclick="t69LoadAlongRoute()" style="width:100%;font-size:11px;padding:6px 4px" title="Show every location in your database near this route, across all states">🔎 What's along this route — from our database</button>
         <button class="route-btn" onclick="t69FollowDlg()" style="width:100%;font-size:11px;padding:6px 4px;margin-top:4px" title="Public map for your followers">📢 Share with followers</button>
+        <button class="route-btn" onclick="t69RestoreDatesFromCalendar()" style="width:100%;font-size:11px;padding:6px 4px;margin-top:4px" title="Put back planned dates from the calendar events this app created">📅 Restore dates from Google Calendar</button>
         <button id="t69ViewX2" class="route-btn" onclick="t69CloseAlongRoute()" style="display:none;width:100%;font-size:11px;padding:6px 4px;margin-top:4px;border-color:#E8590C;color:#E8590C">✕ Close along-route results</button></div>
       <div class="route-actions">
         <button class="route-btn route-btn-draw" onclick="drawAllSegments()">🗺️ Draw</button>
@@ -2222,7 +2223,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v204</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v205</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2577,7 +2578,7 @@ window.t69LoadAlongRoute=async function(){
   var regs={};hits.forEach(function(l){regs[l.state]=1;});
   toast('\u2705 '+hits.length+' locations within '+km+' km of the route, in '+Object.keys(regs).length+' regions'+(noPin?' ('+noPin+' without a map pin could not be checked)':''));};
 
-/* v204: leave the along-route view */
+/* v205: leave the along-route view */
 window.t69InAlongView=function(){return /Along route/.test(String((typeof currentState!=='undefined'&&currentState)||''));};
 window.t69SyncViewX=function(){var on=t69InAlongView();
   ['t69ViewX','t69ViewX2'].forEach(function(id){var b=document.getElementById(id);if(b)b.style.display=on?'':'none';});
@@ -3826,10 +3827,13 @@ function fsList(path){
     });
   });
 }
-function fsPatch(path,obj){
+function fsPatch(path,obj,onlyThese){
   return fsHeaders().then(function(h){
     var body=JSON.stringify({fields:objToFsFields(obj)});
-    return fetch(fsUrl(path),{method:'PATCH',headers:h,body:body}).then(function(r){return r.json();});
+    var url=fsUrl(path);
+    /* onlyThese: write just these fields and leave the rest of the document alone (e.g. a segment's stopDates) */
+    if(onlyThese)url+=Object.keys(obj).map(function(k){return '&updateMask.fieldPaths='+encodeURIComponent(k);}).join('');
+    return fetch(url,{method:'PATCH',headers:h,body:body}).then(function(r){return r.json();});
   });
 }
 function fsDelete(path){
@@ -3948,7 +3952,7 @@ function loadRouteFromFirestore(){
 function saveSegmentToFirestore(seg){
   // Save segment doc
   var segData={name:seg.name||'',customLabel:seg.customLabel||'',order:seg.order||1,color:seg.color||'#4ECDC4'};
-  fsPatch(segPath(seg.id),segData).catch(function(e){console.error('Seg save failed',e);});
+  fsPatch(segPath(seg.id),segData,true).catch(function(e){console.error('Seg save failed',e);});
   // Save all stops
   (seg.stops||[]).forEach(function(stop,i){
     var stopData={
@@ -3958,7 +3962,7 @@ function saveSegmentToFirestore(seg){
       plannedDate:stop.plannedDate||'',visitedDate:stop.visitedDate||'',hidePublic:!!stop.hidePublic,showPublic:!!stop.showPublic,postsJson:stop.postsJson||'',
       sourceSheet:stop.sourceSheet||'',sourceRow:stop.sourceRow||0
     };
-    fsPatch(stopPath(seg.id,stop.id),stopData).catch(function(e){console.error('Stop save failed',e);});
+    fsPatch(stopPath(seg.id,stop.id),stopData,true).catch(function(e){console.error('Stop save failed',e);});
   });
   var _sid=seg.id;
   fsList(TRIP_PATH+'/segments/'+_sid+'/stops').then(function(docs){
@@ -4144,7 +4148,7 @@ function removeStop(segId,stopId,si,i){
   renderRoutePanel();
 }
 
-/* ===== v204 Followers: visited, posts per stop, public map, share target ===== */
+/* ===== v205 Followers: visited, posts per stop, public map, share target ===== */
 (function(){try{var q=new URLSearchParams(location.search);
   var t=[q.get('share_url'),q.get('share_text'),q.get('share_title')].filter(Boolean).join(' ');
   if(t){sessionStorage.setItem('t69_share',t);sessionStorage.setItem('t69_share_title',q.get('share_title')||'');
@@ -4452,7 +4456,7 @@ window.t69HandleShare=function(){var raw='';try{raw=sessionStorage.getItem('t69_
     L.appendChild(b);});
   box.querySelector('#t69ShX').onclick=function(){ov.remove();};
   ov.appendChild(box);document.body.appendChild(ov);};
-/* ===== end v204 Followers ===== */
+/* ===== end v205 Followers ===== */
 
 
 // ══════════════════════════════════════════════════════════════
@@ -4647,7 +4651,7 @@ window.t69CopyTrip=async function(){
     var newId=r&&(r.tripId||r.id);if(!newId)throw new Error('Could not create the trip');
     await new Promise(function(x){setTimeout(x,900);});
     var pending=[],orig=window.fsPatch;
-    window.fsPatch=function(pa,da){var pr=orig(pa,da);pending.push(pr);return pr;};
+    window.fsPatch=function(pa,da,mk){var pr=orig(pa,da,mk);pending.push(pr);return pr;};
     try{segs.forEach(function(sg){saveSegmentToFirestore(sg);});}finally{window.fsPatch=orig;}
     await Promise.all(pending.map(function(pr){return pr&&pr.catch?pr.catch(function(){}):pr;}));
     for(var sg in dates){if(dates[sg]&&Object.keys(dates[sg]).length)
@@ -5759,7 +5763,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v204 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v205 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -6100,7 +6104,7 @@ window.t69MissingForAI=async function(){
     cl.style.cssText='margin-top:12px;padding:7px 14px;font-size:12px';cl.onclick=function(){ov.remove();};
     box.appendChild(cl);ov.appendChild(box);document.body.appendChild(ov);
   }catch(e){t69ProgHide();toast('\u274C '+(e.message||e));}};
-/* v204: remember which parts went to the AI, so the import can ask about the ones still without a rating */
+/* v205: remember which parts went to the AI, so the import can ask about the ones still without a rating */
 window.t69MissNz=function(x){return String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');};
 window.t69MissLoad=function(){try{var a=JSON.parse(localStorage.getItem('t69_missParts')||'[]');var cut=Date.now()-21*864e5;return (Array.isArray(a)?a:[]).filter(function(p){return p&&p.at>cut&&p.rows&&p.rows.length;});}catch(e){return [];}};
 window.t69MissSave=function(a){try{localStorage.setItem('t69_missParts',JSON.stringify(a.slice(-30)));}catch(e){}};
@@ -7501,8 +7505,40 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v204: ready');
+  console.log('T1969 v205: ready');
 }
+function t69EvToDates(ev){var tz=(ev.start&&ev.start.timeZone)||undefined;
+  function dmy(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+  function loc(dt){try{var o={};new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false})
+      .formatToParts(new Date(dt)).forEach(function(p){o[p.type]=p.value;});return {date:o.year+'-'+o.month+'-'+o.day,time:(o.hour==='24'?'00':o.hour)+':'+o.minute};}
+    catch(e){return {date:dt.slice(0,10),time:dt.slice(11,16)};}}
+  if(ev.start&&ev.start.date){var a=ev.start.date,e=(ev.end&&ev.end.date)||a,ed=new Date(e+'T12:00:00');ed.setDate(ed.getDate()-1);
+    var dep=ed.getFullYear()+'-'+('0'+(ed.getMonth()+1)).slice(-2)+'-'+('0'+ed.getDate()).slice(-2);if(dep<a)dep=a;
+    return {arrivalDate:dmy(a),arrivalTime:'',departureDate:dmy(dep),departureTime:'',syncCalendar:true,calendarEventId:ev.id};}
+  if(ev.start&&ev.start.dateTime){var s=loc(ev.start.dateTime),en=(ev.end&&ev.end.dateTime)?loc(ev.end.dateTime):s;
+    var mins=function(t){var m=t.split(':');return (+m[0])*60+(+m[1]);};
+    var depT=(en.date!==s.date||mins(en.time)-mins(s.time)!==30)?en.time:'';
+    return {arrivalDate:dmy(s.date),arrivalTime:s.time,departureDate:dmy(en.date),departureTime:depT,syncCalendar:true,calendarEventId:ev.id};}
+  return null;}
+window.t69RestoreDatesFromCalendar=async function(){
+  if(!window.routeSegments||!routeSegments.length){tst('Open a trip with a route first');return;}
+  if(!confirm('Look up every stop of this trip in your Google Calendar and put back the planned dates that are missing?\n\nOnly stops without a date are filled in. Nothing in your calendar changes.'))return;
+  var token;try{token=await getCalendarAccessToken({interactive:true});}catch(e){tst('\u274C Calendar not connected \u2014 allow the pop-up and try again');return;}
+  var all=[],found=0,missing=0,checked=0,touched={};
+  routeSegments.forEach(function(seg){(seg.stops||[]).forEach(function(st){all.push({seg:seg,st:st});});});
+  for(var n=0;n<all.length;n++){var seg=all[n].seg,st=all[n].st,key=sk(st);
+    D[seg.id]=D[seg.id]||{};var cur=D[seg.id][key];if(cur&&cur.arrivalDate)continue;checked++;
+    if(typeof t69Prog==='function')t69Prog('\uD83D\uDCC5 Looking up dates in your calendar',n,all.length);
+    try{var r=await fetch('https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(T69_CAL_ID)+'/events?privateExtendedProperty='
+        +encodeURIComponent('t69='+tid()+'|'+seg.id+'|'+key)+'&showDeleted=false&maxResults=3',{headers:{'Authorization':'Bearer '+token}});
+      if(!r.ok){if(r.status===401)throw new Error('Calendar sign-in expired \u2014 press the button again');missing++;continue;}
+      var j=await r.json(),ev=j.items&&j.items[0],rec=ev?t69EvToDates(ev):null;
+      if(!rec){missing++;continue;}D[seg.id][key]=rec;touched[seg.id]=1;found++;
+    }catch(e){if(typeof t69ProgHide==='function')t69ProgHide();tst('\u274C '+(e.message||e));return;}}
+  if(typeof t69ProgHide==='function')t69ProgHide();
+  for(var sg in touched){try{await callFn('saveStopDates',{tripId:tid(),segId:sg,stopDates:D[sg]});}catch(e){console.error('restore save',e);}}
+  window._t69dates=D;try{paint();}catch(e){}try{renderRoutePanel();}catch(e){}
+  alert(found+' planned date(s) restored from your calendar.'+(missing?('\n'+missing+' stop(s) have no calendar event \u2014 add those dates by hand with \uD83D\uDCC5.'):'')+(!checked?'\nEvery stop already had a date.':''));};
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
 })();
