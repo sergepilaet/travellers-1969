@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="/icon-follow-512.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<!-- Travellers 1969 · public follower page · v6 · own site · v3 (with app v202) -->
+<!-- Travellers 1969 · public follower page · v6 · own site · v4 (with app v203) -->
 <style>
 :root{--ink:#0D1B2E;--deep:#112240;--card:#162B4A;--line:#2A4E78;--sky:#5BC8F5;--sand:#D8B07A;--text:#F0F8FF;--muted:#8FB3CF;--green:#10B981}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -56,8 +56,9 @@ a{color:var(--sky)}
 .dates{color:var(--muted);font-size:13px;margin-bottom:12px}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0 16px}
 .stat{background:var(--deep);border:1px solid var(--line);border-radius:12px;padding:9px 6px;text-align:center}
-.stat b{display:block;font-size:20px;line-height:1.1}
-.stat span{font-size:11px;color:var(--muted)}
+.stat{display:flex;flex-direction:column;justify-content:center;min-height:58px}
+.stat b{display:block;font-size:17px;line-height:1.2;white-space:nowrap}
+.stat span{font-size:11px;color:var(--muted);margin-top:2px}
 .here{display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(91,200,245,.16),rgba(216,176,122,.12));border:1px solid rgba(91,200,245,.35);border-radius:14px;padding:12px;margin-bottom:16px;cursor:pointer}
 .here img{width:46px;height:46px;border-radius:50%}
 .here small{display:block;color:var(--muted);font-size:12px}
@@ -219,18 +220,16 @@ function showTrip(slug){$('trip').style.display='block';
     var mi=Math.round((s.km||0)/1.609344);
     var h='<a class="back" href="/">← All trips</a><h2>'+esc(t.name)+'</h2>'
       +'<span class="chip '+c[0]+'">'+c[1]+'</span><div class="dates">'+esc(dateRange(t))+'</div>'
-      +'<div class="stats"><div class="stat"><b>'+num(s.days)+'</b><span>'+(s.days===1?'day':'days')+'</span></div>'
-      +'<div class="stat"><b>'+num(s.km)+'</b><span>km · '+num(mi)+' mi</span></div>'
-      +'<div class="stat"><b>'+num(s.states)+'</b><span>'+(s.states===1?'state':'states')+'</span></div>'
-      +'<div class="stat"><b>'+num(s.visited)+'<small style="font-size:12px;color:var(--muted)">/'+num(s.total)+'</small></b><span>stops</span></div></div>';
-    if(t.here)h+='<div class="here" data-k="here"><img src="/pin-travellers.png" alt=""><div><small>'+(t.status==='done'?'Last stop':'We’re here')+'</small><b>'+esc(t.here.n)+'</b><small>'+esc(t.here.s)+'</small></div></div>';
+      +'<div class="stats"><div class="stat"><b>'+num(s.days)+' '+(s.days===1?'day':'days')+'</b></div>'
+      +'<div class="stat"><b>'+num(s.km)+' km</b><span>'+num(mi)+' mi</span></div>'
+      +'<div class="stat"><b>'+num(s.states)+' '+(s.states===1?'state':'states')+'</b></div>'
+      +'<div class="stat"><b>'+num(s.visited)+'/'+num(s.total)+' stops</b></div></div>';
+    if(t.here&&t.status!=='done')h+='<div class="here" data-k="here"><img src="/pin-travellers.png" alt=""><div><small>'+(t.status==='done'?'Last stop':'We’re here')+'</small><b>'+esc(t.here.n)+'</b><small>'+esc(t.here.s)+'</small></div></div>';
     if(t.next&&t.next.length)h+='<h4>Coming up</h4>'+t.next.map(function(n,k){return '<div class="next" data-k="n'+k+'"><span class="num">'+(k+1)+'</span><span>'+esc(n.n)+' <span style="color:var(--muted);font-size:12px">'+esc(n.s)+'</span></span></div>';}).join('');
     var vis=(t.visited||[]).map(function(v,k){return {v:v,k:k};});
     if(vis.length){h+='<h4>Where we\u2019ve been</h4>';
-      if(vis.length>6){var sts={};vis.forEach(function(o){if(o.v.s)sts[o.v.s]=1;});
+      if(vis.length>6){
         h+='<div class="tools"><input type="search" id="q" placeholder="Search a place\u2026" aria-label="Search a place">'
-          +'<select id="fs" aria-label="State"><option value="">All states</option>'+Object.keys(sts).sort().map(function(x){return '<option>'+esc(x)+'</option>';}).join('')+'</select>'
-          +'<select id="so" aria-label="Order"><option value="new">Newest first</option><option value="old">Oldest first</option></select>'
           +'<label><input type="checkbox" id="wp"> With posts</label></div><div class="cnt" id="cnt"></div>';}
       h+='<div class="tl" id="tl"></div>';}
     else if(t.status==='soon')h+='<div class="empty" style="padding:24px 0">The trip hasn’t started yet. The dashed line is the plan — follow us to see it come alive.</div>';
