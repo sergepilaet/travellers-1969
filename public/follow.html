@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="/pin-travellers.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<!-- Travellers 1969 · public follower page · v2 (with app v199) -->
+<!-- Travellers 1969 · public follower page · v3 (with app v200) -->
 <style>
 :root{--ink:#0D1B2E;--deep:#112240;--card:#162B4A;--line:#2A4E78;--sky:#5BC8F5;--sand:#D8B07A;--text:#F0F8FF;--muted:#8FB3CF;--green:#10B981}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -187,8 +187,8 @@ function showTrip(slug){$('trip').style.display='block';
     if(!t){$('panel').innerHTML='<a class="back" href="/follow">← All trips</a><div class="empty">This trip isn’t shared (any more).<br><a href="/follow">See our other trips</a></div>';return;}
     document.title=t.name+' · Travellers 1969';
     var s=t.stats||{},c=CHIP[t.status]||CHIP.soon;
-    if(t.ahead&&t.ahead.length>1){L.polyline(t.ahead,{color:'#ffffff',weight:6,opacity:.55}).addTo(map);
-      L.polyline(t.ahead,{color:'#6B7F99',weight:3,opacity:.95,dashArray:'7 7'}).addTo(map);}
+    if(t.ahead&&t.ahead.length>1){L.polyline(t.ahead,{color:'#ffffff',weight:7,opacity:.8}).addTo(map);
+      L.polyline(t.ahead,{color:'#1D4ED8',weight:4,opacity:.95,dashArray:'8 8'}).addTo(map);}
     if(t.done&&t.done.length>1){L.polyline(t.done,{color:'#ffffff',weight:9,opacity:.95}).addTo(map);
       L.polyline(t.done,{color:'#10B981',weight:6,opacity:1}).addTo(map);}
     var byKey={};

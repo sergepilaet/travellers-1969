@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v199  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v200  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -566,7 +566,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v199: Firestore preview mode ===== */
+/* ===== F0 v200: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{localStorage.setItem('t69_datasource','firestore');return true;}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -640,7 +640,7 @@ function t69RefreshCats(){try{var src=(typeof allLocations!=='undefined'&&allLoc
  try{applyFilters();}catch(e){}
  try{var tb=document.getElementById('t69Tbl');if(tb&&tb.classList.contains('open')&&typeof t69RenderTable==='function')t69RenderTable();}catch(e){}}
 function t69TripCtx(){try{return localStorage.getItem('t69_tripctx')||'A couple travelling in a Ford F-150 with foldable e-bikes, tent camping and a National Parks pass. Mid-range budget, unique experiences over luxury. Already visited (skip these): San Francisco, Yosemite, South Rim Grand Canyon, Antelope Canyon, Monument Valley.';}catch(e){return'';}}
-/* v199: ONE place for the import columns + rules. Change the structure here and every AI prompt follows. */
+/* v200: ONE place for the import columns + rules. Change the structure here and every AI prompt follows. */
 var T69_IMPORT_COLS=['Name','Website','Coordinates','Address','(blank)','(blank)','(blank)','Category','Status','Budget','Season','Notes','Reservation','Subcategory','Region','Google rating','Google reviews'];
 var T69_FOCUS='Focus on: bizarre roadside attractions, quirky museums, ghost towns, aviation experiences, unique non-chain restaurants, scenic routes, state parks. Naturist resorts only if family-friendly (AANR).';
 function t69ImportSpec(o){o=o||{};
@@ -1760,7 +1760,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v199 ===== */
+/* ===== end F0 v200 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1771,12 +1771,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v199</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v200</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v199</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v200</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2222,7 +2222,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v199</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v200</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2577,7 +2577,7 @@ window.t69LoadAlongRoute=async function(){
   var regs={};hits.forEach(function(l){regs[l.state]=1;});
   toast('\u2705 '+hits.length+' locations within '+km+' km of the route, in '+Object.keys(regs).length+' regions'+(noPin?' ('+noPin+' without a map pin could not be checked)':''));};
 
-/* v199: leave the along-route view */
+/* v200: leave the along-route view */
 window.t69InAlongView=function(){return /Along route/.test(String((typeof currentState!=='undefined'&&currentState)||''));};
 window.t69SyncViewX=function(){var on=t69InAlongView();
   ['t69ViewX','t69ViewX2'].forEach(function(id){var b=document.getElementById(id);if(b)b.style.display=on?'':'none';});
@@ -3955,7 +3955,7 @@ function saveSegmentToFirestore(seg){
       order:i+1,name:stop.name||'',state:stop.state||'',
       lat:stop.lat||0,lng:stop.lng||0,
       category:stop.category||'',status:stop.status||'Planning',
-      plannedDate:stop.plannedDate||'',visitedDate:stop.visitedDate||'',hidePublic:!!stop.hidePublic,postsJson:stop.postsJson||'',
+      plannedDate:stop.plannedDate||'',visitedDate:stop.visitedDate||'',hidePublic:!!stop.hidePublic,showPublic:!!stop.showPublic,postsJson:stop.postsJson||'',
       sourceSheet:stop.sourceSheet||'',sourceRow:stop.sourceRow||0
     };
     fsPatch(stopPath(seg.id,stop.id),stopData).catch(function(e){console.error('Stop save failed',e);});
@@ -4038,7 +4038,7 @@ function renderRoutePanel(){
         +'<span class="seg-stop-num">'+(i+1)+'</span>'
         +'<div class="seg-stop-info" onclick="t69StopSheet('+si+','+i+')" style="cursor:pointer" title="Tap: visited date, posts, hide from public">'
           +'<div class="seg-stop-name">'+stop.name+'</div>'
-          +'<div class="seg-stop-sub">'+(stop.state||'')+(stop.plannedDate?' · '+stop.plannedDate:'')+(visited?' · <span style="color:#10B981">✓ '+t69ShortD(stop.visitedDate)+'</span>':'')+(t69Posts(stop).length?' · 🔗'+t69Posts(stop).length:'')+(stop.hidePublic?' · 🙈':'')+'</div>'
+          +'<div class="seg-stop-sub">'+(stop.state||'')+(stop.plannedDate?' · '+stop.plannedDate:'')+(visited?' · <span style="color:#10B981">✓ '+t69ShortD(stop.visitedDate)+'</span>':'')+(t69Posts(stop).length?' · 🔗'+t69Posts(stop).length:'')+(stop.hidePublic?' · 🙈':(stop.showPublic?' · 👁':''))+'</div>'
         +'</div>'
         +'<button class="seg-stop-vis'+(visited?' done':'')+'" title="'+(visited?'Mark unvisited':'Mark visited')+'" '
           +'onclick="toggleVisited(\''+seg.id+'\',\''+stop.id+'\','+si+','+i+')">'+(visited?'✅':'⬜')+'</button>'
@@ -4144,7 +4144,7 @@ function removeStop(segId,stopId,si,i){
   renderRoutePanel();
 }
 
-/* ===== v199 Followers: visited, posts per stop, public map, share target ===== */
+/* ===== v200 Followers: visited, posts per stop, public map, share target ===== */
 (function(){try{var q=new URLSearchParams(location.search);
   var t=[q.get('share_url'),q.get('share_text'),q.get('share_title')].filter(Boolean).join(' ');
   if(t){sessionStorage.setItem('t69_share',t);sessionStorage.setItem('t69_share_title',q.get('share_title')||'');
@@ -4189,7 +4189,7 @@ window.t69StopSheet=function(si,i){
   var sg=routeSegments[si],st=sg&&sg.stops[i];if(!st)return;
   var tw=t69Twins(si,i),posts=[],seen={};
   tw.forEach(function(p){t69Posts(routeSegments[p[0]].stops[p[1]]).forEach(function(x){if(x&&x.u&&!seen[x.u]){seen[x.u]=1;posts.push(x);}});});
-  var hidden=tw.some(function(p){return !!routeSegments[p[0]].stops[p[1]].hidePublic;});
+  var hidden=tw.some(function(p){return !!routeSegments[p[0]].stops[p[1]].hidePublic;}),shown=!hidden&&tw.some(function(p){return !!routeSegments[p[0]].stops[p[1]].showPublic;});
   var ov=document.createElement('div');ov.id='t69StopOv';
   ov.style.cssText='position:fixed;inset:0;z-index:9800;background:rgba(4,10,20,.65);display:flex;align-items:center;justify-content:center;padding:12px';
   var box=document.createElement('div');
@@ -4198,7 +4198,10 @@ window.t69StopSheet=function(si,i){
   box.innerHTML='<div style="font-weight:700;font-size:15px;margin-bottom:2px">'+t69Esc(st.name||'')+'</div>'
     +'<div style="color:var(--muted);font-size:11px;margin-bottom:12px">'+t69Esc(st.state||'')+' · stop '+(si+1)+'.'+(i+1)+'</div>'
     +'<label style="display:flex;align-items:center;gap:8px;margin-bottom:8px">✅ Visited on <input type="date" id="t69SsDate" value="'+t69Esc(st.visitedDate||'')+'" style="'+inp+'"> <button class="t69t-btn" id="t69SsClr">Not visited</button></label>'
-    +'<label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer"><input type="checkbox" id="t69SsHide"'+(hidden?' checked':'')+'> 🙈 Hide from the public map</label>'
+    +'<div style="margin-bottom:14px"><div style="margin-bottom:4px">On the public map</div>'
+    +'<label style="display:block;cursor:pointer;margin:2px 0"><input type="radio" name="t69SsPub" value="auto"'+(!hidden&&!shown?' checked':'')+'> Follow the trip\u2019s category settings</label>'
+    +'<label style="display:block;cursor:pointer;margin:2px 0"><input type="radio" name="t69SsPub" value="show"'+(shown?' checked':'')+'> \uD83D\uDC41 Always show this stop</label>'
+    +'<label style="display:block;cursor:pointer;margin:2px 0"><input type="radio" name="t69SsPub" value="hide"'+(hidden?' checked':'')+'> \uD83D\uDE48 Never show this stop</label></div>'
     +'<div style="font-weight:700;margin-bottom:6px">🔗 Posts <span id="t69SsN" style="color:var(--muted);font-weight:400"></span></div>'
     +'<div id="t69SsList"></div>'
     +'<div style="border:1px dashed var(--border);border-radius:9px;padding:8px;margin-top:8px;display:flex;flex-direction:column;gap:6px">'
@@ -4231,8 +4234,8 @@ window.t69StopSheet=function(si,i){
   box.querySelector('#t69SsSave').onclick=function(){
     var pend=box.querySelector('#t69SsUrl').value.trim();
     if(pend&&!confirm('The link in the box was not added yet. Save without it?'))return;
-    var d=box.querySelector('#t69SsDate').value||'',h=box.querySelector('#t69SsHide').checked;
-    tw.forEach(function(p,k){var s2=routeSegments[p[0]].stops[p[1]];s2.visitedDate=d;s2.hidePublic=h;t69SetPosts(s2,k===0?posts:[]);});
+    var d=box.querySelector('#t69SsDate').value||'',pm=(box.querySelector('input[name=t69SsPub]:checked')||{}).value||'auto',h=pm==='hide',sh=pm==='show';
+    tw.forEach(function(p,k){var s2=routeSegments[p[0]].stops[p[1]];s2.visitedDate=d;s2.hidePublic=h;s2.showPublic=sh;t69SetPosts(s2,k===0?posts:[]);});
     t69SaveTouched(tw);ov.remove();renderRoutePanel();t69PubSoon();t69RefreshVisitedMap();toast('✅ Saved');};};
 /* trip counter under the route totals */
 function t69FlatStops(){var flat=[];
@@ -4241,7 +4244,7 @@ function t69FlatStops(){var flat=[];
     if(i===0&&si>0&&last&&t69SamePlace(last.st,st)){last.tw.push(st);last.pos.push([si,i]);return;}
     flat.push({st:st,si:si,i:i,tw:[st],pos:[[si,i]]});});});
   flat.forEach(function(f){var ds=f.tw.map(function(s){return s.visitedDate;}).filter(Boolean).sort();f.vd=ds[0]||'';
-    f.hide=f.tw.some(function(s){return !!s.hidePublic;});var ps=[],seen={};
+    f.hide=f.tw.some(function(s){return !!s.hidePublic;});f.show=!f.hide&&f.tw.some(function(s){return !!s.showPublic;});var ps=[],seen={};
     f.tw.forEach(function(s){t69Posts(s).forEach(function(p){if(p&&p.u&&!seen[p.u]){seen[p.u]=1;ps.push(p);}});});f.posts=ps;});
   return flat;}
 function t69KmOf(pts){var m=0;for(var k=1;k<pts.length;k++)m+=t69Km(pts[k-1][0],pts[k-1][1],pts[k][0],pts[k][1]);return m;}
@@ -4306,7 +4309,7 @@ window.t69Publish=async function(silent){
     var segPts=[];for(var s=0;s<routeSegments.length;s++)segPts.push(await t69SegGeom(routeSegments[s]));
     if(window.TRIP_ID!==tripAtStart)return false;
     var hc={};t69HideCatsOf(P).forEach(function(c){hc[String(c).toLowerCase()]=1;});
-    var flat=t69FlatStops();flat.forEach(function(f){f.pub=!f.hide&&!hc[String(f.st.category||'').toLowerCase()];});
+    var flat=t69FlatStops();flat.forEach(function(f){f.pub=!f.hide&&(f.show||!hc[String(f.st.category||'').toLowerCase()]);});
     var lastAny=null,lastPub=null,lastPubIx=-1;
     flat.forEach(function(f,k){if(f.vd){lastAny=f;if(f.pub){lastPub=f;lastPubIx=k;}}});
     var stats=t69TripStats(flat,segPts,lastAny),sp=t69Split(segPts,lastPub);
@@ -4359,14 +4362,12 @@ window.t69FollowDlg=async function(){
     +'<label style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-bottom:10px;font-weight:700"><input type="checkbox" id="t69FwOn"'+(P.on?' checked':'')+'> Publish this trip on the public map</label>'
     +'<div style="margin-bottom:10px">Short link name<br><span style="color:var(--muted);font-size:11px">'+t69Esc(base)+'/</span>'
     +'<input id="t69FwSlug" value="'+t69Esc(P.slug||t69Slug(t69TripName()))+'" style="'+inp+';width:190px"> '
-    +'<button class="t69t-btn" id="t69FwCopy1" title="Copy this trip\u2019s link">\uD83D\uDCCB Copy</button> <button class="t69t-btn" id="t69FwOpen1" title="Open the public page">\u2197 Open</button></div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"><button class="t69t-btn" id="t69FwCopy1">\uD83D\uDCCB Copy this trip\u2019s link</button>'
+    +'<button class="t69t-btn" id="t69FwOpen1">\u2197 Open</button><button class="t69t-btn" id="t69FwBio">\uD83D\uDCCB Copy bio link (all trips)</button></div></div>'
     +'<div style="margin-bottom:4px">Never show stops in these categories <span style="color:var(--muted);font-size:11px">(where you sleep, etc.)</span></div>'
     +'<div id="t69FwCats" style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-bottom:10px"></div>'
     +'<div style="color:var(--muted);font-size:11px;line-height:1.5;margin-bottom:12px">Followers see: stops you marked ✅ with their posts, the next 3 stops, and the rest of the route as a line. '
-    +'Never: notes, scores, budget, bookings, hidden stops (🙈) or these categories. It updates by itself when you mark a stop or add a post.</div>'
-    +'<div id="t69FwLinks" style="display:'+(P.on?'flex':'none')+';flex-wrap:wrap;gap:6px;margin-bottom:12px">'
-    +'<button class="t69t-btn" id="t69FwBio">📋 Copy bio link (all trips)</button><button class="t69t-btn" id="t69FwTrip">📋 Copy this trip’s link</button>'
-    +'<button class="t69t-btn" id="t69FwOpen">↗ Open public page</button></div>'
+    +'Never: notes, scores, budget, bookings, stops set to 🙈 Never show, or these categories (unless a stop is set to 👁 Always show). It updates by itself when you mark a stop or add a post.</div>'
     +'<div id="t69FwSt" style="color:var(--muted);font-size:11px;margin-bottom:10px">'+(P.updated?('Last updated '+new Date(P.updated).toLocaleString()):'')+'</div>'
     +'<div style="display:flex;gap:8px;justify-content:flex-end"><button class="t69t-btn" id="t69FwX">Close</button>'
     +'<button class="t69t-btn" id="t69FwGo" style="background:var(--accent);color:#0D1B2E;font-weight:700">Save &amp; update</button></div>';
@@ -4377,8 +4378,6 @@ window.t69FollowDlg=async function(){
   function copy(t,b){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){b.textContent='✅ Copied';})
     .catch(function(){prompt('Copy this link:',t);});}
   box.querySelector('#t69FwBio').onclick=function(){copy(base,this);};
-  box.querySelector('#t69FwTrip').onclick=function(){copy(base+'/'+t69Slug(box.querySelector('#t69FwSlug').value),this);};
-  box.querySelector('#t69FwOpen').onclick=function(){window.open(base+'/'+t69Slug(box.querySelector('#t69FwSlug').value),'_blank');};
   box.querySelector('#t69FwX').onclick=function(){ov.remove();};
   box.querySelector('#t69FwCopy1').onclick=function(){copy(base+'/'+t69Slug(box.querySelector('#t69FwSlug').value),this);};
   box.querySelector('#t69FwOpen1').onclick=function(){window.open(base+'/'+t69Slug(box.querySelector('#t69FwSlug').value),'_blank');};
@@ -4394,8 +4393,8 @@ window.t69FollowDlg=async function(){
       window._t69Pub={on:on,slug:slug,hideCats:hc,updated:P.updated};
       if(oldOn&&oldSlug&&(!on||oldSlug!==slug))await t69Unpublish(oldSlug,on?'__keep__':window.TRIP_ID);
       if(on){stEl.textContent='⏳ Drawing the route and publishing…';var ok=await t69Publish(false);
-        stEl.textContent=ok?('✅ Live at '+base+'/'+slug):'❌ Not published — try again';box.querySelector('#t69FwLinks').style.display='flex';}
-      else{stEl.textContent='✅ Not public any more';box.querySelector('#t69FwLinks').style.display='none';}
+        stEl.textContent=ok?('✅ Live at '+base+'/'+slug):'❌ Not published — try again';}
+      else{stEl.textContent='✅ Not public any more';}
     }catch(e){stEl.textContent='❌ '+(e.message||e);}
     go.disabled=false;};};
 /* ---------- Share → T1969 from Instagram/TikTok/YouTube/Facebook ---------- */
@@ -4433,7 +4432,7 @@ window.t69HandleShare=function(){var raw='';try{raw=sessionStorage.getItem('t69_
     L.appendChild(b);});
   box.querySelector('#t69ShX').onclick=function(){ov.remove();};
   ov.appendChild(box);document.body.appendChild(ov);};
-/* ===== end v199 Followers ===== */
+/* ===== end v200 Followers ===== */
 
 
 // ══════════════════════════════════════════════════════════════
@@ -4559,7 +4558,7 @@ function t69SamePlace(a,b){if(!a||!b)return false;
  return Math.abs((+a.lat||0)-(+b.lat||0))<0.0002&&Math.abs((+a.lng||0)-(+b.lng||0))<0.0002;}
 function t69CloneStop(st){return{id:newStopId(),order:1,name:st.name||'',state:st.state||'',
  lat:st.lat||0,lng:st.lng||0,category:st.category||'',status:st.status||'Planning',
- plannedDate:null,visitedDate:null,hidePublic:!!st.hidePublic,sourceSheet:st.sourceSheet||st.state||'',sourceRow:st.sourceRow||0};}
+ plannedDate:null,visitedDate:null,hidePublic:!!st.hidePublic,showPublic:!!st.showPublic,sourceSheet:st.sourceSheet||st.state||'',sourceRow:st.sourceRow||0};}
 function t69StopFromLoc(loc){return{id:newStopId(),order:1,name:loc.name||'',state:loc.state||'',
  lat:loc.lat||0,lng:loc.lng||0,category:loc.category||'',status:loc.status||'Planning',
  plannedDate:null,visitedDate:null,sourceSheet:loc.state||'',sourceRow:loc.rowIndex||0};}
@@ -5738,7 +5737,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v199 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v200 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -6079,7 +6078,7 @@ window.t69MissingForAI=async function(){
     cl.style.cssText='margin-top:12px;padding:7px 14px;font-size:12px';cl.onclick=function(){ov.remove();};
     box.appendChild(cl);ov.appendChild(box);document.body.appendChild(ov);
   }catch(e){t69ProgHide();toast('\u274C '+(e.message||e));}};
-/* v199: remember which parts went to the AI, so the import can ask about the ones still without a rating */
+/* v200: remember which parts went to the AI, so the import can ask about the ones still without a rating */
 window.t69MissNz=function(x){return String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');};
 window.t69MissLoad=function(){try{var a=JSON.parse(localStorage.getItem('t69_missParts')||'[]');var cut=Date.now()-21*864e5;return (Array.isArray(a)?a:[]).filter(function(p){return p&&p.at>cut&&p.rows&&p.rows.length;});}catch(e){return [];}};
 window.t69MissSave=function(a){try{localStorage.setItem('t69_missParts',JSON.stringify(a.slice(-30)));}catch(e){}};
@@ -7480,7 +7479,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v199: ready');
+  console.log('T1969 v200: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
