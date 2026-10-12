@@ -1,33 +1,51 @@
 {
-  "hosting": {
-    "public": "public",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "headers": [
-      {
-        "source": "**",
-        "headers": [
-          {
-            "key": "Cross-Origin-Opener-Policy",
-            "value": "same-origin-allow-popups"
-          }
-        ]
-      }
-    ],
-    "rewrites": [
-      {
-        "source": "/follow",
-        "destination": "/follow.html"
-      },
-      {
-        "source": "/follow/**",
-        "destination": "/follow.html"
-      }
-    ]
-  },
+  "hosting": [
+    {
+      "target": "app",
+      "public": "public",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "Cross-Origin-Opener-Policy",
+              "value": "same-origin-allow-popups"
+            }
+          ]
+        }
+      ],
+      "redirects": [
+        {
+          "source": "/follow",
+          "destination": "https://travellers1969.web.app/",
+          "type": 301
+        },
+        {
+          "source": "/follow/:slug",
+          "destination": "https://travellers1969.web.app/:slug",
+          "type": 301
+        }
+      ]
+    },
+    {
+      "target": "follow",
+      "public": "follow-site",
+      "ignore": [
+        "**/.*"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    }
+  ],
   "functions": {
     "source": "functions",
     "runtime": "nodejs22"

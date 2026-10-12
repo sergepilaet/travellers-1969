@@ -1,1 +1,18 @@
-{"projects":{"default":"travellers-1969-b3a8e"}}
+{
+  "projects": {
+    "default": "travellers-1969-b3a8e"
+  },
+  "targets": {
+    "travellers-1969-b3a8e": {
+      "hosting": {
+        "app": [
+          "travellers-1969-b3a8e"
+        ],
+        "follow": [
+          "travellers1969"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
