@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v198  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v199  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -566,7 +566,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v198: Firestore preview mode ===== */
+/* ===== F0 v199: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{localStorage.setItem('t69_datasource','firestore');return true;}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -640,7 +640,7 @@ function t69RefreshCats(){try{var src=(typeof allLocations!=='undefined'&&allLoc
  try{applyFilters();}catch(e){}
  try{var tb=document.getElementById('t69Tbl');if(tb&&tb.classList.contains('open')&&typeof t69RenderTable==='function')t69RenderTable();}catch(e){}}
 function t69TripCtx(){try{return localStorage.getItem('t69_tripctx')||'A couple travelling in a Ford F-150 with foldable e-bikes, tent camping and a National Parks pass. Mid-range budget, unique experiences over luxury. Already visited (skip these): San Francisco, Yosemite, South Rim Grand Canyon, Antelope Canyon, Monument Valley.';}catch(e){return'';}}
-/* v198: ONE place for the import columns + rules. Change the structure here and every AI prompt follows. */
+/* v199: ONE place for the import columns + rules. Change the structure here and every AI prompt follows. */
 var T69_IMPORT_COLS=['Name','Website','Coordinates','Address','(blank)','(blank)','(blank)','Category','Status','Budget','Season','Notes','Reservation','Subcategory','Region','Google rating','Google reviews'];
 var T69_FOCUS='Focus on: bizarre roadside attractions, quirky museums, ghost towns, aviation experiences, unique non-chain restaurants, scenic routes, state parks. Naturist resorts only if family-friendly (AANR).';
 function t69ImportSpec(o){o=o||{};
@@ -1760,7 +1760,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v198 ===== */
+/* ===== end F0 v199 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1771,12 +1771,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v198</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v199</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v198</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v199</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2222,7 +2222,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v198</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v199</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2577,7 +2577,7 @@ window.t69LoadAlongRoute=async function(){
   var regs={};hits.forEach(function(l){regs[l.state]=1;});
   toast('\u2705 '+hits.length+' locations within '+km+' km of the route, in '+Object.keys(regs).length+' regions'+(noPin?' ('+noPin+' without a map pin could not be checked)':''));};
 
-/* v198: leave the along-route view */
+/* v199: leave the along-route view */
 window.t69InAlongView=function(){return /Along route/.test(String((typeof currentState!=='undefined'&&currentState)||''));};
 window.t69SyncViewX=function(){var on=t69InAlongView();
   ['t69ViewX','t69ViewX2'].forEach(function(id){var b=document.getElementById(id);if(b)b.style.display=on?'':'none';});
@@ -4036,13 +4036,12 @@ function renderRoutePanel(){
         +'ondrop="stopDrop(event,\''+seg.id+'\','+si+','+i+')">'
         +'<span class="seg-stop-drag">⠿</span>'
         +'<span class="seg-stop-num">'+(i+1)+'</span>'
-        +'<div class="seg-stop-info">'
+        +'<div class="seg-stop-info" onclick="t69StopSheet('+si+','+i+')" style="cursor:pointer" title="Tap: visited date, posts, hide from public">'
           +'<div class="seg-stop-name">'+stop.name+'</div>'
-          +'<div class="seg-stop-sub">'+(stop.state||'')+(stop.plannedDate?' · '+stop.plannedDate:'')+(visited?' · ✓ '+stop.visitedDate:'')+(stop.hidePublic?' · 🙈':'')+'</div>'
+          +'<div class="seg-stop-sub">'+(stop.state||'')+(stop.plannedDate?' · '+stop.plannedDate:'')+(visited?' · <span style="color:#10B981">✓ '+t69ShortD(stop.visitedDate)+'</span>':'')+(t69Posts(stop).length?' · 🔗'+t69Posts(stop).length:'')+(stop.hidePublic?' · 🙈':'')+'</div>'
         +'</div>'
         +'<button class="seg-stop-vis'+(visited?' done':'')+'" title="'+(visited?'Mark unvisited':'Mark visited')+'" '
           +'onclick="toggleVisited(\''+seg.id+'\',\''+stop.id+'\','+si+','+i+')">'+(visited?'✅':'⬜')+'</button>'
-        +'<button class="seg-stop-vis'+(t69Posts(stop).length?' done':'')+'" title="Visited date, posts, hide from public" onclick="t69StopSheet('+si+','+i+')">🔗'+(t69Posts(stop).length||'')+'</button>'
         +t69StopSyncHtml(seg.id,stop)
         +'<button class="seg-stop-del" onclick="removeStop(\''+seg.id+'\',\''+stop.id+'\','+si+','+i+')" title="Remove">✕</button>'
       +'</div>';
@@ -4145,11 +4144,27 @@ function removeStop(segId,stopId,si,i){
   renderRoutePanel();
 }
 
-/* ===== v198 Followers: visited, posts per stop, public map, share target ===== */
+/* ===== v199 Followers: visited, posts per stop, public map, share target ===== */
 (function(){try{var q=new URLSearchParams(location.search);
   var t=[q.get('share_url'),q.get('share_text'),q.get('share_title')].filter(Boolean).join(' ');
   if(t){sessionStorage.setItem('t69_share',t);sessionStorage.setItem('t69_share_title',q.get('share_title')||'');
     history.replaceState(null,'',location.pathname);}}catch(e){}})();
+function t69ShortD(d){var m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?(m[3]+'/'+m[2]):String(d||'');}
+/* visited part of the route: thick green line with a dark edge, drawn on top of the segment colours */
+window.t69DrawDone=function(){try{
+  if(window._t69DoneLayer){map.removeLayer(window._t69DoneLayer);window._t69DoneLayer=null;}
+  if(!window.segPolylines||!Object.keys(segPolylines).length)return;
+  var flat=t69FlatStops(),last=null;flat.forEach(function(f){if(f.vd)last=f;});if(!last)return;
+  var segPts=(routeSegments||[]).map(function(sg){var g=segPolylines[sg.id]?t69PolyPts(segPolylines[sg.id]):[];
+    if(!g.length)(sg.stops||[]).forEach(function(st){if(st.lat!=null)g.push([+st.lat,+st.lng]);});return g;});
+  var all=flat.every(function(f){return f.vd;}),pts=all?[].concat.apply([],segPts):t69Split(segPts,last).done;
+  if(pts.length<2)return;
+  window._t69DoneLayer=L.featureGroup([L.polyline(pts,{color:'#0D1B2E',weight:12,opacity:.9,interactive:false}),
+    L.polyline(pts,{color:'#10B981',weight:7,opacity:1,interactive:false})]).addTo(map);
+  try{if(window._t69StopGrp)window._t69StopGrp.eachLayer(function(m){if(m.setZIndexOffset)m.setZIndexOffset(1300);});}catch(e){}
+}catch(e){console.warn('done line',e);}};
+window.t69DrawDoneSoon=function(){clearTimeout(window._t69DoneT);window._t69DoneT=setTimeout(t69DrawDone,400);};
+window.t69RefreshVisitedMap=function(){t69DrawDoneSoon();try{if(window._t69StopGrp&&typeof t69BuildStopLayer==='function')t69BuildStopLayer();}catch(e){}};
 function t69Today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function t69Posts(st){try{var a=JSON.parse((st&&st.postsJson)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
 function t69SetPosts(st,a){st.postsJson=(a&&a.length)?JSON.stringify(a):'';}
@@ -4167,7 +4182,7 @@ function toggleVisited(segId,stopId,si,i){
   var seg=routeSegments[si];if(!seg)return;var stop=seg.stops[i];if(!stop)return;
   var v=stop.visitedDate?'':t69Today(),tw=t69Twins(si,i);
   tw.forEach(function(p){routeSegments[p[0]].stops[p[1]].visitedDate=v;});
-  t69SaveTouched(tw);renderRoutePanel();t69PubSoon();
+  t69SaveTouched(tw);renderRoutePanel();t69PubSoon();t69RefreshVisitedMap();
   if(v)toast('✅ Visited — tap 🔗 to add posts or change the date');}
 window.t69MaybeFix=function(u){u=String(u||'').trim();if(u&&!/^https?:\/\//i.test(u))u='https://'+u;return u;};
 window.t69StopSheet=function(si,i){
@@ -4218,7 +4233,7 @@ window.t69StopSheet=function(si,i){
     if(pend&&!confirm('The link in the box was not added yet. Save without it?'))return;
     var d=box.querySelector('#t69SsDate').value||'',h=box.querySelector('#t69SsHide').checked;
     tw.forEach(function(p,k){var s2=routeSegments[p[0]].stops[p[1]];s2.visitedDate=d;s2.hidePublic=h;t69SetPosts(s2,k===0?posts:[]);});
-    t69SaveTouched(tw);ov.remove();renderRoutePanel();t69PubSoon();toast('✅ Saved');};};
+    t69SaveTouched(tw);ov.remove();renderRoutePanel();t69PubSoon();t69RefreshVisitedMap();toast('✅ Saved');};};
 /* trip counter under the route totals */
 function t69FlatStops(){var flat=[];
   (routeSegments||[]).forEach(function(sg,si){(sg.stops||[]).forEach(function(st,i){
@@ -4343,7 +4358,8 @@ window.t69FollowDlg=async function(){
     +'<div style="color:var(--muted);font-size:11px;margin:2px 0 12px">'+t69Esc(t69TripName())+'</div>'
     +'<label style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-bottom:10px;font-weight:700"><input type="checkbox" id="t69FwOn"'+(P.on?' checked':'')+'> Publish this trip on the public map</label>'
     +'<div style="margin-bottom:10px">Short link name<br><span style="color:var(--muted);font-size:11px">'+t69Esc(base)+'/</span>'
-    +'<input id="t69FwSlug" value="'+t69Esc(P.slug||t69Slug(t69TripName()))+'" style="'+inp+';width:190px"></div>'
+    +'<input id="t69FwSlug" value="'+t69Esc(P.slug||t69Slug(t69TripName()))+'" style="'+inp+';width:190px"> '
+    +'<button class="t69t-btn" id="t69FwCopy1" title="Copy this trip\u2019s link">\uD83D\uDCCB Copy</button> <button class="t69t-btn" id="t69FwOpen1" title="Open the public page">\u2197 Open</button></div>'
     +'<div style="margin-bottom:4px">Never show stops in these categories <span style="color:var(--muted);font-size:11px">(where you sleep, etc.)</span></div>'
     +'<div id="t69FwCats" style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-bottom:10px"></div>'
     +'<div style="color:var(--muted);font-size:11px;line-height:1.5;margin-bottom:12px">Followers see: stops you marked ✅ with their posts, the next 3 stops, and the rest of the route as a line. '
@@ -4364,6 +4380,8 @@ window.t69FollowDlg=async function(){
   box.querySelector('#t69FwTrip').onclick=function(){copy(base+'/'+t69Slug(box.querySelector('#t69FwSlug').value),this);};
   box.querySelector('#t69FwOpen').onclick=function(){window.open(base+'/'+t69Slug(box.querySelector('#t69FwSlug').value),'_blank');};
   box.querySelector('#t69FwX').onclick=function(){ov.remove();};
+  box.querySelector('#t69FwCopy1').onclick=function(){copy(base+'/'+t69Slug(box.querySelector('#t69FwSlug').value),this);};
+  box.querySelector('#t69FwOpen1').onclick=function(){window.open(base+'/'+t69Slug(box.querySelector('#t69FwSlug').value),'_blank');};
   box.querySelector('#t69FwGo').onclick=async function(){
     var on=box.querySelector('#t69FwOn').checked,slug=t69Slug(box.querySelector('#t69FwSlug').value);
     if(on&&!slug){toast('Give the link a short name');return;}
@@ -4415,7 +4433,7 @@ window.t69HandleShare=function(){var raw='';try{raw=sessionStorage.getItem('t69_
     L.appendChild(b);});
   box.querySelector('#t69ShX').onclick=function(){ov.remove();};
   ov.appendChild(box);document.body.appendChild(ov);};
-/* ===== end v198 Followers ===== */
+/* ===== end v199 Followers ===== */
 
 
 // ══════════════════════════════════════════════════════════════
@@ -4861,18 +4879,19 @@ function t69BuildStopLayer(){t69ClearStopLayer();
     (seg.stops||[]).forEach(function(st,i){
       if(st.lat==null||st.lng==null)return;
       var k=(+st.lat).toFixed(4)+','+(+st.lng).toFixed(4);
-      if(!byKey[k]){byKey[k]={seg:seg,si:si,st:st,i:i,labs:[]};groups.push(byKey[k]);}
+      if(!byKey[k]){byKey[k]={seg:seg,si:si,st:st,i:i,labs:[],vis:false};groups.push(byKey[k]);}
+      if(st.visitedDate)byKey[k].vis=true;
       byKey[k].labs.push((si+1)+'.'+(i+1));});});
   var lastSeg=(routeSegments||[]).length-1;
   groups.forEach(function(g){
-    var seg=g.seg,si=g.si,st=g.st,i=g.i,col=segColor(si);
+    var seg=g.seg,si=g.si,st=g.st,i=g.i,col=g.vis?'#10B981':segColor(si);
     var labs=g.labs,isLoop=labs[0]==='1.1'&&labs.length>1&&labs[labs.length-1].indexOf((lastSeg+1)+'.')===0;
     var lab=isLoop?('\u21BB '+labs[0]):(labs.length>2?(labs[0]+'\u2026'+labs[labs.length-1]):labs.join(' \u00b7 '));
     (function(){
       var ic=L.divIcon({className:'',iconSize:[30,30],iconAnchor:[15,15],
         html:'<div style="min-width:30px;height:24px;border-radius:12px;background:'+col
          +';border:2px solid #fff;color:#fff;font:700 11px/24px -apple-system,Segoe UI,sans-serif;text-align:center;padding:0 4px;'
-         +'border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.55)">'+lab+'</div>'});
+         +'border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.55)">'+(g.vis?'\u2713 ':'')+lab+'</div>'});
       L.marker([st.lat,st.lng],{icon:ic,zIndexOffset:1200,title:isLoop?('Start and end of the loop ('+labs.join(', ')+')'):labs.join(', ')})
         .bindPopup(function(){return t69StopPopup(seg,si,st,i);}).addTo(grp);})();});
   grp.addTo(map);window._t69StopGrp=grp;}
@@ -5210,7 +5229,7 @@ function drawAllSegments(){
       if(data.code!=='Ok'){toast('Route error seg '+(si+1)+': '+data.message);return;}
       var route=data.routes[0];
       var poly=L.featureGroup([L.geoJSON(route.geometry,{style:{color:'#ffffff',weight:9,opacity:0.95},interactive:false}),L.geoJSON(route.geometry,{style:{color:drawCol,weight:5,opacity:1}})]).addTo(map);
-      segPolylines[seg.id]=poly;
+      segPolylines[seg.id]=poly;try{t69DrawDoneSoon();}catch(e){}
       if(!routeMarkers[seg.id])routeMarkers[seg.id]=[];
       try{allBounds=allBounds.concat(poly.getBounds().toBBoxString().split(',').map(Number));}catch(e){}
       totalDist+=route.distance;totalTime+=route.duration;
@@ -5263,6 +5282,7 @@ function clearAllSegments(){
   window._t69DrawGen=(window._t69DrawGen||0)+1;
   Object.keys(segPolylines).forEach(function(k){map.removeLayer(segPolylines[k]);});
   segPolylines={};
+  try{if(window._t69DoneLayer){map.removeLayer(window._t69DoneLayer);window._t69DoneLayer=null;}}catch(e){}
   Object.keys(routeMarkers).forEach(function(k){routeMarkers[k].forEach(function(m){map.removeLayer(m);});});
   routeMarkers={};
   try{t69ApplyPinView();}catch(e){}
@@ -5718,7 +5738,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v198 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v199 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -6059,7 +6079,7 @@ window.t69MissingForAI=async function(){
     cl.style.cssText='margin-top:12px;padding:7px 14px;font-size:12px';cl.onclick=function(){ov.remove();};
     box.appendChild(cl);ov.appendChild(box);document.body.appendChild(ov);
   }catch(e){t69ProgHide();toast('\u274C '+(e.message||e));}};
-/* v198: remember which parts went to the AI, so the import can ask about the ones still without a rating */
+/* v199: remember which parts went to the AI, so the import can ask about the ones still without a rating */
 window.t69MissNz=function(x){return String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');};
 window.t69MissLoad=function(){try{var a=JSON.parse(localStorage.getItem('t69_missParts')||'[]');var cut=Date.now()-21*864e5;return (Array.isArray(a)?a:[]).filter(function(p){return p&&p.at>cut&&p.rows&&p.rows.length;});}catch(e){return [];}};
 window.t69MissSave=function(a){try{localStorage.setItem('t69_missParts',JSON.stringify(a.slice(-30)));}catch(e){}};
@@ -7460,7 +7480,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v198: ready');
+  console.log('T1969 v199: ready');
 }
 function init(){watchMap();watchRoute();loadDates();}
 if(typeof firebase!=='undefined'&&firebase.auth)firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(init,2500);});
