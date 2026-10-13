@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="/icon-follow-512.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<!-- Travellers 1969 · public follower page · v6 · own site · v7 (with app v207) -->
+<!-- Travellers 1969 · public follower page · v6 · own site · v8 (with app v208) -->
 <style>
 :root{--ink:#0D1B2E;--deep:#112240;--card:#162B4A;--line:#2A4E78;--sky:#5BC8F5;--sand:#D8B07A;--text:#F0F8FF;--muted:#8FB3CF;--green:#10B981}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -242,9 +242,8 @@ function showTrip(slug){$('trip').style.display='block';
     function stHtml(o){var v=o.v;return '<div class="st" data-k="v'+o.k+'"><div class="n">'+esc(v.n)+'</div><div class="s">'+esc(v.s)+(v.d?(' \u00b7 '+esc(fmtD(v.d))):'')
       +(v.p&&v.p.length?(' \u00b7 '+v.p.length+' post'+(v.p.length===1?'':'s')):'')+'</div>'+postsHtml(v.p)+'</div>';}
     function drawTL(){var tl=$('tl');if(!tl)return;var q=($('q')&&$('q').value||'').trim().toLowerCase(),fs=$('fs')?$('fs').value:'',
-        so=$('so')?$('so').value:'new',wp=$('wp')&&$('wp').checked;
+        wp=$('wp')&&$('wp').checked;
       var L=vis.filter(function(o){return (!q||(o.v.n+' '+o.v.s).toLowerCase().indexOf(q)>=0)&&(!fs||o.v.s===fs)&&(!wp||(o.v.p&&o.v.p.length));});
-      if(so==='new')L=L.slice().reverse();
       tl.innerHTML=L.length?L.map(stHtml).join(''):'<div class="cnt">Nothing matches.</div>';
       if($('cnt'))$('cnt').textContent=L.length+' of '+vis.length+' places';
       bindRows(tl);}
