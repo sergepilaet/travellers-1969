@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="/icon-follow-512.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<!-- Travellers 1969 · public follower page · v6 · own site · v5 (with app v204) -->
+<!-- Travellers 1969 · public follower page · v6 · own site · v6 (with app v206) -->
 <style>
 :root{--ink:#0D1B2E;--deep:#112240;--card:#162B4A;--line:#2A4E78;--sky:#5BC8F5;--sand:#D8B07A;--text:#F0F8FF;--muted:#8FB3CF;--green:#10B981}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -54,11 +54,11 @@ a{color:var(--sky)}
 .back:hover{color:var(--sky)}
 #panel h2{margin:8px 0 2px;font-size:26px;line-height:1.15}
 .dates{color:var(--muted);font-size:13px;margin-bottom:12px}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0 16px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0 16px}
 .stat{background:var(--deep);border:1px solid var(--line);border-radius:12px;padding:9px 6px;text-align:center}
-.stat{display:flex;flex-direction:column;justify-content:center;min-height:58px}
-.stat b{display:block;font-size:17px;line-height:1.2;white-space:nowrap}
-.stat span{font-size:11px;color:var(--muted);margin-top:2px}
+.stat{display:flex;flex-direction:column;justify-content:center;min-height:64px;padding:10px 8px}
+.stat b{display:block;font-size:20px;line-height:1.15;white-space:nowrap}
+.stat span{font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap}
 .here{display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(91,200,245,.16),rgba(216,176,122,.12));border:1px solid rgba(91,200,245,.35);border-radius:14px;padding:12px;margin-bottom:16px;cursor:pointer}
 .here img{width:46px;height:46px;border-radius:50%}
 .here small{display:block;color:var(--muted);font-size:12px}
@@ -113,7 +113,6 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
   #grab{display:block}
   .hero{flex-direction:column;text-align:center}
   .hero h1{font-size:38px}
-  .stats{grid-template-columns:repeat(2,1fr)}
 }
 </style>
 </head>
@@ -220,13 +219,14 @@ function showTrip(slug){$('trip').style.display='block';
     var mi=Math.round((s.km||0)/1.609344);
     var h='<a class="back" href="/">← All trips</a><h2>'+esc(t.name)+'</h2>'
       +'<span class="chip '+c[0]+'">'+c[1]+'</span><div class="dates">'+esc(dateRange(t))+'</div>'
-      +'<div class="stats"><div class="stat"><b>'+num(s.days)+' '+(s.days===1?'day':'days')+'</b></div>'
-      +'<div class="stat"><b>'+num(s.km)+' km</b><span>'+num(mi)+' mi driven</span></div>'
-      +(t.status==='done'||s.kmLeft==null
-        ?'<div class="stat"><b>'+num(s.states)+' '+(s.states===1?'state':'states')+'</b></div>'
-        :'<div class="stat"><b>'+num(s.kmLeft)+' km</b><span>'+num(Math.round(s.kmLeft/1.609344))+' mi to go</span></div>')
-      +'<div class="stat"><b>'+num(s.visited)+'/'+num(s.total)+' stops</b>'+(t.status!=='done'&&s.total>s.visited?'<span>'+num(s.total-s.visited)+' to go</span>':'')+'</div></div>'
-      +(t.status!=='done'&&s.kmLeft!=null&&s.states?'<div class="cnt" style="margin:-8px 0 12px">'+num(s.states)+' '+(s.states===1?'state':'states')+' visited so far</div>':'');
+      +(function(){var done=t.status==='done',left=s.kmLeft||0,posts=0;(t.visited||[]).forEach(function(v){posts+=(v.p||[]).length;});
+        function tile(big,small){return '<div class="stat"><b>'+big+'</b><span>'+small+'</span></div>';}
+        return '<div class="stats">'
+          +tile(num(s.days)+' '+(s.days===1?'day':'days'),done?'travelled':'on the road')
+          +tile(num(s.km)+' km',num(mi)+' mi driven')
+          +(done?tile(num(s.visited)+' stops','all visited'):tile(num(left)+' km',num(Math.round(left/1.609344))+' mi to go'))
+          +(done?tile(num(posts)+' '+(posts===1?'post':'posts'),'on our socials'):tile(num(s.visited)+'/'+num(s.total)+' stops',num(Math.max(0,s.total-s.visited))+' to go'))
+          +'</div>';})();
     if(t.here&&t.status!=='done')h+='<div class="here" data-k="here"><img src="/pin-travellers.png" alt=""><div><small>'+(t.status==='done'?'Last stop':'We’re here')+'</small><b>'+esc(t.here.n)+'</b><small>'+esc(t.here.s)+'</small></div></div>';
     if(t.next&&t.next.length)h+='<h4>Coming up</h4>'+t.next.map(function(n,k){return '<div class="next" data-k="n'+k+'"><span class="num">'+(k+1)+'</span><span>'+esc(n.n)+' <span style="color:var(--muted);font-size:12px">'+esc(n.s)+'</span></span></div>';}).join('');
     var vis=(t.visited||[]).map(function(v,k){return {v:v,k:k};});
