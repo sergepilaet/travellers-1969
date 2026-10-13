@@ -637,3 +637,42 @@ exports.importStateFromSheetTab=fn(async(data)=>{
   if(ops>=400){await batch.commit();batch=admin.firestore().batch();ops=0;}}
  if(ops>0)await batch.commit();
  return{success:true,tab,written};});
+
+/* ===== v185: post titles (YouTube/TikTok, free oEmbed) + link previews for travellers1969.web.app ===== */
+exports.fsPostTitle=fn(async(data)=>{
+  const u=String((data&&data.url)||'').trim();if(!/^https:\/\//i.test(u))return{success:false};
+  let api='';
+  if(/youtube\.com\/|youtu\.be\//i.test(u))api='https://www.youtube.com/oembed?format=json&url='+encodeURIComponent(u);
+  else if(/tiktok\.com\//i.test(u))api='https://www.tiktok.com/oembed?url='+encodeURIComponent(u);
+  else return{success:false,reason:'unsupported'};
+  try{const r=await fetch(api,{headers:{'User-Agent':'Mozilla/5.0 (Travellers1969)'}});if(!r.ok)return{success:false};
+    const j=await r.json();const t=String(j.title||'').replace(/\s+/g,' ').trim();
+    return{success:!!t,title:t.slice(0,120)};}catch(e){return{success:false};}});
+const FOLLOW_BASE='https://travellers1969.web.app';
+let _followTpl=null,_followTplAt=0;
+async function followTemplate(){if(_followTpl&&Date.now()-_followTplAt<600000)return _followTpl;
+  const r=await fetch(FOLLOW_BASE+'/index.html');_followTpl=await r.text();_followTplAt=Date.now();return _followTpl;}
+function escHtml(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+exports.followPage=functions.region(REGION).https.onRequest(async(req,res)=>{
+  let tpl;try{tpl=await followTemplate();}catch(e){res.status(500).send('Please try again in a moment.');return;}
+  const slug=String(req.path||'').replace(/^\/+|\/+$/g,'').split('/')[0];
+  let t=null;if(/^[a-z0-9-]{1,40}$/.test(slug)){try{const d=await FSDB.collection('public').doc(slug).get();if(d.exists)t=JSON.parse(d.data().json||'null');}catch(e){}}
+  if(t){const s=t.stats||{},n=x=>(x||0).toLocaleString('en-US');
+    const title=t.name+' · Travellers 1969';
+    const desc=(t.status==='done'?'Trip completed':(t.status==='live'?'On the road now':'Coming soon'))
+      +' · '+n(s.days)+(s.days===1?' day':' days')+' · '+n(s.km)+' km · '+n(s.visited)+(t.status==='done'?'':(' of '+n(s.total)))+' stops. Follow Serge & Els.';
+    const img=FOLLOW_BASE+'/og/'+slug+'.jpg?v='+encodeURIComponent(String(t.updated||'').replace(/\D/g,''));
+    const tags='<title>'+escHtml(title)+'</title>\n<meta name="description" content="'+escHtml(desc)+'">\n'
+      +'<meta property="og:type" content="website">\n<meta property="og:url" content="'+FOLLOW_BASE+'/'+slug+'">\n'
+      +'<meta property="og:title" content="'+escHtml(title)+'">\n<meta property="og:description" content="'+escHtml(desc)+'">\n'
+      +'<meta property="og:image" content="'+img+'">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
+      +'<meta name="twitter:card" content="summary_large_image">';
+    tpl=tpl.replace(/<!--og-->[\s\S]*?<!--\/og-->/,'<!--og-->'+tags+'<!--/og-->');}
+  res.set('Cache-Control','public, max-age=300, s-maxage=300');res.status(200).send(tpl);});
+exports.followOg=functions.region(REGION).https.onRequest(async(req,res)=>{
+  const m=String(req.path||'').match(/([a-z0-9-]{1,40})\.jpg$/);if(!m){res.status(404).send('');return;}
+  try{const d=await FSDB.collection('public').doc(m[1]+'_og').get();
+    if(!d.exists||!d.data().img){res.redirect(302,FOLLOW_BASE+'/pin-travellers.png');return;}
+    res.set('Content-Type','image/jpeg');res.set('Cache-Control','public, max-age=600, s-maxage=600');
+    res.status(200).send(Buffer.from(d.data().img,'base64'));}
+  catch(e){res.redirect(302,FOLLOW_BASE+'/pin-travellers.png');}});

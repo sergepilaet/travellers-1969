@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v206  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v207  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -566,7 +566,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v206: Firestore preview mode ===== */
+/* ===== F0 v207: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{localStorage.setItem('t69_datasource','firestore');return true;}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -640,7 +640,7 @@ function t69RefreshCats(){try{var src=(typeof allLocations!=='undefined'&&allLoc
  try{applyFilters();}catch(e){}
  try{var tb=document.getElementById('t69Tbl');if(tb&&tb.classList.contains('open')&&typeof t69RenderTable==='function')t69RenderTable();}catch(e){}}
 function t69TripCtx(){try{return localStorage.getItem('t69_tripctx')||'A couple travelling in a Ford F-150 with foldable e-bikes, tent camping and a National Parks pass. Mid-range budget, unique experiences over luxury. Already visited (skip these): San Francisco, Yosemite, South Rim Grand Canyon, Antelope Canyon, Monument Valley.';}catch(e){return'';}}
-/* v206: ONE place for the import columns + rules. Change the structure here and every AI prompt follows. */
+/* v207: ONE place for the import columns + rules. Change the structure here and every AI prompt follows. */
 var T69_IMPORT_COLS=['Name','Website','Coordinates','Address','(blank)','(blank)','(blank)','Category','Status','Budget','Season','Notes','Reservation','Subcategory','Region','Google rating','Google reviews'];
 var T69_FOCUS='Focus on: bizarre roadside attractions, quirky museums, ghost towns, aviation experiences, unique non-chain restaurants, scenic routes, state parks. Naturist resorts only if family-friendly (AANR).';
 function t69ImportSpec(o){o=o||{};
@@ -1760,7 +1760,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v206 ===== */
+/* ===== end F0 v207 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1771,12 +1771,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v206</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v207</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v206</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v207</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2222,7 +2222,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v206</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v207</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2577,7 +2577,7 @@ window.t69LoadAlongRoute=async function(){
   var regs={};hits.forEach(function(l){regs[l.state]=1;});
   toast('\u2705 '+hits.length+' locations within '+km+' km of the route, in '+Object.keys(regs).length+' regions'+(noPin?' ('+noPin+' without a map pin could not be checked)':''));};
 
-/* v206: leave the along-route view */
+/* v207: leave the along-route view */
 window.t69InAlongView=function(){return /Along route/.test(String((typeof currentState!=='undefined'&&currentState)||''));};
 window.t69SyncViewX=function(){var on=t69InAlongView();
   ['t69ViewX','t69ViewX2'].forEach(function(id){var b=document.getElementById(id);if(b)b.style.display=on?'':'none';});
@@ -4147,7 +4147,7 @@ function removeStop(segId,stopId,si,i){
   renderRoutePanel();
 }
 
-/* ===== v206 Followers: visited, posts per stop, public map, share target ===== */
+/* ===== v207 Followers: visited, posts per stop, public map, share target ===== */
 (function(){try{var q=new URLSearchParams(location.search);
   var t=[q.get('share_url'),q.get('share_text'),q.get('share_title')].filter(Boolean).join(' ');
   if(t){sessionStorage.setItem('t69_share',t);sessionStorage.setItem('t69_share_title',q.get('share_title')||'');
@@ -4172,6 +4172,10 @@ window.t69RefreshVisitedMap=function(){t69DrawDoneSoon();try{if(window._t69StopG
 function t69PlanDate(si,i,dep){try{var sg=routeSegments[si],st=sg.stops[i],D=window._t69dates||{},k=window.sk?window.sk(st):st.id;
   var r=(D[sg.id]||{})[k];var v=r?String((dep&&r.departureDate)||r.arrivalDate||''):'';var m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   return m?(m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2)):'';}catch(e){return '';}}
+window.t69FetchTitle=function(url,inputEl){var p=t69Plat(url);if((p!=='yt'&&p!=='tt')||!inputEl||inputEl.value.trim())return;
+  var was=inputEl.placeholder;inputEl.placeholder='\u23F3 Fetching the title\u2026';
+  callFn('fsPostTitle',{url:url}).then(function(r){if(r&&r.success&&r.title&&!inputEl.value.trim())inputEl.value=r.title;})
+    .catch(function(){}).then(function(){inputEl.placeholder=was;});};
 function t69Today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function t69Posts(st){try{var a=JSON.parse((st&&st.postsJson)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
 function t69SetPosts(st,a){st.postsJson=(a&&a.length)?JSON.stringify(a):'';}
@@ -4239,6 +4243,8 @@ window.t69StopSheet=function(si,i){
       L.appendChild(r);});}
   draw();
   box.querySelector('#t69SsClr').onclick=function(){box.querySelector('#t69SsDate').value='';};
+  (function(){var ui=box.querySelector('#t69SsUrl'),li=box.querySelector('#t69SsLbl');
+    var go=function(){setTimeout(function(){t69FetchTitle(t69MaybeFix(ui.value),li);},50);};ui.addEventListener('paste',go);ui.addEventListener('change',go);})();
   box.querySelector('#t69SsAdd').onclick=function(){var u=t69MaybeFix(box.querySelector('#t69SsUrl').value);
     if(!/^https?:\/\/\S+\.\S+/.test(u)){toast('Paste a post link first');return;}
     if(posts.some(function(p){return p.u===u;})){toast('That post is already on this stop');return;}
@@ -4352,14 +4358,41 @@ window.t69Publish=async function(silent){
     idx.push({trip:window.TRIP_ID,slug:P.slug,name:snap.name,status:status,updated:snap.updated,from:snap.from,to:snap.to,stats:snap.stats,
       line:t69Thin(sp.done.concat(sp.ahead),120)});
     await fsPatch('public/index',{json:JSON.stringify(idx),updated:snap.updated});
+    try{var og=await t69OgImage(snap);if(og)await fsPatch('public/'+P.slug+'_og',{img:og,updated:snap.updated});}catch(e){console.warn('preview image',e);}
     window._t69Pub.updated=snap.updated;
     t69FsMask('trips/'+window.TRIP_ID,{publicUpdated:snap.updated}).catch(function(){});
     if(!silent)toast('📢 Public map updated');
     return true;
   }catch(e){if(!silent)toast('❌ Public map: '+(e.message||e));return false;}
   finally{window._t69PubBusy=false;if(window._t69PubAgain){window._t69PubAgain=false;t69PubSoon();}}};
+/* 1200x630 preview for WhatsApp / Facebook / Messenger: route line, trip name, stats, our round logo */
+window.t69OgImage=function(t){return new Promise(function(res){
+  var W=1200,H=630,c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');
+  var g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,'#112240');g.addColorStop(1,'#0D1B2E');x.fillStyle=g;x.fillRect(0,0,W,H);
+  var pts=(t.done||[]).concat(t.ahead||[]);
+  if(pts.length>1){var a=90,b=180,cc=-90,d=-180;pts.forEach(function(p){a=Math.min(a,p[0]);cc=Math.max(cc,p[0]);b=Math.min(b,p[1]);d=Math.max(d,p[1]);});
+    var bx=600,by=40,bw=560,bh=550,k=Math.cos((a+cc)/2*Math.PI/180),w=(d-b)*k||1e-3,h=(cc-a)||1e-3,sc=Math.min(bw/w,bh/h);
+    var ox=bx+(bw-w*sc)/2,oy=by+(bh-h*sc)/2,P=function(p){return [ox+(p[1]-b)*k*sc,oy+(cc-p[0])*sc];};
+    var line=function(arr,col,wd,dash){if(arr.length<2)return;x.setLineDash(dash||[]);x.strokeStyle=col;x.lineWidth=wd;x.lineJoin='round';x.lineCap='round';
+      x.beginPath();arr.forEach(function(p,i){var q=P(p);if(i)x.lineTo(q[0],q[1]);else x.moveTo(q[0],q[1]);});x.stroke();};
+    line(t.ahead||[],'rgba(255,255,255,.55)',9);line(t.ahead||[],'#3B82F6',5,[14,12]);
+    line(t.done||[],'#0D1B2E',14);line(t.done||[],'#10B981',8);x.setLineDash([]);
+    if(t.here){var q=P([t.here.a,t.here.o]);x.fillStyle='#fff';x.beginPath();x.arc(q[0],q[1],13,0,7);x.fill();x.fillStyle='#10B981';x.beginPath();x.arc(q[0],q[1],8,0,7);x.fill();}}
+  var s=t.stats||{},done=t.status==='done',num=function(n){return (n||0).toLocaleString('en-US');};
+  x.fillStyle='#5BC8F5';x.font='600 30px Outfit, sans-serif';x.fillText(done?'Trip completed':(t.status==='live'?'On the road now':'Coming soon'),60,250);
+  x.fillStyle='#F0F8FF';x.font='700 62px Outfit, sans-serif';
+  var name=String(t.name||''),words=name.split(' '),l1='',l2='';words.forEach(function(wd){if(x.measureText((l1+' '+wd).trim()).width<500&&!l2)l1=(l1+' '+wd).trim();else l2=(l2+' '+wd).trim();});
+  x.fillText(l1,60,320);if(l2)x.fillText(l2,60,390);
+  x.fillStyle='#8FB3CF';x.font='500 30px Outfit, sans-serif';
+  var y=l2?450:390;x.fillText(num(s.days)+' '+(s.days===1?'day':'days')+'  \u00b7  '+num(s.km)+' km',60,y);
+  x.fillText(done?(num(s.visited)+' stops'):(num(s.visited)+' of '+num(s.total)+' stops'),60,y+44);
+  x.fillStyle='#5BC8F5';x.font='600 26px Outfit, sans-serif';x.fillText('travellers1969.web.app',60,H-50);
+  var img=new Image();img.onload=function(){x.save();x.beginPath();x.arc(120,120,64,0,7);x.clip();x.drawImage(img,56,56,128,128);x.restore();
+      x.fillStyle='#F0F8FF';x.font='700 50px "Dancing Script", Outfit, sans-serif';x.fillText('Travellers',205,138);x.fillStyle='#5BC8F5';x.fillText('1969',205+x.measureText('Travellers ').width,138);fin();};
+  img.onerror=fin;img.src='/pin-travellers.png';
+  function fin(){try{var u=c.toDataURL('image/jpeg',0.82);res(u.slice(u.indexOf(',')+1));}catch(e){res('');}}});};
 window.t69Unpublish=async function(slug,tripId){
-  if(slug)await fsDelete('public/'+slug).catch(function(){});
+  if(slug){await fsDelete('public/'+slug).catch(function(){});await fsDelete('public/'+slug+'_og').catch(function(){});}
   var idxRaw=await fsGet('public/index'),idx=[];try{idx=JSON.parse(fsDocToObj(idxRaw||{}).json||'[]');}catch(e){}
   idx=idx.filter(function(e){return e&&e.trip!==tripId&&e.slug!==slug;});
   await fsPatch('public/index',{json:JSON.stringify(idx),updated:new Date().toISOString()});};
@@ -4441,7 +4474,7 @@ window.t69HandleShare=function(){var raw='';try{raw=sessionStorage.getItem('t69_
     +'<input id="t69ShLbl" value="'+t69Esc(guess)+'" placeholder="Short label" style="'+inp+';margin-bottom:8px">'
     +'<div id="t69ShList" style="max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:9px"></div>'
     +'<div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="t69t-btn" id="t69ShX">Cancel</button></div>';
-  var L=box.querySelector('#t69ShList');
+  var L=box.querySelector('#t69ShList');t69FetchTitle(url,box.querySelector('#t69ShLbl'));
   order.forEach(function(o){var f=o.f,b=document.createElement('div');
     b.style.cssText='padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer;display:flex;gap:8px;align-items:center';
     b.innerHTML='<span>'+(f.vd?'✅':'○')+'</span><span style="flex:1">'+t69Esc(f.st.name||'')+' <span style="color:var(--muted);font-size:11px">'+t69Esc(f.st.state||'')+(f.vd?(' · '+f.vd):'')+'</span></span>'
@@ -4455,7 +4488,7 @@ window.t69HandleShare=function(){var raw='';try{raw=sessionStorage.getItem('t69_
     L.appendChild(b);});
   box.querySelector('#t69ShX').onclick=function(){ov.remove();};
   ov.appendChild(box);document.body.appendChild(ov);};
-/* ===== end v206 Followers ===== */
+/* ===== end v207 Followers ===== */
 
 
 // ══════════════════════════════════════════════════════════════
@@ -5762,7 +5795,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v206 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v207 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -6103,7 +6136,7 @@ window.t69MissingForAI=async function(){
     cl.style.cssText='margin-top:12px;padding:7px 14px;font-size:12px';cl.onclick=function(){ov.remove();};
     box.appendChild(cl);ov.appendChild(box);document.body.appendChild(ov);
   }catch(e){t69ProgHide();toast('\u274C '+(e.message||e));}};
-/* v206: remember which parts went to the AI, so the import can ask about the ones still without a rating */
+/* v207: remember which parts went to the AI, so the import can ask about the ones still without a rating */
 window.t69MissNz=function(x){return String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');};
 window.t69MissLoad=function(){try{var a=JSON.parse(localStorage.getItem('t69_missParts')||'[]');var cut=Date.now()-21*864e5;return (Array.isArray(a)?a:[]).filter(function(p){return p&&p.at>cut&&p.rows&&p.rows.length;});}catch(e){return [];}};
 window.t69MissSave=function(a){try{localStorage.setItem('t69_missParts',JSON.stringify(a.slice(-30)));}catch(e){}};
@@ -7504,7 +7537,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v206: ready');
+  console.log('T1969 v207: ready');
 }
 function t69EvToDates(ev){var tz=(ev.start&&ev.start.timeZone)||undefined;
   function dmy(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
