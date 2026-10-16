@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v212  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v213  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -566,7 +566,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v212: Firestore preview mode ===== */
+/* ===== F0 v213: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{localStorage.setItem('t69_datasource','firestore');return true;}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -640,7 +640,7 @@ function t69RefreshCats(){try{var src=(typeof allLocations!=='undefined'&&allLoc
  try{applyFilters();}catch(e){}
  try{var tb=document.getElementById('t69Tbl');if(tb&&tb.classList.contains('open')&&typeof t69RenderTable==='function')t69RenderTable();}catch(e){}}
 function t69TripCtx(){try{return localStorage.getItem('t69_tripctx')||'A couple travelling in a Ford F-150 with foldable e-bikes, tent camping and a National Parks pass. Mid-range budget, unique experiences over luxury. Already visited (skip these): San Francisco, Yosemite, South Rim Grand Canyon, Antelope Canyon, Monument Valley.';}catch(e){return'';}}
-/* v212: ONE place for the import columns + rules. Change the structure here and every AI prompt follows. */
+/* v213: ONE place for the import columns + rules. Change the structure here and every AI prompt follows. */
 var T69_IMPORT_COLS=['Name','Website','Coordinates','Address','(blank)','(blank)','(blank)','Category','Status','Budget','Season','Notes','Reservation','Subcategory','Region','Google rating','Google reviews'];
 var T69_FOCUS='Focus on: bizarre roadside attractions, quirky museums, ghost towns, aviation experiences, unique non-chain restaurants, scenic routes, state parks. Naturist resorts only if family-friendly (AANR).';
 function t69ImportSpec(o){o=o||{};
@@ -1760,7 +1760,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v212 ===== */
+/* ===== end F0 v213 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1771,12 +1771,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v212</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v213</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v212</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v213</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2224,7 +2224,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v212</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v213</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2579,7 +2579,7 @@ window.t69LoadAlongRoute=async function(){
   var regs={};hits.forEach(function(l){regs[l.state]=1;});
   toast('\u2705 '+hits.length+' locations within '+km+' km of the route, in '+Object.keys(regs).length+' regions'+(noPin?' ('+noPin+' without a map pin could not be checked)':''));};
 
-/* v212: leave the along-route view */
+/* v213: leave the along-route view */
 window.t69InAlongView=function(){return /Along route/.test(String((typeof currentState!=='undefined'&&currentState)||''));};
 window.t69SyncViewX=function(){var on=t69InAlongView();
   ['t69ViewX','t69ViewX2'].forEach(function(id){var b=document.getElementById(id);if(b)b.style.display=on?'':'none';});
@@ -4149,7 +4149,7 @@ function removeStop(segId,stopId,si,i){
   renderRoutePanel();
 }
 
-/* ===== v212 Followers: visited, posts per stop, public map, share target ===== */
+/* ===== v213 Followers: visited, posts per stop, public map, share target ===== */
 (function(){try{var q=new URLSearchParams(location.search);
   var t=[q.get('share_url'),q.get('share_text'),q.get('share_title')].filter(Boolean).join(' ');
   if(t){sessionStorage.setItem('t69_share',t);sessionStorage.setItem('t69_share_title',q.get('share_title')||'');
@@ -4255,7 +4255,7 @@ window.t69StopSheet=function(si,i){
     if(posts.some(function(p){return p.u===u;})){toast('That post is already on this stop');return;}
     posts.push({u:u,l:box.querySelector('#t69SsLbl').value.trim(),d:box.querySelector('#t69SsPd').value||''});
     box.querySelector('#t69SsUrl').value='';box.querySelector('#t69SsLbl').value='';draw();};
-  box.querySelector('#t69SsCancel').onclick=function(){ov.remove();};
+  box.querySelector('#t69SsCancel').onclick=function(){ov.remove();};t69AddX(box,function(){ov.remove();});
   box.querySelector('#t69SsSave').onclick=function(){
     var pend=box.querySelector('#t69SsUrl').value.trim();
     if(pend&&!confirm('The link in the box was not added yet. Save without it?'))return;
@@ -4398,7 +4398,11 @@ window.t69OgImage=function(t){return new Promise(function(res){
       x.fillStyle='#F0F8FF';x.font='700 50px "Dancing Script", Outfit, sans-serif';x.fillText('Travellers',205,138);x.fillStyle='#5BC8F5';x.fillText('1969',205+x.measureText('Travellers ').width,138);fin();};
   img.onerror=fin;img.src='/pin-travellers.png';
   function fin(){try{var u=c.toDataURL('image/jpeg',0.82);res(u.slice(u.indexOf(',')+1));}catch(e){res('');}}});};
-/* ===== v212: social texts — captions per stop, drafts for all stops, recaps since the last recap ===== */
+/* ===== v213: one close button for every window — ✕ top-right ===== */
+(function(){var c=document.createElement('style');c.textContent='.t69x{position:absolute;top:-10px;right:-10px;z-index:3;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface2,#1e2538);color:var(--text);font-size:16px;line-height:1;cursor:pointer;padding:0;box-shadow:0 2px 10px rgba(0,0,0,.5)}.t69x:hover{border-color:var(--accent);color:var(--accent)}';document.head.appendChild(c);})();
+window.t69AddX=function(box,onClose){var b=document.createElement('button');b.type='button';b.className='t69x';b.title='Close';b.textContent='\u2715';b.onclick=onClose;
+  var w=document.createElement('div');w.style.cssText='position:relative;display:flex;max-width:96vw';if(box.parentNode)box.parentNode.insertBefore(w,box);w.appendChild(box);w.appendChild(b);return b;};
+/* ===== v213: social texts — captions per stop, drafts for all stops, recaps since the last recap ===== */
 var T69_CAP_PARTS=[['instagram','📸 Instagram'],['facebook','📘 Facebook'],['tiktok','🎵 TikTok'],['youtube_title','▶️ YouTube title'],['youtube_description','▶️ YouTube description'],['opus','✂️ Opus Clip (all platforms at once)'],['facts','💡 Fun facts (voice-over / on-screen text)']];
 function t69CapLang(v){try{if(v)localStorage.setItem('t69_cap_lang',v);return localStorage.getItem('t69_cap_lang')||'en';}catch(e){return v||'en';}}
 function t69CapOf(st){try{var o=JSON.parse((st&&st.captionJson)||'null');return (o&&typeof o==='object')?o:null;}catch(e){return null;}}
@@ -4445,7 +4449,7 @@ window.t69CaptionDlg=function(si,i){var sg=routeSegments[si],st=sg&&sg.stops[i];
     +'<div style="margin-bottom:4px">What happened? <span style="color:var(--muted);font-size:11px">(optional, one line — this makes it sound like you)</span></div>'
     +'<textarea id="t69CapOne" rows="2" placeholder="e.g. a bear walked right up to the truck and Els forgot to film it" style="'+inp+'"></textarea>'
     +'<div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button class="t69t-btn" id="t69CapGo" style="background:var(--accent);color:#0D1B2E;font-weight:700">✨ Write texts</button>'
-    +'<span id="t69CapSt" style="color:var(--muted);font-size:11px;flex:1"></span><button class="t69t-btn" id="t69CapX">Close</button></div>'
+    +'<span id="t69CapSt" style="color:var(--muted);font-size:11px;flex:1"></span></div>'
     +'<div id="t69CapOut"></div>';
   var one=box.querySelector('#t69CapOne'),stEl=box.querySelector('#t69CapSt'),out=box.querySelector('#t69CapOut'),go=box.querySelector('#t69CapGo');
   box.querySelector('.t69CapLang').onchange=function(){t69CapLang(this.value);};
@@ -4453,7 +4457,7 @@ window.t69CaptionDlg=function(si,i){var sg=routeSegments[si],st=sg&&sg.stops[i];
     stEl.textContent=(c.draft&&!c.one?'Draft made before the trip — add what happened and press Try again. ':'')+(c.at?('Written '+new Date(c.at).toLocaleDateString()):'')+(c.edited?' · your edits kept':'');}
   function show(c){t69CapRender(out,c,function(cc){cc.edited=true;t69CapSave(si,i,cc);info(cc);});info(c);go.textContent=c?'🔄 Try again':'✨ Write texts';}
   if(cap){one.value=cap.one||'';show(cap);}
-  box.querySelector('#t69CapX').onclick=function(){D.ov.remove();};
+  t69AddX(box,function(){D.ov.remove();});
   go.onclick=function(){if(cap&&cap.edited&&!confirm('Write new texts? Your edits to the current ones will be replaced.'))return;
     go.disabled=true;stEl.textContent='⏳ Writing…';
     callFn('fsCaption',t69CapPayload(si,i,one.value.trim(),!st.visitedDate&&!one.value.trim())).then(function(r){
@@ -4495,17 +4499,17 @@ async function t69RecapWrite(recaps,n,one,btn,stEl){
     recaps[n-1]=rec;await t69RecapsSave(recaps);stEl.textContent=(r.gNote||'');return rec;}
   catch(e){stEl.textContent='❌ '+(e.message||e);return null;}finally{btn.disabled=false;}}
 function t69RecapOpen(recaps,k,onChange){var rec=recaps[k],D=t69CapBox();
-  D.box.innerHTML='<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;font-weight:700;font-size:15px">🧭 Recap #'+rec.n+'</div><button class="t69t-btn" id="t69RcX">Close</button></div>'
+  D.box.innerHTML='<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;font-weight:700;font-size:15px">🧭 Recap #'+rec.n+'</div></div>'
     +'<div style="color:var(--muted);font-size:11px;margin:2px 0 4px">'+t69Esc(t69ShortD(rec.from))+' – '+t69Esc(t69ShortD(rec.to))+' · '+(rec.names||[]).length+' stops'+(rec.km?(' · ≈'+rec.km.toLocaleString()+' km'):'')+'</div>'
     +'<div style="color:var(--muted);font-size:11px">'+t69Esc((rec.names||[]).join(' · '))+'</div>'
     +'<div style="color:var(--muted);font-size:11px;margin-top:6px">Tip: 📢 Share with followers → 📸 Story image makes the matching map picture.</div><div id="t69RcOut"></div>';
   t69CapRender(D.box.querySelector('#t69RcOut'),rec.cap,function(c){c.edited=true;rec.cap=c;t69RecapsSave(recaps).then(function(){if(onChange)onChange();});});
-  D.box.querySelector('#t69RcX').onclick=function(){D.ov.remove();};}
+  t69AddX(D.box,function(){D.ov.remove();});}
 window.t69SocialHub=async function(){
   if(!routeSegments||!routeSegments.length){toast('Open a trip with a route first');return;}
   await t69LoadPub();var recaps=await t69RecapsLoad(),D=t69CapBox(540),box=D.box;
   var inp='width:100%;box-sizing:border-box;background:var(--card);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;padding:7px 8px;font-family:inherit';
-  box.innerHTML='<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;font-weight:700;font-size:15px">✍️ Social texts</div>'+t69CapLangSel()+'<button class="t69t-btn" id="t69ShX">Close</button></div>'
+  box.innerHTML='<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;font-weight:700;font-size:15px">✍️ Social texts</div>'+t69CapLangSel()+'</div>'
     +'<div style="color:var(--muted);font-size:11px;margin:2px 0 12px">'+t69Esc(t69TripName())+' · texts for one stop: tap the stop → ✍️ Social texts</div>'
     +'<div style="font-weight:700;margin-bottom:4px">🧭 Recap</div><div id="t69ShRc" style="font-size:12px;margin-bottom:6px"></div>'
     +'<textarea id="t69ShOne" rows="2" placeholder="Your own words about this stretch (optional), e.g. snow every day, truck still clean" style="'+inp+'"></textarea>'
@@ -4516,7 +4520,7 @@ window.t69SocialHub=async function(){
     +'<div style="color:var(--muted);font-size:11px;line-height:1.5;margin-bottom:6px">Writes texts for every stop that has none yet, so they are ready on the road. Skipped: stops hidden from the public map and sleeping places. On the day you only add what happened and press Try again.</div>'
     +'<div style="display:flex;gap:8px;align-items:center"><button class="t69t-btn" id="t69ShDr"></button><button class="t69t-btn" id="t69ShDrStop" style="display:none">⏹ Stop</button><span id="t69ShDrSt" style="color:var(--muted);font-size:11px;flex:1"></span></div>';
   box.querySelector('.t69CapLang').onchange=function(){t69CapLang(this.value);};
-  box.querySelector('#t69ShX').onclick=function(){stopDr=true;D.ov.remove();};
+  t69AddX(box,function(){stopDr=true;D.ov.remove();});
   var rcGo=box.querySelector('#t69ShRcGo'),rcSt=box.querySelector('#t69ShRcSt');
   function drawRc(){var flat=t69RecapFlat(),before={};recaps.forEach(function(r){(r.keys||[]).forEach(function(k){before[k]=1;});});
     var nw=flat.filter(function(f){return f.vd&&f.pub&&f.vd<=t69Today()&&!before[t69RecapKey(f)];}),n=recaps.length+1;
@@ -4552,7 +4556,7 @@ window.t69SocialHub=async function(){
       catch(e){bad++;if(bad>=3&&!ok){drSt.textContent='❌ '+(e.message||e);break;}}}
     drStop.style.display='none';if(ok||!bad)drSt.textContent='✅ '+ok+' draft'+(ok===1?'':'s')+' written'+(bad?(' · '+bad+' failed (press again to retry)'):'')+gn;drawDr();};
   drStop.onclick=function(){stopDr=true;drStop.textContent='⏳ Stopping…';};};
-/* ===== v212: media folders per trip (laptop, Chrome/Edge) — only creates/renames folders, never deletes or touches files ===== */
+/* ===== v213: media folders per trip (laptop, Chrome/Edge) — only creates/renames folders, never deletes or touches files ===== */
 function t69MediaOk(){return typeof window.showDirectoryPicker==='function';}
 function t69MediaDb(){return new Promise(function(ok,no){var r=indexedDB.open('t69media',1);r.onupgradeneeded=function(){r.result.createObjectStore('h');};r.onsuccess=function(){ok(r.result);};r.onerror=function(){no(r.error);};});}
 async function t69MediaRoot(h){var db=await t69MediaDb();return new Promise(function(ok,no){var tx=db.transaction('h','readwrite'),s=tx.objectStore('h'),k='root_'+window.TRIP_ID;
@@ -4578,9 +4582,18 @@ async function t69MediaDirs(h){var out={};for await (var e of h.values()){if(e.k
 async function t69MediaManifest(m){if(m===undefined){var o={};try{o=fsDocToObj((await fsGet('trips/'+window.TRIP_ID))||{});}catch(e){}
     try{var j=JSON.parse(o.mediaJson||'{}');return (j&&j.dates)?j:{dates:{}};}catch(e){return {dates:{}};}}
   return t69FsMask('trips/'+window.TRIP_ID,{mediaJson:JSON.stringify(m)});}
+/* stop list for the media sorter: _route_stops.tsv in the main folder (rewritten each run) */
+function t69MediaIso(v){var m=String(v||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?(m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2)):'';}
+async function t69MediaStopsTsv(root){var D=window._t69dates||{},rows=[['trip','segment','stop_no','stop','state','category','visited','arrival_date','arrival_time','departure_date','departure_time','lat','lng'].join('\t')];
+  var cl=function(v){return String(v==null?'':v).replace(/[\t\r\n]+/g,' ').trim();},tn=t69TripName();
+  (routeSegments||[]).forEach(function(sg,si){(sg.stops||[]).forEach(function(st,i){var k=window.sk?window.sk(st):st.id,r=(D[sg.id]||{})[k]||{};
+    rows.push([tn,si+1,(si+1)+'.'+(i+1),st.name,st.state,st.category,st.visitedDate||'',t69MediaIso(r.arrivalDate),r.arrivalTime||'',t69MediaIso(r.departureDate),r.departureTime||'',st.lat==null?'':st.lat,st.lng==null?'':st.lng].map(cl).join('\t'));});});
+  var fh=await root.getFileHandle('_route_stops.tsv',{create:true}),w=await fh.createWritable();await w.write(rows.join('\r\n')+'\r\n');await w.close();return rows.length-1;}
 async function t69MediaRun(root,log){
   var plan=t69MediaPlan(),man=await t69MediaManifest(),dirs=await t69MediaDirs(root),made=0,ren=0,sub=0,kept=[],gone=[],want={};
-  if(!plan.length)return {msg:'No visited stops yet — tick ✅ on the stops you visited first.'};
+  var inbox=!dirs['_Inbox'];if(inbox)await root.getDirectoryHandle('_Inbox',{create:true});
+  var nStops=0;try{nStops=await t69MediaStopsTsv(root);}catch(e){}
+  if(!plan.length)return {msg:(inbox?'📥 _Inbox folder created. ':'')+'No visited stops yet — tick ✅ on the stops you visited first.'};
   for(var k=0;k<plan.length;k++){var p=plan[k],old=man.dates[p.date],day=null,dn=p.name;want[p.date]=1;
     log('⏳ '+(k+1)+'/'+plan.length+' — '+p.name);
     if(dirs[p.name])day=dirs[p.name];
@@ -4599,7 +4612,7 @@ async function t69MediaRun(root,log){
     man.dates[p.date]={name:dn,stops:p.stops.map(function(s){return s.key;}),names:p.stops.map(function(s){return s.name;})};}
   Object.keys(man.dates).forEach(function(d){if(!want[d]){var o=man.dates[d];gone.push((o.name||d)+' — no stop is marked visited on '+d+' any more');}});
   man.root=root.name;man.at=Date.now();await t69MediaManifest(man);
-  return {made:made,ren:ren,sub:sub,kept:kept,gone:gone,days:plan.length};}
+  return {made:made,ren:ren,sub:sub,kept:kept,gone:gone,days:plan.length,inbox:inbox,nStops:nStops};}
 window.t69MediaDlg=async function(){
   if(!t69MediaOk()){toast('📁 Media folders work on the laptop in Chrome or Edge');return;}
   if(!routeSegments||!routeSegments.length){toast('Open a trip with a route first');return;}
@@ -4614,15 +4627,16 @@ window.t69MediaDlg=async function(){
     +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span id="t69MdRoot" style="flex:1;font-weight:700"></span><button class="t69t-btn" id="t69MdPick">Choose folder…</button></div>'
     +'<label id="t69MdSubL" style="display:none;font-size:12px;cursor:pointer;margin-bottom:6px"><input type="checkbox" id="t69MdSub" checked> Make a folder “<span id="t69MdSubN"></span>” inside it and use that</label>'
     +'<div style="color:var(--muted);font-size:11px;line-height:1.5;margin:6px 0 12px">One folder per day you visited something: <i>YYYY-MM-DD stop name</i>. Two or more stops that day get a subfolder per stop. '
-    +'Only stops marked ✅ visited. Nothing is ever deleted or moved, and files inside are never touched.</div>'
+    +'Only stops marked ✅ visited. Nothing is ever deleted or moved, and files inside are never touched. '
+    +'It also makes an <b>_Inbox</b> folder (copy your memory cards in there) and saves the stop list for the media sorter.</div>'
     +'<div style="font-size:12px;margin-bottom:10px">'+(plan.length?('<b>'+plan.length+'</b> day folder'+(plan.length===1?'':'s')+' to check: <span style="color:var(--muted)">'+t69Esc(plan.slice(0,4).map(function(p){return p.name;}).join(' · '))+(plan.length>4?' …':'')+'</span>'):'<span style="color:var(--muted)">No visited stops yet in this trip.</span>')+'</div>'
     +'<div id="t69MdSt" style="font-size:12px;line-height:1.6;margin-bottom:10px"></div>'
-    +'<div style="display:flex;gap:8px;justify-content:flex-end"><button class="t69t-btn" id="t69MdX">Close</button>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end">'
     +'<button class="t69t-btn" id="t69MdGo" style="background:var(--accent);color:#0D1B2E;font-weight:700">📁 Create / update media folders</button></div>';
   var rEl=box.querySelector('#t69MdRoot'),stEl=box.querySelector('#t69MdSt'),go=box.querySelector('#t69MdGo'),tn=t69MediaClean(t69TripName())||'Trip',picked=null;
   function drawRoot(){rEl.textContent=root?('📁 '+root.name):'— not chosen yet —';rEl.style.color=root?'':'var(--muted)';go.disabled=!root||!plan.length;}
   drawRoot();
-  box.querySelector('#t69MdX').onclick=function(){ov.remove();};
+  t69AddX(box,function(){ov.remove();});
   box.querySelector('#t69MdPick').onclick=async function(){try{var h=await window.showDirectoryPicker({id:'t69media',mode:'readwrite'});
       picked=h;var subL=box.querySelector('#t69MdSubL');
       if(h.name!==tn){box.querySelector('#t69MdSubN').textContent=tn;subL.style.display='block';}else subL.style.display='none';
@@ -4635,7 +4649,8 @@ window.t69MediaDlg=async function(){
         root=await picked.getDirectoryHandle(tn,{create:true});await t69MediaRoot(root);picked=null;box.querySelector('#t69MdSubL').style.display='none';drawRoot();go.disabled=true;}
       var r=await t69MediaRun(root,function(t){stEl.textContent=t;});
       if(r.msg){stEl.textContent=r.msg;go.disabled=false;return;}
-      var h='✅ <b>'+r.made+'</b> folder'+(r.made===1?'':'s')+' created · <b>'+r.ren+'</b> renamed · <b>'+r.sub+'</b> stop subfolder'+(r.sub===1?'':'s')+' added · '+r.days+' day'+(r.days===1?'':'s')+' checked';
+      var h='✅ <b>'+r.made+'</b> folder'+(r.made===1?'':'s')+' created · <b>'+r.ren+'</b> renamed · <b>'+r.sub+'</b> stop subfolder'+(r.sub===1?'':'s')+' added · '+r.days+' day'+(r.days===1?'':'s')+' checked'
+        +'<br>📥 _Inbox '+(r.inbox?'created':'ready')+' — copy your memory cards in there'+(r.nStops?(' · stop list saved for the sorter ('+r.nStops+' stops)'):'');
       if(r.kept.length)h+='<div style="margin-top:6px"><b>Kept as they were:</b><br>'+r.kept.map(t69Esc).join('<br>')+'</div>';
       h+='<div style="margin-top:6px"><b>No longer matching — check by hand:</b> '+(r.gone.length?('<br>'+r.gone.map(t69Esc).join('<br>')):'none')+'</div>';
       stEl.innerHTML=h;}
@@ -4644,7 +4659,7 @@ window.t69MediaDlg=async function(){
 
 (function(){function sh(){var b=document.getElementById('t69MediaBtn');if(b&&t69MediaOk()&&!(window.matchMedia&&matchMedia('(pointer:coarse)').matches&&!matchMedia('(pointer:fine)').matches))b.style.display='';}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sh);else sh();})();
-/* ===== v212: "We're here" story image (9:16) from the published trip summary ===== */
+/* ===== v213: "We're here" story image (9:16) from the published trip summary ===== */
 window.t69StoryImage=async function(slug,btn){
   var lbl=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent='⏳ Making the story image…';}
   try{
@@ -4751,7 +4766,7 @@ window.t69FollowDlg=async function(){
     +'Never: notes, scores, budget, bookings, stops set to 🙈 Never show, or these categories (unless a stop is set to 👁 Always show). It updates by itself when you mark a stop or add a post.</div>'
     +'<div style="margin-bottom:10px"><button class="t69t-btn" id="t69FwDates" title="Only stops whose visited date is later than their planned dates get the planned arrival date. Dates you set yourself within the plan stay as they are.">\uD83D\uDCC5 Fix visited dates that were ticked late</button></div>'
     +'<div id="t69FwSt" style="color:var(--muted);font-size:11px;margin-bottom:10px">'+(P.updated?('Last updated '+new Date(P.updated).toLocaleString()):'')+'</div>'
-    +'<div style="display:flex;gap:8px;justify-content:flex-end"><button class="t69t-btn" id="t69FwX">Close</button>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end">'
     +'<button class="t69t-btn" id="t69FwGo" style="background:var(--accent);color:#0D1B2E;font-weight:700">Save settings</button></div>';
   var cw=box.querySelector('#t69FwCats');
   cats.forEach(function(c){var l=document.createElement('label');l.style.cssText='cursor:pointer;font-size:12px';
@@ -4760,7 +4775,7 @@ window.t69FollowDlg=async function(){
   function copy(t,b){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){b.textContent='✅ Copied';})
     .catch(function(){prompt('Copy this link:',t);});}
   box.querySelector('#t69FwBio').onclick=function(){copy(base,this);};
-  box.querySelector('#t69FwX').onclick=function(){ov.remove();};
+  t69AddX(box,function(){ov.remove();});
   box.querySelector('#t69FwDates').onclick=function(){var n=0,touched={};
     (routeSegments||[]).forEach(function(sg,si){(sg.stops||[]).forEach(function(st,i){
       if(!st.visitedDate)return;var pd=t69PlanDate(si,i),pe=t69PlanDate(si,i,true)||pd;if(pd&&st.visitedDate>pe){st.visitedDate=pd;touched[si]=1;n++;}});});
@@ -4823,9 +4838,9 @@ window.t69HandleShare=function(){var raw='';try{raw=sessionStorage.getItem('t69_
       if(!f.vd&&confirm('Also mark “'+(f.st.name||'')+'” as visited today?'))f.pos.forEach(function(p){routeSegments[p[0]].stops[p[1]].visitedDate=t69Today();});
       t69SaveTouched(f.pos);ov.remove();renderRoutePanel();t69PubSoon();toast('✅ Post added to '+(f.st.name||'the stop'));};
     L.appendChild(b);});
-  box.querySelector('#t69ShX').onclick=function(){ov.remove();};
+  box.querySelector('#t69ShX').onclick=function(){ov.remove();};t69AddX(box,function(){ov.remove();});
   ov.appendChild(box);document.body.appendChild(ov);};
-/* ===== end v212 Followers ===== */
+/* ===== end v213 Followers ===== */
 
 
 // ══════════════════════════════════════════════════════════════
@@ -6133,7 +6148,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v212 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v213 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -6474,7 +6489,7 @@ window.t69MissingForAI=async function(){
     cl.style.cssText='margin-top:12px;padding:7px 14px;font-size:12px';cl.onclick=function(){ov.remove();};
     box.appendChild(cl);ov.appendChild(box);document.body.appendChild(ov);
   }catch(e){t69ProgHide();toast('\u274C '+(e.message||e));}};
-/* v212: remember which parts went to the AI, so the import can ask about the ones still without a rating */
+/* v213: remember which parts went to the AI, so the import can ask about the ones still without a rating */
 window.t69MissNz=function(x){return String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');};
 window.t69MissLoad=function(){try{var a=JSON.parse(localStorage.getItem('t69_missParts')||'[]');var cut=Date.now()-21*864e5;return (Array.isArray(a)?a:[]).filter(function(p){return p&&p.at>cut&&p.rows&&p.rows.length;});}catch(e){return [];}};
 window.t69MissSave=function(a){try{localStorage.setItem('t69_missParts',JSON.stringify(a.slice(-30)));}catch(e){}};
@@ -7875,7 +7890,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v212: ready');
+  console.log('T1969 v213: ready');
 }
 function t69EvToDates(ev){var tz=(ev.start&&ev.start.timeZone)||undefined;
   function dmy(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
