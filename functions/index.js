@@ -676,3 +676,114 @@ exports.followOg=functions.region(REGION).https.onRequest(async(req,res)=>{
     res.set('Content-Type','image/jpeg');res.set('Cache-Control','public, max-age=600, s-maxage=600');
     res.status(200).send(Buffer.from(d.data().img,'base64'));}
   catch(e){res.redirect(302,FOLLOW_BASE+'/pin-travellers.png');}});
+
+/* ===== v186: social texts (captions per stop + recaps) — Gemini by default, Claude when AI_PROVIDER=claude ===== */
+const AI_KEYS=['instagram','facebook','tiktok','youtube_title','youtube_description','opus','facts'];
+async function aiGemini(system,user){
+  const proj=process.env.GCLOUD_PROJECT||process.env.GCP_PROJECT||'travellers-1969-b3a8e';
+  const loc=process.env.AI_LOCATION||'europe-west1',model=process.env.AI_MODEL||'gemini-2.5-flash';
+  const host=loc==='global'?'aiplatform.googleapis.com':(loc+'-aiplatform.googleapis.com');
+  const client=await google.auth.getClient({scopes:['https://www.googleapis.com/auth/cloud-platform']});
+  const tok=(await client.getAccessToken()).token;
+  const props={};AI_KEYS.forEach(k=>{props[k]={type:'STRING'};});
+  const r=await fetch('https://'+host+'/v1/projects/'+proj+'/locations/'+loc+'/publishers/google/models/'+model+':generateContent',{
+    method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},
+    body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:'user',parts:[{text:user}]}],
+      generationConfig:{temperature:0.9,maxOutputTokens:4096,responseMimeType:'application/json',
+        responseSchema:{type:'OBJECT',properties:props,required:AI_KEYS},thinkingConfig:{thinkingBudget:0}}})});
+  const j=await r.json();
+  if(j&&j.error){const m=String(j.error.message||'');
+    if(/has not been used|is disabled|SERVICE_DISABLED/i.test(m))throw new Error('Gemini is not switched on yet in Google Cloud (run the one-time setup command)');
+    if(/permission|PERMISSION_DENIED/i.test(m))throw new Error('Gemini: no permission yet (run the one-time setup command)');
+    throw new Error('Gemini: '+m.slice(0,200));}
+  const txt=(((j.candidates||[])[0]||{}).content||{}).parts;return (txt||[]).map(p=>p.text||'').join('');}
+async function aiClaude(system,user){
+  const key=process.env.ANTHROPIC_KEY||'';if(!key)throw new Error('No ANTHROPIC_KEY in functions/.env');
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+    body:JSON.stringify({model:process.env.CLAUDE_MODEL||'claude-sonnet-5-5',max_tokens:3000,system:system,
+      messages:[{role:'user',content:user+'\n\nReply with ONLY a JSON object with these string keys: '+AI_KEYS.join(', ')+'.'}]})});
+  const j=await r.json();if(j&&j.error)throw new Error('Claude: '+String(j.error.message||'').slice(0,200));
+  return ((j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join(''));}
+async function aiWrite(system,user){
+  const prov=(process.env.AI_PROVIDER||'gemini').toLowerCase();
+  const raw=prov==='claude'?await aiClaude(system,user):await aiGemini(system,user);
+  let o=null;try{o=JSON.parse(raw);}catch(e){const m=String(raw||'').match(/\{[\s\S]*\}/);if(m){try{o=JSON.parse(m[0]);}catch(e2){}}}
+  if(!o)throw new Error('The AI gave an unreadable answer — try again');
+  const out={};AI_KEYS.forEach(k=>{let v=o[k];if(Array.isArray(v))v=v.join('\n');out[k]=String(v==null?'':v).trim();});
+  out.ai=prov==='claude'?(process.env.CLAUDE_MODEL||'claude-sonnet-5-5'):(process.env.AI_MODEL||'gemini-2.5-flash');return out;}
+/* Google description + a few reviews, cached on the location for 6 months (Places budget applies) */
+async function captionGoogleInfo(d){
+  let ref=null,cur={};
+  if(d.locState&&d.locId){try{ref=FSDB.collection('locations').doc(t69slug(d.locState)).collection('items').doc(String(d.locId));
+    const s=await ref.get();if(s.exists)cur=s.data()||{};else ref=null;}catch(e){ref=null;}}
+  if(cur.gInfo&&cur.gInfo.at&&Date.now()-cur.gInfo.at<180*864e5)return {info:cur.gInfo,note:''};
+  if(!GPLACES_KEY)return {info:null,note:'no Google key'};
+  const q=[d.name,d.address||d.state].filter(Boolean).join(', ');if(!q)return {info:null,note:''};
+  const body={textQuery:q,maxResultCount:1};
+  if(d.lat&&d.lng)body.locationBias={circle:{center:{latitude:+d.lat,longitude:+d.lng},radius:20000}};
+  try{
+    const res=await fetch('https://places.googleapis.com/v1/places:searchText',{method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GPLACES_KEY,
+        'X-Goog-FieldMask':'places.displayName,places.editorialSummary,places.primaryTypeDisplayName,places.reviews'},body:JSON.stringify(body)});
+    const j=await res.json();const p=(j&&j.places&&j.places[0])||null;
+    if(!p)return {info:null,note:'not found on Google'};
+    const info={at:Date.now(),name:(p.displayName&&p.displayName.text)||'',type:(p.primaryTypeDisplayName&&p.primaryTypeDisplayName.text)||'',
+      sum:(p.editorialSummary&&p.editorialSummary.text)||'',
+      rev:(p.reviews||[]).map(r=>String((r.text&&r.text.text)||(r.originalText&&r.originalText.text)||'').replace(/\s+/g,' ').slice(0,350)).filter(Boolean).slice(0,4)};
+    if(ref){try{await ref.update({gInfo:info});}catch(e){}}
+    return {info:info,note:''};
+  }catch(e){return {info:null,note:e&&e.quota?'Google daily limit reached — written without Google info':'Google lookup failed'};}}
+function captionSystem(lang){
+  return 'You write social media texts for "Travellers 1969": Serge and Els, a Belgian couple, both born in 1969, on a 9-month road trip through the USA and Canada in 2027 in their Ford F-150 pickup, moving to Malta afterwards.\n'
+  +'VOICE: warm, witty, a bit cheeky, self-deprecating Belgian humour; two curious fifty-somethings having the time of their lives. Short sentences. Never salesy, never cringe, no influencer clichés ("hidden gem", "bucket list", "you won\'t believe"). '
+  +'A Belgian reference (fries, chocolate, beer, waffles, rain, tiny country) only when it fits naturally, not in every text. At most 2-3 emoji per text.\n'
+  +'LANGUAGE: write everything in '+(lang==='nl'?'Dutch (Flemish, informal, as Belgians write it)':'English')+'. Hashtags stay English.\n'
+  +'FACTS: only use facts given to you or that are widely known about the place. Never invent prices, numbers, dates, opening hours or events. If "What happened" is given, build the texts around that moment.\n'
+  +'PRIVATE, never mention: money, prices paid, budget, bookings, where they sleep, home address, their star scores as numbers (you may joke that they disagreed).\n'
+  +'HASHTAGS: specific and real: the place, town or park + state, the theme, and the trip. Always include #travellers1969. Good trip tags: #usaroadtrip #roadtripusa #belgiansinamerica #over50travel.\n'
+  +'OUTPUT, one string per key:\n'
+  +'- instagram: hook line first (max 80 characters), then 2-4 short lines, then a blank line and EXACTLY 5 hashtags (Instagram allows 5). Mention "live route map: link in bio" only in a few words at the end of the text, before the hashtags.\n'
+  +'- facebook: 3-6 sentences, more of a story, friendly; if a route link is given end with "Follow our route live: <link>"; then 2-3 hashtags.\n'
+  +'- tiktok: 1-2 punchy lines (max 150 characters) + 4 hashtags.\n'
+  +'- youtube_title: max 70 characters, curious, includes the place name.\n'
+  +'- youtube_description: 2-4 sentences, then a line "📍 <place, state>", then the route link if given, then 3 hashtags.\n'
+  +'- opus: ONE universal caption that works on Instagram, TikTok, YouTube and Facebook at once (for Opus Clip, which posts everywhere): no "link in bio", no platform words, no @handles; 1-3 lines + 5 hashtags.\n'
+  +'- facts: 3 short fun facts for a voice-over or on-screen text, one per line, each starting with "• ".';}
+exports.fsCaption=functions.region(REGION).runWith({timeoutSeconds:120,memory:'256MB'}).https.onCall(async(data,context)=>{
+  checkAuth(context);const d=data||{},lang=d.lang==='nl'?'nl':'en';
+  try{
+    let user='',gNote='';
+    if(d.mode==='recap'){
+      const stops=(Array.isArray(d.stops)?d.stops:[]).slice(0,60);
+      if(!stops.length)return {success:false,message:'No visited stops in this recap'};
+      user='Write a RECAP post: "'+(d.title||('Recap #'+(d.n||1)))+'" for the trip "'+(d.tripName||'')+'".\n'
+        +'Period: '+(d.from||'?')+' to '+(d.to||'?')+(d.days?(' ('+d.days+' days)'):'')+'.\n'
+        +(d.km?('Driven in this period: about '+d.km+' km ('+Math.round(d.km/1.609344)+' miles).\n'):'')
+        +(d.totals?('Whole trip so far: '+d.totals+'.\n'):'')
+        +'Stops visited in this period, in order (name, state, category, date, and what happened or our post titles when known):\n'
+        +stops.map((s,k)=>(k+1)+'. '+[s.n,s.s,s.cat,s.d].filter(Boolean).join(' · ')+(s.one?(' — '+s.one):'')+(s.posts?(' — posts: '+s.posts):'')).join('\n')+'\n'
+        +(d.one?('Our own words about this period: '+d.one+'\n'):'')
+        +(d.link?('Route link: '+d.link+'\n'):'')
+        +'Pick the highlights (do not list every stop when there are more than 6), make it feel like a chapter of the journey, and end with a teaser for what comes next'+(d.next?(' ('+d.next+')'):'')+'. The youtube_title must start with "'+(d.title||('Recap #'+(d.n||1)))+'". The facts are 3 fun numbers or moments from this period.';
+    }else{
+      if(!d.name)return {success:false,message:'No stop name'};
+      const g=await captionGoogleInfo(d);gNote=g.note;const gi=g.info;
+      const rt=d.ratings||{},rs=Object.keys(rt).filter(k=>+rt[k]>0).map(k=>k+' '+rt[k]+'/5').join(', ');
+      user='Write the texts for this stop.\n'
+        +'Place: '+d.name+(d.state?(', '+d.state):'')+(d.country&&d.country!=='USA'&&d.country!=='United States'?(', '+d.country):'')+'\n'
+        +(d.category?('Our category: '+d.category+'\n'):'')
+        +(d.address?('Address/town: '+d.address+'\n'):'')
+        +(d.date?('Date: '+d.date+(d.draft?' (planned)':'')+'\n'):'')
+        +(gi&&gi.type?('Google type: '+gi.type+'\n'):'')
+        +(gi&&gi.sum?('Google description: '+gi.sum+'\n'):'')
+        +(gi&&gi.rev&&gi.rev.length?('What visitors say on Google:\n'+gi.rev.map(x=>'- '+x).join('\n')+'\n'):'')
+        +(d.notes?('Our research notes (for context only, private details must not be repeated): '+String(d.notes).slice(0,600)+'\n'):'')
+        +(rs?('Our scores (do not show numbers): '+rs+'\n'):'')
+        +(d.posts?('Titles of posts we already made here: '+d.posts+'\n'):'')
+        +(d.one?('WHAT HAPPENED (build around this): '+d.one+'\n'):(d.draft?'This is a DRAFT written before the visit: write it as if we are there now, but keep it general enough so it still fits whatever happens.\n':''))
+        +(d.link?('Route link: '+d.link+'\n'):'');
+    }
+    const out=await aiWrite(captionSystem(lang),user);
+    out.success=true;out.gNote=gNote;return out;
+  }catch(e){console.error(e);return {success:false,message:(e&&e.message)||'Could not write the texts'};}});
