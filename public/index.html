@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v214  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v215  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -566,7 +566,7 @@ Object.defineProperty(google.script,'run',{get:function(){
   make("getNearbyLocations",function(lat,lng,km){return{lat:lat,lng:lng,radiusKm:km};});
   return h;
 }});
-/* ===== F0 v214: Firestore preview mode ===== */
+/* ===== F0 v215: Firestore preview mode ===== */
 var T69_TRAVELLERS=['Els','Serge'];
 function isFsMode(){try{localStorage.setItem('t69_datasource','firestore');return true;}catch(e){return false;}}
 var T69_FSMAP={getAvailableStates:'fsGetStates',getOtherCountryTabs:'fsGetOtherCountryTabs',getStateData:'fsGetStateData',getMultiStateData:'fsGetMultiStateData',getAllPinnedLocations:'fsGetAllPinnedLocations',getNearbyLocations:'fsGetNearbyLocations',setPinnedState:'fsSetPinnedState',updateLocationField:'fsUpdateLocationField',addLocationToSheet:'fsAddLocation',createCountryTabs:'fsCreateCountry'};
@@ -640,7 +640,7 @@ function t69RefreshCats(){try{var src=(typeof allLocations!=='undefined'&&allLoc
  try{applyFilters();}catch(e){}
  try{var tb=document.getElementById('t69Tbl');if(tb&&tb.classList.contains('open')&&typeof t69RenderTable==='function')t69RenderTable();}catch(e){}}
 function t69TripCtx(){try{return localStorage.getItem('t69_tripctx')||'A couple travelling in a Ford F-150 with foldable e-bikes, tent camping and a National Parks pass. Mid-range budget, unique experiences over luxury. Already visited (skip these): San Francisco, Yosemite, South Rim Grand Canyon, Antelope Canyon, Monument Valley.';}catch(e){return'';}}
-/* v214: ONE place for the import columns + rules. Change the structure here and every AI prompt follows. */
+/* v215: ONE place for the import columns + rules. Change the structure here and every AI prompt follows. */
 var T69_IMPORT_COLS=['Name','Website','Coordinates','Address','(blank)','(blank)','(blank)','Category','Status','Budget','Season','Notes','Reservation','Subcategory','Region','Google rating','Google reviews'];
 var T69_FOCUS='Focus on: bizarre roadside attractions, quirky museums, ghost towns, aviation experiences, unique non-chain restaurants, scenic routes, state parks. Naturist resorts only if family-friendly (AANR).';
 function t69ImportSpec(o){o=o||{};
@@ -1760,7 +1760,7 @@ function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat
  (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
-/* ===== end F0 v214 ===== */
+/* ===== end F0 v215 ===== */
 
 firebase.auth().onAuthStateChanged(function(u){function go(){if(u){try{loadTravellers();}catch(e){}var l=document.getElementById("loginScreen");if(l)l.style.display="none";if(typeof initApp==="function")initApp();else window.addEventListener("load",function(){if(typeof initApp==="function")initApp();});}else{var l=document.getElementById("loginScreen");if(l)l.style.display="flex";var s=document.getElementById("splash");if(s)s.style.display="none";}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",go);else go();});
 function signIn(){
@@ -1771,12 +1771,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v214</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v215</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v214</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v215</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2225,7 +2225,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v214</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v215</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2580,7 +2580,7 @@ window.t69LoadAlongRoute=async function(){
   var regs={};hits.forEach(function(l){regs[l.state]=1;});
   toast('\u2705 '+hits.length+' locations within '+km+' km of the route, in '+Object.keys(regs).length+' regions'+(noPin?' ('+noPin+' without a map pin could not be checked)':''));};
 
-/* v214: leave the along-route view */
+/* v215: leave the along-route view */
 window.t69InAlongView=function(){return /Along route/.test(String((typeof currentState!=='undefined'&&currentState)||''));};
 window.t69SyncViewX=function(){var on=t69InAlongView();
   ['t69ViewX','t69ViewX2'].forEach(function(id){var b=document.getElementById(id);if(b)b.style.display=on?'':'none';});
@@ -3996,7 +3996,7 @@ function buildRoutePanel(){
   else renderRoutePanel();
 }
 
-/* ===== v214: base stays — side trips and hotels (stop.sideKind = 'trip' | 'hotel'; base = nearest route stop above) ===== */
+/* ===== v215: base stays — side trips and hotels (stop.sideKind = 'trip' | 'hotel'; base = nearest route stop above) ===== */
 (function(){var c=document.createElement('style');c.textContent='.seg-stop.t69side{margin-left:22px;border-left:2px dotted #F59E0B}.seg-stop.t69side .seg-stop-num{background:transparent;color:#F59E0B;font-size:13px}.t69sidegap{height:4px}';document.head.appendChild(c);})();
 function t69CatHid(hc,sts){return sts.some(function(x){return !!hc[String(x.category||'').toLowerCase()]||(x.sideKind==='hotel'&&!!hc.hotel);});}
 function t69IsSide(st){return !!st&&(st.sideKind==='trip'||st.sideKind==='hotel');}
@@ -4184,7 +4184,7 @@ function removeStop(segId,stopId,si,i){
   renderRoutePanel();
 }
 
-/* ===== v214 Followers: visited, posts per stop, public map, share target ===== */
+/* ===== v215 Followers: visited, posts per stop, public map, share target ===== */
 (function(){try{var q=new URLSearchParams(location.search);
   var t=[q.get('share_url'),q.get('share_text'),q.get('share_title')].filter(Boolean).join(' ');
   if(t){sessionStorage.setItem('t69_share',t);sessionStorage.setItem('t69_share_title',q.get('share_title')||'');
@@ -4449,11 +4449,11 @@ window.t69OgImage=function(t){return new Promise(function(res){
       x.fillStyle='#F0F8FF';x.font='700 50px "Dancing Script", Outfit, sans-serif';x.fillText('Travellers',205,138);x.fillStyle='#5BC8F5';x.fillText('1969',205+x.measureText('Travellers ').width,138);fin();};
   img.onerror=fin;img.src='/pin-travellers.png';
   function fin(){try{var u=c.toDataURL('image/jpeg',0.82);res(u.slice(u.indexOf(',')+1));}catch(e){res('');}}});};
-/* ===== v214: one close button for every window — ✕ top-right ===== */
+/* ===== v215: one close button for every window — ✕ top-right ===== */
 (function(){var c=document.createElement('style');c.textContent='.t69x{position:absolute;top:-10px;right:-10px;z-index:3;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface2,#1e2538);color:var(--text);font-size:16px;line-height:1;cursor:pointer;padding:0;box-shadow:0 2px 10px rgba(0,0,0,.5)}.t69x:hover{border-color:var(--accent);color:var(--accent)}';document.head.appendChild(c);})();
 window.t69AddX=function(box,onClose){var b=document.createElement('button');b.type='button';b.className='t69x';b.title='Close';b.textContent='\u2715';b.onclick=onClose;
   var w=document.createElement('div');w.style.cssText='position:relative;display:flex;max-width:96vw';if(box.parentNode)box.parentNode.insertBefore(w,box);w.appendChild(box);w.appendChild(b);return b;};
-/* ===== v214: social texts — captions per stop, drafts for all stops, recaps since the last recap ===== */
+/* ===== v215: social texts — captions per stop, drafts for all stops, recaps since the last recap ===== */
 var T69_CAP_PARTS=[['instagram','📸 Instagram'],['facebook','📘 Facebook'],['tiktok','🎵 TikTok'],['youtube_title','▶️ YouTube title'],['youtube_description','▶️ YouTube description'],['opus','✂️ Opus Clip (all platforms at once)'],['facts','💡 Fun facts (voice-over / on-screen text)']];
 function t69CapLang(v){try{if(v)localStorage.setItem('t69_cap_lang',v);return localStorage.getItem('t69_cap_lang')||'en';}catch(e){return v||'en';}}
 function t69CapOf(st){try{var o=JSON.parse((st&&st.captionJson)||'null');return (o&&typeof o==='object')?o:null;}catch(e){return null;}}
@@ -4607,7 +4607,7 @@ window.t69SocialHub=async function(){
       catch(e){bad++;if(bad>=3&&!ok){drSt.textContent='❌ '+(e.message||e);break;}}}
     drStop.style.display='none';if(ok||!bad)drSt.textContent='✅ '+ok+' draft'+(ok===1?'':'s')+' written'+(bad?(' · '+bad+' failed (press again to retry)'):'')+gn;drawDr();};
   drStop.onclick=function(){stopDr=true;drStop.textContent='⏳ Stopping…';};};
-/* ===== v214: media folders per trip (laptop, Chrome/Edge) — only creates/renames folders, never deletes or touches files ===== */
+/* ===== v215: media folders per trip (laptop, Chrome/Edge) — only creates/renames folders, never deletes or touches files ===== */
 function t69MediaOk(){return typeof window.showDirectoryPicker==='function';}
 function t69MediaDb(){return new Promise(function(ok,no){var r=indexedDB.open('t69media',1);r.onupgradeneeded=function(){r.result.createObjectStore('h');};r.onsuccess=function(){ok(r.result);};r.onerror=function(){no(r.error);};});}
 async function t69MediaRoot(h){var db=await t69MediaDb();return new Promise(function(ok,no){var tx=db.transaction('h','readwrite'),s=tx.objectStore('h'),k='root_'+window.TRIP_ID;
@@ -4710,7 +4710,7 @@ window.t69MediaDlg=async function(){
 
 (function(){function sh(){var b=document.getElementById('t69MediaBtn');if(b&&t69MediaOk()&&!(window.matchMedia&&matchMedia('(pointer:coarse)').matches&&!matchMedia('(pointer:fine)').matches))b.style.display='';}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sh);else sh();})();
-/* ===== v214: "We're here" story image (9:16) from the published trip summary ===== */
+/* ===== v215: "We're here" story image (9:16) from the published trip summary ===== */
 window.t69StoryImage=async function(slug,btn){
   var lbl=btn?btn.textContent:'';if(btn){btn.disabled=true;btn.textContent='⏳ Making the story image…';}
   try{
@@ -4891,7 +4891,7 @@ window.t69HandleShare=function(){var raw='';try{raw=sessionStorage.getItem('t69_
     L.appendChild(b);});
   box.querySelector('#t69ShX').onclick=function(){ov.remove();};t69AddX(box,function(){ov.remove();});
   ov.appendChild(box);document.body.appendChild(ov);};
-/* ===== end v214 Followers ===== */
+/* ===== end v215 Followers ===== */
 
 
 // ══════════════════════════════════════════════════════════════
@@ -5516,6 +5516,9 @@ async function t69StaticMap(opts){
     function trace(){ctx.beginPath();l.forEach(function(p,i2){var q=t69LL2px(p[0],p[1],z);
       var X=q.x-ox,Y=q.y-oy;if(i2)ctx.lineTo(X,Y);else ctx.moveTo(X,Y);});}
     ctx.lineJoin='round';ctx.lineCap='round';
+    var dot=opts.lineDots&&opts.lineDots[li];
+    if(dot){ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=6;trace();ctx.stroke();
+      ctx.setLineDash([1,9]);ctx.strokeStyle=t69FixColor((opts.lineColors&&opts.lineColors[li])||'#F59E0B');ctx.lineWidth=4.5;trace();ctx.stroke();ctx.setLineDash([]);return;}
     ctx.strokeStyle=(opts.casing||'rgba(15,20,30,.9)');ctx.lineWidth=9;trace();ctx.stroke();
     ctx.strokeStyle=t69FixColor((opts.lineColors&&opts.lineColors[li])||'#2f6f9f');ctx.lineWidth=5;trace();ctx.stroke();});
   pts.forEach(function(p){
@@ -5531,18 +5534,21 @@ async function t69StaticMap(opts){
   ctx.fillText('\u00a9 OpenStreetMap contributors',6,H-5);
   try{return cv.toDataURL('image/jpeg',0.82);}catch(e){return null;}}
 async function t69RouteMaps(){
-  var stopPts=[],lines=[],cols=[];
+  var stopPts=[],lines=[],cols=[],dots=[];
   (routeSegments||[]).forEach(function(seg,si){
     var col=segColor(si);
     (seg.stops||[]).forEach(function(st,i){
       if(st.lat==null||st.lng==null)return;
-      stopPts.push({lat:st.lat,lng:st.lng,color:col,label:(si+1)+'.'+(i+1)});});
+      stopPts.push({lat:st.lat,lng:st.lng,color:t69IsSideAt(seg,i)?'#F59E0B':col,label:(si+1)+'.'+(i+1)});});
     try{var poly=segPolylines[seg.id];
       if(poly){var pts=t69PolyPts(poly);
         if(pts.length){lines.push(pts);cols.push(col);}}}catch(e){}});
   if(!stopPts.length)return{};
+  /* side trips: the dotted lines drawn on the map (press Draw first) */
+  try{dots=lines.map(function(){return false;});if(window._t69SideGrp)window._t69SideGrp.eachLayer(function(l){
+    if(l.options&&l.options.dashArray&&l.getLatLngs){var g=l.getLatLngs().map(function(q){return [q.lat,q.lng];});if(g.length>1){lines.push(g);cols.push(l.options.color);dots.push(true);}}});}catch(e){}
   t69ExProgSafe('Building route map\u2026');
-  var routeImg=await t69StaticMap({points:stopPts,lines:lines,lineColors:cols,width:1700,height:1080,
+  var routeImg=await t69StaticMap({points:stopPts,lines:lines,lineColors:cols,lineDots:dots,width:1700,height:1080,
     onProgress:function(p){t69ExProgSafe('Building route map \u2014 '+p+'%');}});
   var pinPts=[],seen={};
   function addPin(l){if(!l||l.lat==null||l.lng==null)return;
@@ -5554,7 +5560,7 @@ async function t69RouteMaps(){
   if(!pinPts.length)t69ExProgSafe('No locations loaded \u2014 pin map skipped');
   var pinImg=null;
   if(pinPts.length){t69ExProgSafe('Building pin map\u2026');
-    pinImg=await t69StaticMap({points:pinPts.concat(stopPts),lines:lines,lineColors:cols,width:1700,height:1080,
+    pinImg=await t69StaticMap({points:pinPts.concat(stopPts),lines:lines,lineColors:cols,lineDots:dots,width:1700,height:1080,
       onProgress:function(p){t69ExProgSafe('Building pin map \u2014 '+p+'%');}});}
   return{route:routeImg,pins:pinImg};}
 function t69ExProgSafe(m){try{toast(m);}catch(e){}}
@@ -5636,12 +5642,16 @@ async function t69ExportRoutePDF(){
       +'<div><span class="v">'+(t.budget?t69Money(t.budget):'\u2014')+'</span><span class="l">BUDGET</span></div></div>');
     h.push('<table><tr><th></th><th>STOP</th><th>RATING</th><th>DATE</th><th>TO NEXT STOP</th></tr>');
     stops.forEach(function(x,i){
-      var legEl=document.getElementById('leg-'+seg.id+'-'+i);
+      var _sd=t69IsSideAt(seg,i),_lastBefore=i===stops.length-1||!t69IsSideAt(seg,i+1);
+      var legEl=_sd?null:document.getElementById('leg-'+seg.id+'-'+i);
       var leg=legEl?(((legEl.querySelector('.seg-leg-info')||{}).textContent)||''):'';
+      if(_sd){var _se=document.getElementById('side-'+seg.id+'-'+i);leg=(_se&&_se.textContent.replace(/^\s*·\s*/,''))||(x.sideKind==='hotel'?'hotel':'side trip');}
+      else if(!_lastBefore&&leg)leg='after the stay: '+leg;
       var _L=t69PdfLoc(x),_cat=(_L&&_L.category)||x.category||'',_note=String((_L&&_L.notes)||'').replace(/\s+/g,' ').trim();
       if(_note.length>260)_note=_note.slice(0,257).replace(/\s+\S*$/,'')+'\u2026';
       var _desc=esc(_note);
-      h.push('<tr class="top"><td class="n" rowspan="2">'+(i+1)+'</td><td rowspan="2"><b>'+esc(x.name||'')+'</b>'
+      h.push('<tr class="top"><td class="n" rowspan="2">'+(_sd?(x.sideKind==='hotel'?'\uD83C\uDFE8':'\u21B3'):(i+1))+'</td><td rowspan="2"'+(_sd?' style="padding-left:14px"':'')+'><b>'+esc(x.name||'')+'</b>'
+        +(_sd?('<br><span class="reg">'+(x.sideKind==='hotel'?'Hotel during ':'Side trip from ')+esc((stops[t69BaseIx(seg,i)]||{}).name||'')+'</span>'):'')
         +((x.state||_cat)?('<br><span class="reg">'+esc(x.state||'')+(x.state&&_cat?' \u00b7 ':'')+(_cat?('<span class="cat">'+esc(_cat)+'</span>'):'')+'</span>'):'')
         +t69PdfMeta(x)+'</td>'
         +'<td class="rt">'+t69PdfRating(x)+'</td>'
@@ -6204,7 +6214,7 @@ function t69SuggestRegions(){var nm=(document.getElementById('newCountryName').v
     if(!r||!r.regions||!r.regions.length){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">No official subdivisions known \u2014 leave empty or type your own.</span>';return;}
     box.innerHTML='';t69RenderSuggestList(box,r.regions,function(picked){
       document.getElementById('newCountryRegions').value=picked.join(', ');});
-  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v214 backend.</span>';});}
+  }).catch(function(){box.innerHTML='<span style="color:#7EAAC8;font-size:11px">Region suggestions need the v215 backend.</span>';});}
 function t69RenderSuggestList(box,regions,onPick){
   var byType={};regions.forEach(function(r){(byType[r.type||'Region']=byType[r.type||'Region']||[]).push(r.name);});
   var types=Object.keys(byType).sort();
@@ -6545,7 +6555,7 @@ window.t69MissingForAI=async function(){
     cl.style.cssText='margin-top:12px;padding:7px 14px;font-size:12px';cl.onclick=function(){ov.remove();};
     box.appendChild(cl);ov.appendChild(box);document.body.appendChild(ov);
   }catch(e){t69ProgHide();toast('\u274C '+(e.message||e));}};
-/* v214: remember which parts went to the AI, so the import can ask about the ones still without a rating */
+/* v215: remember which parts went to the AI, so the import can ask about the ones still without a rating */
 window.t69MissNz=function(x){return String(x||'').toLowerCase().replace(/[^a-z0-9]/g,'');};
 window.t69MissLoad=function(){try{var a=JSON.parse(localStorage.getItem('t69_missParts')||'[]');var cut=Date.now()-21*864e5;return (Array.isArray(a)?a:[]).filter(function(p){return p&&p.at>cut&&p.rows&&p.rows.length;});}catch(e){return [];}};
 window.t69MissSave=function(a){try{localStorage.setItem('t69_missParts',JSON.stringify(a.slice(-30)));}catch(e){}};
@@ -7953,7 +7963,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v214: ready');
+  console.log('T1969 v215: ready');
 }
 function t69EvToDates(ev){var tz=(ev.start&&ev.start.timeZone)||undefined;
   function dmy(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
