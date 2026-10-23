@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="/icon-follow-512.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<!-- Travellers 1969 · public follower page · v6 · own site · v9 (with app v209) -->
+<!-- Travellers 1969 · public follower page · v6 · own site · v10 (with app v214) -->
 <style>
 :root{--ink:#0D1B2E;--deep:#112240;--card:#162B4A;--line:#2A4E78;--sky:#5BC8F5;--sand:#D8B07A;--text:#F0F8FF;--muted:#8FB3CF;--green:#10B981}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -141,7 +141,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 <script>
 function setHdr(){var h=document.querySelector('.top');if(h)document.documentElement.style.setProperty('--hdr',h.offsetHeight+'px');}
 setHdr();window.addEventListener('resize',function(){setHdr();if(window.map&&map.invalidateSize)map.invalidateSize();});
-var SITE_V='v9';
+var SITE_V='v10';
 var BASE='https://firestore.googleapis.com/v1/projects/travellers-1969-b3a8e/databases/(default)/documents/public/';
 var KEY='AIzaSyAxPJoDENiNy3wA2rFs-MFcJkUwBN1YwK8';
 var SOC=[['ig','Instagram','https://www.instagram.com/travellers_1969/'],['tt','TikTok','https://www.tiktok.com/@travellers_1969'],
@@ -203,6 +203,9 @@ function showTrip(slug){$('trip').style.display='block';
     var s=t.stats||{},c=CHIP[t.status]||CHIP.soon;
     if(t.ahead&&t.ahead.length>1){L.polyline(t.ahead,{color:'#ffffff',weight:7,opacity:.8}).addTo(map);
       L.polyline(t.ahead,{color:'#1D4ED8',weight:4,opacity:.95,dashArray:'8 8'}).addTo(map);}
+    /* side trips from a base stay: dotted, green once visited */
+    (t.side||[]).forEach(function(q){var ll=[[q[0],q[1]],[q[2],q[3]]];L.polyline(ll,{color:'#ffffff',weight:6,opacity:.75,interactive:false}).addTo(map);
+      L.polyline(ll,{color:q[4]?'#10B981':'#F59E0B',weight:3.5,opacity:1,dashArray:'1 8',lineCap:'round',interactive:false}).addTo(map);});
     if(t.done&&t.done.length>1){L.polyline(t.done,{color:'#ffffff',weight:9,opacity:.95}).addTo(map);
       L.polyline(t.done,{color:'#10B981',weight:6,opacity:1}).addTo(map);}
     var byKey={};
