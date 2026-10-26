@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="/icon-follow-512.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<!-- Travellers 1969 · public follower page · v6 · own site · v10 (with app v214) -->
+<!-- Travellers 1969 · public follower page · v6 · own site · v12 (with app v218) -->
 <style>
 :root{--ink:#0D1B2E;--deep:#112240;--card:#162B4A;--line:#2A4E78;--sky:#5BC8F5;--sand:#D8B07A;--text:#F0F8FF;--muted:#8FB3CF;--green:#10B981}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -28,6 +28,27 @@ a{color:var(--sky)}
 .soc a{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--line)}
 .soc svg{width:17px;height:17px;fill:var(--text)}
 .soc a:hover{border-color:var(--sky)}
+/* share */
+.soc button.shr{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--sky);border:1px solid var(--sky);cursor:pointer;padding:0}
+.soc button.shr svg{fill:var(--ink)}
+/* share sheet */
+#shOv{position:fixed;inset:0;z-index:3000;background:rgba(4,10,20,.7);display:none;align-items:center;justify-content:center;padding:14px}
+#shOv.on{display:flex}
+#shBox{position:relative;background:var(--deep);border:1px solid var(--line);border-radius:18px;width:420px;max-width:100%;max-height:92vh;overflow:auto;padding:18px 18px 20px;text-align:center}
+#shX{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--deep);color:var(--text);font-size:16px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+#shBox h3{margin:0 0 4px;font-family:'Dancing Script',cursive;font-size:30px;font-weight:700}
+#shBox .sub{color:var(--muted);font-size:13px;margin-bottom:12px}
+.shc{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:12px}
+.shc button{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:6px 11px;font:inherit;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.shc button svg{width:14px;height:14px;fill:var(--text)}
+.shc button.on{background:var(--sky);border-color:var(--sky);color:var(--ink)}.shc button.on svg{fill:var(--ink)}
+#shQr{background:#fff;border-radius:14px;padding:12px;display:inline-block;line-height:0}
+#shQr canvas{width:240px;height:240px;max-width:62vw;max-height:62vw}
+#shUrl{font-size:13px;color:var(--sky);margin:10px 0 12px;word-break:break-all}
+.sha{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.sha button{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 14px;font:inherit;font-size:14px;cursor:pointer}
+.sha button.main{background:var(--sky);border-color:var(--sky);color:var(--ink);font-weight:700}
+@media (max-width:400px){.top img{width:32px;height:32px}.top{gap:7px;padding-left:10px;padding-right:10px}.word{font-size:20px}.soc{gap:4px}.soc a,.soc button.shr{width:28px;height:28px}.soc svg{width:14px;height:14px}}
 /* home */
 #home{display:none;padding:calc(env(safe-area-inset-top) + 76px) 16px 40px;max-width:980px;margin:0 auto}
 .hero{display:flex;align-items:center;gap:22px;margin:10px 0 26px}
@@ -95,6 +116,8 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 @keyframes pl{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.5);opacity:0}}
 @media (prefers-reduced-motion:reduce){.pulse::before{animation:none}}
 .vdot{width:14px;height:14px;border-radius:50%;background:var(--sky);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.ndot.sd,.num.sd{border-color:#F59E0B;color:#F59E0B}.sdl{font-size:12px;color:#F59E0B}
+.pvbar{background:#3a2a0b;border:1px solid #F59E0B;color:#FCD34D;border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.4;margin:6px 0 10px}
 .ndot{width:24px;height:24px;border-radius:50%;background:#0D1B2E;border:2px solid var(--sand);color:var(--sand);font:700 12px Outfit,sans-serif;display:flex;align-items:center;justify-content:center}
 .leaflet-popup-content-wrapper{background:var(--ink);color:var(--text);border-radius:14px;border:1px solid var(--line)}
 .leaflet-popup-tip{background:var(--ink)}
@@ -106,7 +129,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 /* phone: map on top, panel below as a sheet */
 @media (max-width:820px){
   .word{font-size:22px}
-  .soc a{width:30px;height:30px}.soc svg{width:15px;height:15px}
+  .soc a,.soc button.shr{width:30px;height:30px}.soc svg{width:15px;height:15px}
   #map{left:0;right:0;bottom:0;top:var(--hdr,56px)}
   #panel{top:auto;bottom:0;left:0;right:0;width:auto;height:var(--sheet,46vh);padding:0 16px 30px;border-right:none;border-top:1px solid var(--line);border-radius:18px 18px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.45);transition:height .25s ease;overscroll-behavior:contain}
   #panel.drag{transition:none}
@@ -132,6 +155,16 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
   <div class="grid" id="trips"><div class="empty">Loading…</div></div>
 </main>
 
+<div id="shOv" role="dialog" aria-modal="true" aria-label="Share Travellers 1969"><div id="shBox">
+  <button id="shX" type="button" title="Close" aria-label="Close">✕</button>
+  <h3>Share Travellers 1969</h3>
+  <div class="sub">Send the link, or let someone scan the code.</div>
+  <div class="shc" id="shChips"></div>
+  <div id="shQr"></div>
+  <div id="shUrl"></div>
+  <div class="sha"><button class="main" id="shGo" type="button">📤 Share link</button><button id="shCp" type="button">📋 Copy link</button><button id="shDl" type="button">⬇️ Save QR</button></div>
+</div></div>
+
 <main id="trip">
   <div id="map"></div>
   <aside id="panel"><div class="empty">Loading…</div></aside>
@@ -141,7 +174,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 <script>
 function setHdr(){var h=document.querySelector('.top');if(h)document.documentElement.style.setProperty('--hdr',h.offsetHeight+'px');}
 setHdr();window.addEventListener('resize',function(){setHdr();if(window.map&&map.invalidateSize)map.invalidateSize();});
-var SITE_V='v10';
+var SITE_V='v12';
 var BASE='https://firestore.googleapis.com/v1/projects/travellers-1969-b3a8e/databases/(default)/documents/public/';
 var KEY='AIzaSyAxPJoDENiNy3wA2rFs-MFcJkUwBN1YwK8';
 var SOC=[['ig','Instagram','https://www.instagram.com/travellers_1969/'],['tt','TikTok','https://www.tiktok.com/@travellers_1969'],
@@ -161,7 +194,38 @@ function fmtShort(d){if(!d)return '';var x=new Date(d+'T12:00:00');return isNaN(
 function num(n){return (n||0).toLocaleString('en-US');}
 function load(doc){return fetch(BASE+encodeURIComponent(doc)+'?key='+KEY).then(function(r){if(r.status===404)return null;if(!r.ok)throw new Error(r.status);return r.json();})
   .then(function(d){if(!d||!d.fields||!d.fields.json)return null;return JSON.parse(d.fields.json.stringValue);});}
-$('soc').innerHTML=SOC.map(function(s){return '<a href="'+s[2]+'" target="_blank" rel="noopener" aria-label="'+s[1]+'" title="'+s[1]+'">'+ICON[s[0]]+'</a>';}).join('');
+$('soc').innerHTML=SOC.map(function(s){return '<a href="'+s[2]+'" target="_blank" rel="noopener" aria-label="'+s[1]+'" title="'+s[1]+'">'+ICON[s[0]]+'</a>';}).join('')
+  +'<button class="shr" type="button" id="shBtn" aria-label="Share" title="Share this page / QR codes"><svg viewBox="0 0 24 24"><path d="M18 16a3 3 0 00-2.4 1.2l-6.7-3.4a3 3 0 000-1.6l6.7-3.4A3 3 0 1015 7a3 3 0 00.1.8L8.4 11.2a3 3 0 100 3.6l6.7 3.4A3 3 0 1018 16z"/></svg></button>';
+/* ---------- share sheet: link + QR codes (site, this trip, socials) ---------- */
+var SH={cur:0,list:[],lib:null};
+function shLib(){if(window.qrcode)return Promise.resolve();if(SH.lib)return SH.lib;
+  SH.lib=new Promise(function(ok,no){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';s.onload=ok;s.onerror=no;document.head.appendChild(s);});return SH.lib;}
+function shTargets(){var slug=String(location.pathname||'').replace(/^\/+|\/+$/g,'').split('/')[0],o=[];
+  if(/^[a-z0-9-]{1,40}$/.test(slug)){var nm=(document.querySelector('#panel h2')||{}).textContent||'This trip';o.push({k:'trip',l:'This trip',t:nm,u:'https://travellers1969.web.app/'+slug,i:''});}
+  o.push({k:'site',l:'All our trips',t:'Travellers 1969',u:'https://travellers1969.web.app',i:''});
+  SOC.forEach(function(s){o.push({k:s[0],l:s[1],t:'Travellers 1969 on '+s[1],u:s[2],i:ICON[s[0]]});});return o;}
+function shDraw(){var t=SH.list[SH.cur];$('shChips').querySelectorAll('button').forEach(function(b,k){b.classList.toggle('on',k===SH.cur);});
+  $('shUrl').textContent=t.u.replace(/^https:\/\//,'');$('shQr').innerHTML='';
+  shLib().then(function(){var q=qrcode(0,'H');q.addData(t.u);q.make();var n=q.getModuleCount(),cell=Math.max(4,Math.floor(480/n)),m=cell*2,S=n*cell+2*m;
+    var c=document.createElement('canvas');c.width=S;c.height=S;var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,S,S);x.fillStyle='#0D1B2E';
+    for(var r=0;r<n;r++)for(var k=0;k<n;k++)if(q.isDark(r,k))x.fillRect(m+k*cell,m+r*cell,cell,cell);
+    var lg=new Image();lg.onload=function(){var L=Math.round(S*0.22),p=(S-L)/2;x.fillStyle='#fff';x.beginPath();x.arc(S/2,S/2,L/2+6,0,7);x.fill();
+      x.save();x.beginPath();x.arc(S/2,S/2,L/2,0,7);x.clip();x.drawImage(lg,p,p,L,L);x.restore();};lg.src='/pin-travellers.png';
+    $('shQr').appendChild(c);SH.canvas=c;}).catch(function(){$('shQr').innerHTML='<div style="color:#0D1B2E;padding:20px;line-height:1.4">QR code needs an internet connection</div>';});}
+function shOpen(){SH.list=shTargets();SH.cur=0;
+  $('shChips').innerHTML=SH.list.map(function(t,k){return '<button type="button" data-k="'+k+'">'+(t.i||'')+esc(t.l)+'</button>';}).join('');
+  $('shChips').querySelectorAll('button').forEach(function(b){b.onclick=function(){SH.cur=+b.getAttribute('data-k');shDraw();};});
+  $('shOv').classList.add('on');shDraw();}
+function shClose(){$('shOv').classList.remove('on');}
+$('shBtn').onclick=shOpen;$('shX').onclick=shClose;
+$('shOv').addEventListener('click',function(e){if(e.target===$('shOv'))shClose();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')shClose();});
+$('shCp').onclick=function(){var t=SH.list[SH.cur],b=this;(navigator.clipboard?navigator.clipboard.writeText(t.u):Promise.reject()).then(function(){b.textContent='✅ Copied';setTimeout(function(){b.textContent='📋 Copy link';},1600);}).catch(function(){prompt('Copy this link:',t.u);});};
+$('shGo').onclick=function(){var t=SH.list[SH.cur];
+  if(navigator.share)navigator.share({title:t.t,text:'Follow Serge & Els, two Belgians born in 1969, travelling the world.',url:t.u}).catch(function(){});
+  else $('shCp').click();};
+$('shDl').onclick=function(){var t=SH.list[SH.cur];if(!SH.canvas)return;var a=document.createElement('a');a.href=SH.canvas.toDataURL('image/png');
+  a.download='Travellers1969_QR_'+t.l.replace(/[^A-Za-z0-9]+/g,'_')+'.png';document.body.appendChild(a);a.click();a.remove();};
 var CHIP={live:['live','🟢 On the road now'],done:['done','✅ Trip completed'],soon:['soon','🔜 Coming soon']};
 function dateRange(t){if(t.status==='soon')return 'Starting soon';if(t.status==='live')return 'Since '+fmtD(t.from);return fmtD(t.from)+' – '+fmtD(t.to);}
 
@@ -204,8 +268,9 @@ function showTrip(slug){$('trip').style.display='block';
     if(t.ahead&&t.ahead.length>1){L.polyline(t.ahead,{color:'#ffffff',weight:7,opacity:.8}).addTo(map);
       L.polyline(t.ahead,{color:'#1D4ED8',weight:4,opacity:.95,dashArray:'8 8'}).addTo(map);}
     /* side trips from a base stay: dotted, green once visited */
-    (t.side||[]).forEach(function(q){var ll=[[q[0],q[1]],[q[2],q[3]]];L.polyline(ll,{color:'#ffffff',weight:6,opacity:.75,interactive:false}).addTo(map);
-      L.polyline(ll,{color:q[4]?'#10B981':'#F59E0B',weight:3.5,opacity:1,dashArray:'1 8',lineCap:'round',interactive:false}).addTo(map);});
+    (t.side||[]).forEach(function(q){var ll=Array.isArray(q)?[[q[0],q[1]],[q[2],q[3]]]:(q.g||[]),v=Array.isArray(q)?q[4]:q.v;if(ll.length<2)return;
+      L.polyline(ll,{color:'#ffffff',weight:6,opacity:.75,interactive:false}).addTo(map);
+      L.polyline(ll,{color:v?'#10B981':'#F59E0B',weight:3.5,opacity:1,dashArray:'1 8',lineCap:'round',interactive:false}).addTo(map);});
     if(t.done&&t.done.length>1){L.polyline(t.done,{color:'#ffffff',weight:9,opacity:.95}).addTo(map);
       L.polyline(t.done,{color:'#10B981',weight:6,opacity:1}).addTo(map);}
     var byKey={};
@@ -214,14 +279,16 @@ function showTrip(slug){$('trip').style.display='block';
         .bindPopup('<div class="pp"><div class="n">'+esc(v.n)+'</div><div class="s">'+esc(v.s)+(v.d?(' · '+esc(fmtD(v.d))):'')+'</div>'+(v.p&&v.p.length?postsHtml(v.p):'<div class="s">Posts coming soon</div>')+'</div>',{maxWidth:280});
       byKey['v'+k]=m;});
     (t.next||[]).forEach(function(n,k){
-      var m=L.marker([n.a,n.o],{icon:divIcon('<div class="ndot">'+(k+1)+'</div>',24)}).addTo(map)
-        .bindPopup('<div class="pp"><div class="n">'+esc(n.n)+'</div><div class="s">'+esc(n.s)+' · coming up</div></div>');
+      var m=L.marker([n.a,n.o],{icon:divIcon('<div class="ndot'+(n.sd?' sd':'')+'">'+(k+1)+'</div>',24)}).addTo(map)
+        .bindPopup('<div class="pp"><div class="n">'+esc(n.n)+'</div><div class="s">'+esc(n.s)+' · coming up'+(n.sd?(' · '+(n.sd===2?'where we stay in ':'side trip from ')+esc(n.b||'')):'')+'</div></div>');
       byKey['n'+k]=m;});
     if(t.here){byKey.here=L.marker([t.here.a,t.here.o],{icon:divIcon('<div class="pulse"><img src="/pin-travellers.png" alt=""></div>',58),zIndexOffset:1000}).addTo(map)
       .bindPopup('<div class="pp"><div class="n">'+(t.status==='done'?'Last stop':'We’re here')+'</div><div class="s">'+esc(t.here.n)+', '+esc(t.here.s)+'</div></div>');}
     if(t.bbox)map.fitBounds([[t.bbox[0],t.bbox[1]],[t.bbox[2],t.bbox[3]]],{padding:[30,30]});
     var mi=Math.round((s.km||0)/1.609344);
-    var h='<a class="back" href="/">← All trips</a><h2>'+esc(t.name)+'</h2>'
+    if(t.preview){var mr=document.createElement('meta');mr.name='robots';mr.content='noindex,nofollow';document.head.appendChild(mr);document.title='Preview · '+document.title;}
+    var h=(t.preview?'<div class="pvbar">👁 <b>Preview</b> — only people with this link can see it. Followers don’t see this page; it’s updated when you press Preview in the planner.</div>':'')
+      +'<a class="back" href="/">← All trips</a><h2>'+esc(t.name)+'</h2>'
       +'<span class="chip '+c[0]+'">'+c[1]+'</span><div class="dates">'+esc(dateRange(t))+'</div>'
       +(function(){var done=t.status==='done',left=s.kmLeft||0,posts=0;(t.visited||[]).forEach(function(v){posts+=(v.p||[]).length;});
         function tile(big,small){return '<div class="stat"><b>'+big+'</b><span>'+small+'</span></div>';}
@@ -232,7 +299,7 @@ function showTrip(slug){$('trip').style.display='block';
           +(done?tile(num(posts)+' '+(posts===1?'post':'posts'),'on our socials'):tile(num(s.visited)+'/'+num(s.total)+' stops',num(Math.max(0,s.total-s.visited))+' to go'))
           +'</div>';})();
     if(t.here&&t.status!=='done')h+='<div class="here" data-k="here"><img src="/pin-travellers.png" alt=""><div><small>'+(t.status==='done'?'Last stop':'We’re here')+'</small><b>'+esc(t.here.n)+'</b><small>'+esc(t.here.s)+'</small></div></div>';
-    if(t.next&&t.next.length)h+='<h4>Coming up</h4>'+t.next.map(function(n,k){return '<div class="next" data-k="n'+k+'"><span class="num">'+(k+1)+'</span><span>'+esc(n.n)+' <span style="color:var(--muted);font-size:12px">'+esc(n.s)+'</span></span></div>';}).join('');
+    if(t.next&&t.next.length)h+='<h4>Coming up</h4>'+t.next.map(function(n,k){return '<div class="next" data-k="n'+k+'"><span class="num'+(n.sd?' sd':'')+'">'+(k+1)+'</span><span>'+esc(n.n)+' <span style="color:var(--muted);font-size:12px">'+esc(n.s)+'</span>'+(n.sd?('<br><span class="sdl">'+(n.sd===2?'🏨 where we stay in ':'↳ side trip from ')+esc(n.b||'')+'</span>'):'')+'</span></div>';}).join('');
     var vis=(t.visited||[]).map(function(v,k){return {v:v,k:k};});
     if(vis.length){h+='<h4>Where we\u2019ve been</h4>';
       if(vis.length>6){
