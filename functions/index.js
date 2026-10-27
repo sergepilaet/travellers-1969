@@ -668,7 +668,7 @@ exports.followPage=functions.region(REGION).https.onRequest(async(req,res)=>{
       +'<meta property="og:image" content="'+img+'">\n<meta property="og:image:width" content="1200">\n<meta property="og:image:height" content="630">\n'
       +'<meta name="twitter:card" content="summary_large_image">';
     tpl=tpl.replace(/<!--og-->[\s\S]*?<!--\/og-->/,'<!--og-->'+tags+'<!--/og-->');}
-  res.set('Cache-Control','public, max-age=300, s-maxage=300');res.status(200).send(tpl);});
+  res.set('Cache-Control','public, max-age=300, s-maxage=1800');res.status(200).send(tpl);});
 exports.followOg=functions.region(REGION).https.onRequest(async(req,res)=>{
   const m=String(req.path||'').match(/([a-z0-9-]{1,40})\.jpg$/);if(!m){res.status(404).send('');return;}
   try{const d=await FSDB.collection('public').doc(m[1]+'_og').get();

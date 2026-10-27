@@ -12,9 +12,11 @@
 <link rel="icon" type="image/png" href="/icon-follow-192.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icon-follow-512.png">
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<!-- Travellers 1969 · public follower page · v6 · own site · v12 (with app v218) -->
+<!-- Travellers 1969 · public follower page · v6 · own site · v13 (with app v218) -->
 <style>
 :root{--ink:#0D1B2E;--deep:#112240;--card:#162B4A;--line:#2A4E78;--sky:#5BC8F5;--sand:#D8B07A;--text:#F0F8FF;--muted:#8FB3CF;--green:#10B981}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -174,7 +176,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 <script>
 function setHdr(){var h=document.querySelector('.top');if(h)document.documentElement.style.setProperty('--hdr',h.offsetHeight+'px');}
 setHdr();window.addEventListener('resize',function(){setHdr();if(window.map&&map.invalidateSize)map.invalidateSize();});
-var SITE_V='v12';
+var SITE_V='v13';
 var BASE='https://firestore.googleapis.com/v1/projects/travellers-1969-b3a8e/databases/(default)/documents/public/';
 var KEY='AIzaSyAxPJoDENiNy3wA2rFs-MFcJkUwBN1YwK8';
 var SOC=[['ig','Instagram','https://www.instagram.com/travellers_1969/'],['tt','TikTok','https://www.tiktok.com/@travellers_1969'],
@@ -192,6 +194,8 @@ function safeUrl(u){u=String(u||'');return /^https:\/\//i.test(u)?u:'#';}
 function fmtD(d){if(!d)return '';var x=new Date(d+'T12:00:00');return isNaN(x)?d:x.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
 function fmtShort(d){if(!d)return '';var x=new Date(d+'T12:00:00');return isNaN(x)?d:x.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
 function num(n){return (n||0).toLocaleString('en-US');}
+var LCACHE={};
+function loadC(doc){if(!LCACHE[doc])LCACHE[doc]=load(doc).catch(function(e){delete LCACHE[doc];throw e;});return LCACHE[doc];}
 function load(doc){return fetch(BASE+encodeURIComponent(doc)+'?key='+KEY).then(function(r){if(r.status===404)return null;if(!r.ok)throw new Error(r.status);return r.json();})
   .then(function(d){if(!d||!d.fields||!d.fields.json)return null;return JSON.parse(d.fields.json.stringValue);});}
 $('soc').innerHTML=SOC.map(function(s){return '<a href="'+s[2]+'" target="_blank" rel="noopener" aria-label="'+s[1]+'" title="'+s[1]+'">'+ICON[s[0]]+'</a>';}).join('')
@@ -249,6 +253,12 @@ function showHome(){$('home').style.display='block';
       return '<a class="trip" href="/'+encodeURIComponent(t.slug)+'">'+miniSvg(t.line)+'<div class="b"><span class="chip '+c[0]+'">'+c[1]+'</span>'
         +'<h3>'+esc(t.name)+'</h3><div class="m">'+esc(dateRange(t))+'</div>'
         +'<div class="m" style="margin-top:4px">'+(s.visited||0)+' of '+(s.total||0)+' stops'+(s.km?(' · '+num(s.km)+' km'):'')+(s.states?(' · '+s.states+' state'+(s.states===1?'':'s')):'')+'</div></div></a>';}).join('');
+    $('trips').querySelectorAll('a.trip').forEach(function(a){var sl=decodeURIComponent(a.getAttribute('href').slice(1));
+      var pre=function(){loadC(sl).catch(function(){});};a.addEventListener('mouseenter',pre);a.addEventListener('touchstart',pre,{passive:true});
+      a.addEventListener('click',function(e){if(e.metaKey||e.ctrlKey||e.shiftKey||e.button)return;e.preventDefault();
+        history.pushState({trip:sl},'','/'+encodeURIComponent(sl));$('home').style.display='none';window.scrollTo(0,0);showTrip(sl);});});
+    /* most visitors open the newest trip: fetch it in the background */
+    setTimeout(function(){if(list[0])loadC(list[0].slug).catch(function(){});},400);
   }).catch(function(){$('trips').innerHTML='<div class="empty">Could not load the trips. Please try again in a moment.</div>';});}
 
 /* ---------- one trip ---------- */
@@ -261,7 +271,7 @@ function showTrip(slug){$('trip').style.display='block';
   map=L.map('map',{zoomControl:true,attributionControl:true,worldCopyJump:true}).setView([44,-100],4);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
-  load(slug).then(function(t){
+  loadC(slug).then(function(t){
     if(!t){$('panel').innerHTML='<a class="back" href="/">← All trips</a><div class="empty">This trip isn’t shared (any more).<br><a href="/">See our other trips</a></div>';return;}
     document.title=t.name+' · Travellers 1969';
     var s=t.stats||{},c=CHIP[t.status]||CHIP.soon;
@@ -322,7 +332,10 @@ function showTrip(slug){$('trip').style.display='block';
     function bindRows(root){root.querySelectorAll('[data-k]').forEach(function(el){if(el._b)return;el._b=1;el.addEventListener('click',function(e){
       if(e.target.closest('a'))return;var m=byKey[el.getAttribute('data-k')];if(!m)return;
       if(isPhone())setSheet('peek');
-      map.flyTo(m.getLatLng(),Math.max(map.getZoom(),9),{duration:.8});setTimeout(function(){m.openPopup();},850);});});}
+      var ll=m.getLatLng(),z=Math.max(map.getZoom(),9),far=map.getCenter().distanceTo(ll)>400000;
+      if(map.getCenter().distanceTo(ll)<20&&map.getZoom()===z){m.openPopup();return;}
+      map.once('moveend',function(){m.openPopup();});
+      if(far)map.setView(ll,z,{animate:false});else map.flyTo(ll,z,{duration:.45});});});}
     bindRows($('panel'));drawTL();
     Object.keys(byKey).forEach(function(k){byKey[k].on('popupopen',function(){
       document.querySelectorAll('.st.hl').forEach(function(x){x.classList.remove('hl');});
@@ -351,6 +364,7 @@ var parts=location.pathname.replace(/\/+$/,'').split('/').filter(Boolean);
 var slug=(parts[0]==='follow'?parts[1]:parts[0])||new URLSearchParams(location.search).get('trip')||'';
 try{slug=decodeURIComponent(slug);}catch(e){slug='';}
 if(slug&&/^[a-z0-9-]{1,40}$/.test(slug))showTrip(slug);else showHome();
+window.addEventListener('popstate',function(){location.reload();});
 </script>
 </body>
 </html>
