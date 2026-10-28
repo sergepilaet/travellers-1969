@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<!-- Travellers 1969 · public follower page · v6 · own site · v13 (with app v218) -->
+<!-- Travellers 1969 · public follower page · v6 · own site · v14 (with app v219) -->
 <style>
 :root{--ink:#0D1B2E;--deep:#112240;--card:#162B4A;--line:#2A4E78;--sky:#5BC8F5;--sand:#D8B07A;--text:#F0F8FF;--muted:#8FB3CF;--green:#10B981}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -118,6 +118,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 @keyframes pl{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.5);opacity:0}}
 @media (prefers-reduced-motion:reduce){.pulse::before{animation:none}}
 .vdot{width:14px;height:14px;border-radius:50%;background:var(--sky);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.plane{width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center}.plane svg{width:17px;height:17px}
 .ndot.sd,.num.sd{border-color:#F59E0B;color:#F59E0B}.sdl{font-size:12px;color:#F59E0B}
 .pvbar{background:#3a2a0b;border:1px solid #F59E0B;color:#FCD34D;border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.4;margin:6px 0 10px}
 .ndot{width:24px;height:24px;border-radius:50%;background:#0D1B2E;border:2px solid var(--sand);color:var(--sand);font:700 12px Outfit,sans-serif;display:flex;align-items:center;justify-content:center}
@@ -176,7 +177,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 <script>
 function setHdr(){var h=document.querySelector('.top');if(h)document.documentElement.style.setProperty('--hdr',h.offsetHeight+'px');}
 setHdr();window.addEventListener('resize',function(){setHdr();if(window.map&&map.invalidateSize)map.invalidateSize();});
-var SITE_V='v13';
+var SITE_V='v14';
 var BASE='https://firestore.googleapis.com/v1/projects/travellers-1969-b3a8e/databases/(default)/documents/public/';
 var KEY='AIzaSyAxPJoDENiNy3wA2rFs-MFcJkUwBN1YwK8';
 var SOC=[['ig','Instagram','https://www.instagram.com/travellers_1969/'],['tt','TikTok','https://www.tiktok.com/@travellers_1969'],
@@ -275,14 +276,24 @@ function showTrip(slug){$('trip').style.display='block';
     if(!t){$('panel').innerHTML='<a class="back" href="/">← All trips</a><div class="empty">This trip isn’t shared (any more).<br><a href="/">See our other trips</a></div>';return;}
     document.title=t.name+' · Travellers 1969';
     var s=t.stats||{},c=CHIP[t.status]||CHIP.soon;
-    if(t.ahead&&t.ahead.length>1){L.polyline(t.ahead,{color:'#ffffff',weight:7,opacity:.8}).addTo(map);
+    /* lines can be one array of points, or several runs when a flight cuts them (v14) */
+    var hasLine=function(a){return !!(a&&a.length&&(Array.isArray(a[0][0])?a.some(function(r){return r.length>1;}):a.length>1));};
+    t.ahead=hasLine(t.ahead)?t.ahead:null;t.done=hasLine(t.done)?t.done:null;
+    if(t.ahead){L.polyline(t.ahead,{color:'#ffffff',weight:7,opacity:.8}).addTo(map);
       L.polyline(t.ahead,{color:'#1D4ED8',weight:4,opacity:.95,dashArray:'8 8'}).addTo(map);}
     /* side trips from a base stay: dotted, green once visited */
     (t.side||[]).forEach(function(q){var ll=Array.isArray(q)?[[q[0],q[1]],[q[2],q[3]]]:(q.g||[]),v=Array.isArray(q)?q[4]:q.v;if(ll.length<2)return;
       L.polyline(ll,{color:'#ffffff',weight:6,opacity:.75,interactive:false}).addTo(map);
       L.polyline(ll,{color:v?'#10B981':'#F59E0B',weight:3.5,opacity:1,dashArray:'1 8',lineCap:'round',interactive:false}).addTo(map);});
-    if(t.done&&t.done.length>1){L.polyline(t.done,{color:'#ffffff',weight:9,opacity:.95}).addTo(map);
+    if(t.done){L.polyline(t.done,{color:'#ffffff',weight:9,opacity:.95}).addTo(map);
       L.polyline(t.done,{color:'#10B981',weight:6,opacity:1}).addTo(map);}
+    /* flights: curved slate line with a plane, dash-dot until flown, solid green once flown */
+    (t.fly||[]).forEach(function(q){var g=q.g||[];if(g.length<2)return;var col=q.v?'#10B981':'#334155';
+      L.polyline(g,{color:'#ffffff',weight:6,opacity:.9,interactive:false}).addTo(map);
+      L.polyline(g,{color:col,weight:3,opacity:1,dashArray:q.v?null:'12 6 2 6',lineCap:'round',interactive:false}).addTo(map);
+      var a=g[0],b=g[g.length-1],k=Math.cos((a[0]+b[0])/2*Math.PI/180),ang=Math.atan2((b[1]-a[1])*k,b[0]-a[0])*180/Math.PI;
+      L.marker(g[Math.floor(g.length/2)],{icon:divIcon('<div class="plane"><svg viewBox="0 0 24 24" style="transform:rotate('+Math.round(ang)+'deg)"><path fill="'+col+'" d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></div>',26),keyboard:false})
+        .bindPopup('<div class="pp"><div class="n">✈ Flight</div><div class="s">'+esc(q.a||'')+' → '+esc(q.b||'')+'</div></div>').addTo(map);});
     var byKey={};
     (t.visited||[]).forEach(function(v,k){
       var m=L.marker([v.a,v.o],{icon:divIcon('<div class="vdot"></div>',14),keyboard:false}).addTo(map)
@@ -309,7 +320,7 @@ function showTrip(slug){$('trip').style.display='block';
           +(done?tile(num(posts)+' '+(posts===1?'post':'posts'),'on our socials'):tile(num(s.visited)+'/'+num(s.total)+' stops',num(Math.max(0,s.total-s.visited))+' to go'))
           +'</div>';})();
     if(t.here&&t.status!=='done')h+='<div class="here" data-k="here"><img src="/pin-travellers.png" alt=""><div><small>'+(t.status==='done'?'Last stop':'We’re here')+'</small><b>'+esc(t.here.n)+'</b><small>'+esc(t.here.s)+'</small></div></div>';
-    if(t.next&&t.next.length)h+='<h4>Coming up</h4>'+t.next.map(function(n,k){return '<div class="next" data-k="n'+k+'"><span class="num'+(n.sd?' sd':'')+'">'+(k+1)+'</span><span>'+esc(n.n)+' <span style="color:var(--muted);font-size:12px">'+esc(n.s)+'</span>'+(n.sd?('<br><span class="sdl">'+(n.sd===2?'🏨 where we stay in ':'↳ side trip from ')+esc(n.b||'')+'</span>'):'')+'</span></div>';}).join('');
+    if(t.next&&t.next.length)h+='<h4>Coming up</h4>'+t.next.map(function(n,k){return '<div class="next" data-k="n'+k+'"><span class="num'+(n.sd?' sd':'')+'">'+(k+1)+'</span><span>'+(n.fl?'✈ ':'')+esc(n.n)+' <span style="color:var(--muted);font-size:12px">'+esc(n.s)+'</span>'+(n.sd?('<br><span class="sdl">'+(n.sd===2?'🏨 where we stay in ':'↳ side trip from ')+esc(n.b||'')+'</span>'):'')+'</span></div>';}).join('');
     var vis=(t.visited||[]).map(function(v,k){return {v:v,k:k};});
     if(vis.length){h+='<h4>Where we\u2019ve been</h4>';
       if(vis.length>6){
@@ -320,7 +331,7 @@ function showTrip(slug){$('trip').style.display='block';
     h+='<div class="foot">Updated '+esc(new Date(t.updated).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' \u00b7 site '+SITE_V+'<br>Follow along on '
       +SOC.map(function(x){return '<a href="'+x[2]+'" target="_blank" rel="noopener">'+x[1]+'</a>';}).join(' · ')+'</div>';
     $('panel').innerHTML='<div id="grab"><i></i><small id="grabT">Swipe up for the list</small></div>'+h;
-    function stHtml(o){var v=o.v;return '<div class="st" data-k="v'+o.k+'"><div class="n">'+esc(v.n)+'</div><div class="s">'+esc(v.s)+(v.d?(' \u00b7 '+esc(fmtD(v.d))):'')
+    function stHtml(o){var v=o.v;return '<div class="st" data-k="v'+o.k+'"><div class="n">'+(v.fl?'✈ ':'')+esc(v.n)+'</div><div class="s">'+esc(v.s)+(v.d?(' \u00b7 '+esc(fmtD(v.d))):'')
       +(v.p&&v.p.length?(' \u00b7 '+v.p.length+' post'+(v.p.length===1?'':'s')):'')+'</div>'+postsHtml(v.p)+'</div>';}
     function drawTL(){var tl=$('tl');if(!tl)return;var q=($('q')&&$('q').value||'').trim().toLowerCase(),fs=$('fs')?$('fs').value:'',
         wp=$('wp')&&$('wp').checked;
