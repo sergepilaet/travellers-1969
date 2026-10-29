@@ -787,3 +787,56 @@ exports.fsCaption=functions.region(REGION).runWith({timeoutSeconds:120,memory:'2
     const out=await aiWrite(captionSystem(lang),user);
     out.success=true;out.gNote=gNote;return out;
   }catch(e){console.error(e);return {success:false,message:(e&&e.message)||'Could not write the texts'};}});
+
+/* ===== v188: new follower subscriber -> Brevo list (key stays server-side as secret BREVO_KEY) ===== */
+const BREVO_LIST_ID = 3;            // Brevo list "Followers" (#3)
+const BREVO_DOI_TEMPLATE = 0;       // 0 = off; set to a Brevo double-opt-in template number to turn on
+const BREVO_DOI_REDIRECT = 'https://travellers1969.web.app/?subscribed=1';
+exports.subscriberToBrevo = functions.region(REGION).runWith({secrets:['BREVO_KEY']})
+  .firestore.document('subscribers/{id}').onCreate(async (snap) => {
+    const d = snap.data() || {};
+    const email = String(d.email || '').trim().toLowerCase();
+    if (!email) return null;
+    const attrs = {};
+    if (d.name) attrs.FIRSTNAME = String(d.name).slice(0, 60);
+    if (d.src) attrs.SOURCE = String(d.src).slice(0, 80);
+    const doi = BREVO_DOI_TEMPLATE > 0;
+    const url = doi ? 'https://api.brevo.com/v3/contacts/doubleOptinConfirmation' : 'https://api.brevo.com/v3/contacts';
+    const body = doi
+      ? { email, attributes: attrs, includeListIds: [BREVO_LIST_ID], templateId: BREVO_DOI_TEMPLATE, redirectionUrl: BREVO_DOI_REDIRECT }
+      : { email, attributes: attrs, listIds: [BREVO_LIST_ID], updateEnabled: true };
+    let status = 'ok', info = '';
+    try {
+      const r = await fetch(url, { method: 'POST',
+        headers: { 'api-key': process.env.BREVO_KEY, 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify(body) });
+      if (!r.ok) {
+        info = (await r.text()).slice(0, 300);
+        // SOURCE/FIRSTNAME attribute unknown in Brevo -> retry with email only
+        if (r.status === 400 && /attribute/i.test(info)) {
+          delete body.attributes;
+          const r2 = await fetch(url, { method: 'POST',
+            headers: { 'api-key': process.env.BREVO_KEY, 'content-type': 'application/json', accept: 'application/json' },
+            body: JSON.stringify(body) });
+          if (r2.ok) info = ''; else { status = 'error'; info = (await r2.text()).slice(0, 300); }
+        } else status = 'error';
+      }
+    } catch (e) { status = 'error'; info = String(e && e.message || e).slice(0, 300); }
+    if (status === 'error') console.error('Brevo', email, info);
+    await snap.ref.set({ brevo: status, brevoInfo: info, brevoAt: new Date().toISOString() }, { merge: true });
+    return null;
+  });
+
+/* ===== v189: weekly keep-alive so the Brevo key never hits "90 days unused" ===== */
+exports.brevoKeepAlive = functions.region(REGION).runWith({secrets:['BREVO_KEY']})
+  .pubsub.schedule('every monday 09:00').timeZone('America/Boise').onRun(async () => {
+    try {
+      const r = await fetch('https://api.brevo.com/v3/contacts/lists/' + BREVO_LIST_ID,
+        { headers: { 'api-key': process.env.BREVO_KEY, accept: 'application/json' } });
+      const ok = r.ok;
+      await admin.firestore().collection('config').doc('brevo')
+        .set({ lastPing: new Date().toISOString(), pingOk: ok, pingStatus: r.status }, { merge: true });
+      if (!ok) console.error('Brevo keep-alive failed', r.status, (await r.text()).slice(0, 200));
+    } catch (e) { console.error('Brevo keep-alive error', e); }
+    return null;
+  });
