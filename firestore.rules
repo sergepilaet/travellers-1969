@@ -9,5 +9,16 @@ service cloud.firestore {
     match /public/{doc} {
       allow read: if true;
     }
+    // email sign-ups from the follower site: anyone may add their own email once; nobody else can read or change them
+    // (only the two of you can read them, via the rule above)
+    match /subscribers/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['email','name','src','at'])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 120
+        && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        && (!('name' in request.resource.data) || (request.resource.data.name is string && request.resource.data.name.size() <= 60))
+        && (!('src' in request.resource.data) || (request.resource.data.src is string && request.resource.data.src.size() <= 80))
+        && (!('at' in request.resource.data) || (request.resource.data.at is string && request.resource.data.at.size() <= 40));
+    }
   }
 }

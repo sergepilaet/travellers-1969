@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0D1B2E">
 <!--og--><title>Travellers 1969 · Follow our trips</title>
-<meta name="description" content="Follow Serge &amp; Els, two Belgians born in 1969, travelling the world.">
-<meta property="og:description" content="Follow Serge &amp; Els, two Belgians born in 1969, travelling the world.">
+<meta name="description" content="Follow Serge &amp; Els, a Belgian-American couple born in 1969, travelling the world.">
+<meta property="og:description" content="Follow Serge &amp; Els, a Belgian-American couple born in 1969, travelling the world.">
 <meta property="og:title" content="Travellers 1969 · Follow our trips">
 <meta property="og:image" content="https://travellers1969.web.app/pin-travellers.png"><!--/og-->
 <link rel="icon" type="image/png" href="/icon-follow-192.png">
@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<!-- Travellers 1969 · public follower page · v6 · own site · v14 (with app v219) -->
+<!-- Travellers 1969 · public follower page · v6 · own site · v15 (with app v226) -->
 <style>
 :root{--ink:#0D1B2E;--deep:#112240;--card:#162B4A;--line:#2A4E78;--sky:#5BC8F5;--sand:#D8B07A;--text:#F0F8FF;--muted:#8FB3CF;--green:#10B981}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -51,6 +51,17 @@ a{color:var(--sky)}
 .sha button{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 14px;font:inherit;font-size:14px;cursor:pointer}
 .sha button.main{background:var(--sky);border-color:var(--sky);color:var(--ink);font-weight:700}
 @media (max-width:400px){.top img{width:32px;height:32px}.top{gap:7px;padding-left:10px;padding-right:10px}.word{font-size:20px}.soc{gap:4px}.soc a,.soc button.shr{width:28px;height:28px}.soc svg{width:14px;height:14px}}
+/* message + subscribe */
+.notice{background:linear-gradient(135deg,rgba(216,176,122,.18),rgba(91,200,245,.10));border:1px solid rgba(216,176,122,.45);border-radius:16px;padding:16px 18px;margin:0 0 18px;font-size:16px;line-height:1.5;white-space:pre-line}
+.notice b{color:var(--sand)}
+.sub{background:var(--deep);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:22px}
+.sub h4{margin:0 0 4px;color:var(--text);font-size:16px}.sub p{margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.5}
+.sub form{display:flex;flex-wrap:wrap;gap:8px}
+.sub input[type=email],.sub input[type=text]{flex:1 1 180px;min-width:0;background:var(--ink);border:1px solid var(--line);border-radius:10px;color:var(--text);font:inherit;font-size:15px;padding:10px 12px}
+.sub button{background:var(--sky);color:var(--ink);border:0;border-radius:10px;font:inherit;font-weight:700;font-size:15px;padding:10px 16px;cursor:pointer}
+.sub .hp{position:absolute;left:-5000px;width:1px;height:1px;overflow:hidden}
+.sub .msg{flex-basis:100%;font-size:13px;color:var(--muted);min-height:1em}
+#panel .sub{margin-top:18px}
 /* home */
 #home{display:none;padding:calc(env(safe-area-inset-top) + 76px) 16px 40px;max-width:980px;margin:0 auto}
 .hero{display:flex;align-items:center;gap:22px;margin:10px 0 26px}
@@ -153,9 +164,11 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
   <section class="hero">
     <img src="/pin-travellers.png" alt="Serge and Els">
     <div><h1>Follow our trips</h1>
-    <p>Two Belgians born in 1969, on the road, travelling the world. Pick a trip to see where we've been, where we're heading next, and the posts from every stop.</p></div>
+    <p>A Belgian-American couple, both born in 1969, on the road and travelling the world. Pick a trip to see where we've been, where we're heading next, and the posts from every stop.</p></div>
   </section>
+  <div id="notice" class="notice" style="display:none"></div>
   <div class="grid" id="trips"><div class="empty">Loading…</div></div>
+  <div class="subwrap" id="subHome"></div>
 </main>
 
 <div id="shOv" role="dialog" aria-modal="true" aria-label="Share Travellers 1969"><div id="shBox">
@@ -177,7 +190,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 <script>
 function setHdr(){var h=document.querySelector('.top');if(h)document.documentElement.style.setProperty('--hdr',h.offsetHeight+'px');}
 setHdr();window.addEventListener('resize',function(){setHdr();if(window.map&&map.invalidateSize)map.invalidateSize();});
-var SITE_V='v14';
+var SITE_V='v15';
 var BASE='https://firestore.googleapis.com/v1/projects/travellers-1969-b3a8e/databases/(default)/documents/public/';
 var KEY='AIzaSyAxPJoDENiNy3wA2rFs-MFcJkUwBN1YwK8';
 var SOC=[['ig','Instagram','https://www.instagram.com/travellers_1969/'],['tt','TikTok','https://www.tiktok.com/@travellers_1969'],
@@ -227,13 +240,33 @@ $('shOv').addEventListener('click',function(e){if(e.target===$('shOv'))shClose()
 document.addEventListener('keydown',function(e){if(e.key==='Escape')shClose();});
 $('shCp').onclick=function(){var t=SH.list[SH.cur],b=this;(navigator.clipboard?navigator.clipboard.writeText(t.u):Promise.reject()).then(function(){b.textContent='✅ Copied';setTimeout(function(){b.textContent='📋 Copy link';},1600);}).catch(function(){prompt('Copy this link:',t.u);});};
 $('shGo').onclick=function(){var t=SH.list[SH.cur];
-  if(navigator.share)navigator.share({title:t.t,text:'Follow Serge & Els, two Belgians born in 1969, travelling the world.',url:t.u}).catch(function(){});
+  if(navigator.share)navigator.share({title:t.t,text:'Follow Serge & Els, a Belgian-American couple born in 1969, travelling the world.',url:t.u}).catch(function(){});
   else $('shCp').click();};
 $('shDl').onclick=function(){var t=SH.list[SH.cur];if(!SH.canvas)return;var a=document.createElement('a');a.href=SH.canvas.toDataURL('image/png');
   a.download='Travellers1969_QR_'+t.l.replace(/[^A-Za-z0-9]+/g,'_')+'.png';document.body.appendChild(a);a.click();a.remove();};
 var CHIP={live:['live','🟢 On the road now'],done:['done','✅ Trip completed'],soon:['soon','🔜 Coming soon']};
 function dateRange(t){if(t.status==='soon')return 'Starting soon';if(t.status==='live')return 'Since '+fmtD(t.from);return fmtD(t.from)+' – '+fmtD(t.to);}
 
+
+/* ---------- message on the home page (set in the planner) + email subscribe ---------- */
+function subHtml(src){return '<div class="sub"><h4>📬 Get our updates by email</h4><p>A short email when we start a new trip or reach a new chapter. No spam — unsubscribe anytime.</p>'
+  +'<form novalidate data-src="'+esc(src)+'"><input type="text" name="name" placeholder="First name (optional)" autocomplete="given-name" maxlength="60">'
+  +'<input type="email" name="email" placeholder="Your email address" autocomplete="email" required maxlength="120">'
+  +'<span class="hp" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></span>'
+  +'<button type="submit">Subscribe</button><div class="msg" role="status"></div></form></div>';}
+function subBind(root){root.querySelectorAll('.sub form').forEach(function(f){if(f._b)return;f._b=1;f.addEventListener('submit',function(e){e.preventDefault();
+  var em=f.email.value.trim().toLowerCase(),nm=f.name.value.trim(),msg=f.querySelector('.msg'),btn=f.querySelector('button');
+  if(f.website.value){msg.textContent='Thanks!';return;}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){msg.textContent='Please enter a valid email address.';return;}
+  btn.disabled=true;msg.textContent='Saving…';
+  var id=em.replace(/[^a-z0-9]+/g,'_').slice(0,140),fields={email:{stringValue:em},src:{stringValue:String(f.getAttribute('data-src')||'').slice(0,80)},at:{stringValue:new Date().toISOString()}};
+  if(nm)fields.name={stringValue:nm.slice(0,60)};
+  fetch('https://firestore.googleapis.com/v1/projects/travellers-1969-b3a8e/databases/(default)/documents/subscribers?documentId='+encodeURIComponent(id)+'&key='+KEY,
+    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:fields})})
+  .then(function(r){if(r.ok||r.status===409||r.status===403){msg.textContent=r.ok?'✅ Thanks'+(nm?(', '+nm):'')+'! You’re on the list.':'✅ You’re already on the list — thanks!';f.email.value='';f.name.value='';}
+    else msg.textContent='Something went wrong — please try again later.';})
+  .catch(function(){msg.textContent='No connection — please try again.';}).then(function(){btn.disabled=false;});});});}
+function showNotice(){load('site').then(function(o){var n=$('notice');if(!n||!o||!o.notice)return;n.textContent=o.notice;n.style.display='block';}).catch(function(){});}
 /* ---------- home: all published trips ---------- */
 function miniSvg(line){if(!line||line.length<2)return '<svg class="mini"></svg>';
   var a=90,b=180,c=-90,d=-180;line.forEach(function(p){a=Math.min(a,p[0]);c=Math.max(c,p[0]);b=Math.min(b,p[1]);d=Math.max(d,p[1]);});
@@ -245,9 +278,9 @@ function miniSvg(line){if(!line||line.length<2)return '<svg class="mini"></svg>'
    +'<polyline points="'+pts.join(' ')+'" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>'
    +'<polyline points="'+pts.join(' ')+'" fill="none" stroke="#5BC8F5" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'
    +'<circle cx="'+first[0]+'" cy="'+first[1]+'" r="4.5" fill="#D8B07A"/><circle cx="'+last[0]+'" cy="'+last[1]+'" r="4.5" fill="#fff" stroke="#5BC8F5" stroke-width="2"/></svg>';}
-function showHome(){$('home').style.display='block';
+function showHome(){$('home').style.display='block';showNotice();$('subHome').innerHTML=subHtml('home');subBind($('subHome'));
   load('index').then(function(list){list=(list||[]).filter(function(t){return t&&t.slug;});
-    if(!list.length){$('trips').innerHTML='<div class="empty">No trips shared yet — follow us on the socials above and check back soon.</div>';return;}
+    if(!list.length){$('trips').innerHTML='<div class="empty">No trips shared right now — subscribe below or follow us on the socials above.</div>';return;}
     var rank={live:0,soon:1,done:2};
     list.sort(function(x,y){return (rank[x.status]-rank[y.status])||String(y.from||'').localeCompare(String(x.from||''));});
     $('trips').innerHTML=list.map(function(t){var c=CHIP[t.status]||CHIP.soon,s=t.stats||{};
@@ -330,7 +363,8 @@ function showTrip(slug){$('trip').style.display='block';
     else if(t.status==='soon')h+='<div class="empty" style="padding:24px 0">The trip hasn’t started yet. The dashed line is the plan — follow us to see it come alive.</div>';
     h+='<div class="foot">Updated '+esc(new Date(t.updated).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+' \u00b7 site '+SITE_V+'<br>Follow along on '
       +SOC.map(function(x){return '<a href="'+x[2]+'" target="_blank" rel="noopener">'+x[1]+'</a>';}).join(' · ')+'</div>';
-    $('panel').innerHTML='<div id="grab"><i></i><small id="grabT">Swipe up for the list</small></div>'+h;
+    h+=subHtml('trip:'+(t.slug||''));
+    $('panel').innerHTML='<div id="grab"><i></i><small id="grabT">Swipe up for the list</small></div>'+h;subBind($('panel'));
     function stHtml(o){var v=o.v;return '<div class="st" data-k="v'+o.k+'"><div class="n">'+(v.fl?'✈ ':'')+esc(v.n)+'</div><div class="s">'+esc(v.s)+(v.d?(' \u00b7 '+esc(fmtD(v.d))):'')
       +(v.p&&v.p.length?(' \u00b7 '+v.p.length+' post'+(v.p.length===1?'':'s')):'')+'</div>'+postsHtml(v.p)+'</div>';}
     function drawTL(){var tl=$('tl');if(!tl)return;var q=($('q')&&$('q').value||'').trim().toLowerCase(),fs=$('fs')?$('fs').value:'',
