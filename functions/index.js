@@ -41,7 +41,7 @@ const COL = {NAAM:0,LINK:1,MAPS:2,ADRES:3,ELS:4,SERGE:5,AVG:6,CATEGORY:7,STATUS:
 const VALID_CATEGORIES = new Set(['Bizarre','Nature','Restaurant','Museum','Historic','Festival','Aviation','Ghost Town','Entertainment','Naturist Resort','Swingers Club','Hotel','Theme Park','Brewery/Distillery','Scenic Route','Entertainment/sports','Ski Resort']);
 function checkAuth(context){if(!context.auth)throw new functions.https.HttpsError('unauthenticated','Login required');if(!ALLOWED_EMAILS.includes(context.auth.token.email))throw new functions.https.HttpsError('permission-denied','Access denied');}
 function getSheets(){const sa=require('./service-account-key.json');const auth=new google.auth.JWT(sa.client_email,null,sa.private_key,['https://www.googleapis.com/auth/spreadsheets']);return google.sheets({version:'v4',auth});}
-function extractCoordsFromUrl(url){if(!url||url==='N/A')return null;const patterns=[/@(-?\d+\.?\d+),(-?\d+\.?\d+)/,/[?&]q=(-?\d+\.?\d+),(-?\d+\.?\d+)/,/ll=(-?\d+\.?\d+),(-?\d+\.?\d+)/,/\/place\/[^/]+\/@(-?\d+\.?\d+),(-?\d+\.?\d+)/,/!3d(-?\d+\.?\d+)!4d(-?\d+\.?\d+)/];for(const p of patterns){const m=url.match(p);if(m){const lat=parseFloat(m[1]),lng=parseFloat(m[2]);if(lat>=17&&lat<=84&&lng>=-180&&lng<=-50)return{lat,lng};}}return null;}
+function extractCoordsFromUrl(url){if(!url||url==='N/A')return null;const patterns=[/@(-?\d+\.?\d+),(-?\d+\.?\d+)/,/\/maps\/search\/(-?\d+\.\d+)(?:,|%2C)\s*\+?(-?\d+\.\d+)/i,/[?&]q=(-?\d+\.?\d+),(-?\d+\.?\d+)/,/ll=(-?\d+\.?\d+),(-?\d+\.?\d+)/,/\/place\/[^/]+\/@(-?\d+\.?\d+),(-?\d+\.?\d+)/,/!3d(-?\d+\.?\d+)!4d(-?\d+\.?\d+)/];for(const p of patterns){const m=url.match(p);if(m){const lat=parseFloat(m[1]),lng=parseFloat(m[2]);if(lat>=17&&lat<=84&&lng>=-180&&lng<=-50)return{lat,lng};}}return null;}
 function parseRow(row,rowIndex){while(row.length<16)row.push('');const naam=(row[COL.NAAM]||'').toString().trim();const category=(row[COL.CATEGORY]||'').toString().trim();if(!naam)return null;if(naam==='Naam')return null;if(naam===naam.toUpperCase()&&naam.length>2&&!/\d/.test(naam))return null;if(!category)return null;let lat=parseFloat(String(row[COL.LAT]||'').replace(',','.'));let lng=parseFloat(String(row[COL.LNG]||'').replace(',','.'));if(isNaN(lat)||isNaN(lng)){const coords=extractCoordsFromUrl((row[COL.MAPS]||'').toString());if(coords){lat=coords.lat;lng=coords.lng;}}return{name:naam,website:(row[COL.LINK]||'').toString(),mapsUrl:(row[COL.MAPS]||'').toString(),address:(row[COL.ADRES]||'').toString(),elsRating:parseFloat(row[COL.ELS])||null,sergeRating:parseFloat(row[COL.SERGE])||null,category,status:(row[COL.STATUS]||'Planning').toString(),budget:parseFloat(row[COL.BUDGET])||0,season:(row[COL.SEASON]||'Year-round').toString(),notes:(row[COL.OPMERKINGEN]||'').toString(),reservation:(row[COL.RESERVATION]||'No').toString(),pinned:(row[COL.PINNED]||'').toString().trim()==='Yes',lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,rowIndex};}
 function parseSheetRows(values){if(!values||values.length<3)return[];const locs=[];for(let i=2;i<values.length;i++){const loc=parseRow(Array.from(values[i]||[]),i+1);if(loc)locs.push(loc);}return locs;}
 function fn(handler){return functions.region(REGION).https.onCall(async(data,context)=>{checkAuth(context);try{return await handler(data,context);}catch(e){if(e&&e.quota)return {success:false,quota:true,message:e.message};if(e instanceof functions.https.HttpsError)throw e;console.error(e);throw new functions.https.HttpsError('internal',e.message||'Internal error');}});}
@@ -60,10 +60,14 @@ exports.resolveLocationFromUrl=fn(async(url)=>{
   const GK=process.env.GPLACES_KEY||'';
   const US={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',DC:'District of Columbia'};
   if(!url||!url.trim())return{success:false,message:'No URL provided'};
-  const raw=url.trim();
+  /* v190: accept Google Maps share text and short maps.app.goo.gl links */
+  const ex=await t69ExpandMaps(url);
+  const raw=ex.url||url.trim();
   const coords=extractCoordsFromUrl(raw);
-  let name='';
+  let name='',_label='';
   try{const m=raw.match(/\/maps\/place\/([^\/@?]+)/);if(m&&m[1])name=decodeURIComponent(m[1].replace(/\+/g,' ')).trim();}catch(e){}
+  if(!name&&ex.text)name=ex.text;
+  _label=t69PlaceLabel(name);
   let state=null,country=null,address='',category='',lat=coords?coords.lat:null,lng=coords?coords.lng:null;
   function ctryFromComps(c){const ct=(c||[]).find(x=>(x.types||[]).includes('country'));return ct?(ct.long_name||null):null;}
   function stFromComps(c){
@@ -105,6 +109,7 @@ exports.resolveLocationFromUrl=fn(async(url)=>{
   }
   if(!state)state=stFromAddr(address);
   if(!name&&address)name=address.split(',')[0];
+  if((lat==null||lng==null)&&name){const ph=await t69Photon(name);if(ph){lat=ph.lat;lng=ph.lng;if(!address)address=ph.address||'';if(!state)state=ph.state||null;if(!country)country=ph.country||null;diag='';}}
   if((lat==null||lng==null)&&name){
     try{const fu='https://maps.googleapis.com/maps/api/geocode/json?address='+encodeURIComponent(name)+'&key='+GK;
       const fj=await (await fetch(fu)).json();
@@ -119,7 +124,10 @@ exports.resolveLocationFromUrl=fn(async(url)=>{
   if(lat==null||lng==null)return{success:false,message:'No coordinates found. '+(diag||'Google returned no result for this link.')};
   if(!country){const m2=(address||'').split(',');if(m2.length)country=(m2[m2.length-1]||'').trim()||null;}
   if(country==='USA')country='United States';
-  return{success:true,lat:lat,lng:lng,state:state,stateRaw:state,region:state,country:country,address:address,suggestedName:name,category:category,mapsUrl:'https://www.google.com/maps?q='+lat+','+lng};});
+  if(!address&&_label&&_label!==name)address=name.slice(_label.length).replace(/^\s*,\s*/,'');
+  if(state&&US[state])state=US[state];
+  const _gUrl=(/google\.[a-z.]+\/maps\/place\//.test(raw))?raw.split('?')[0]:'';
+  return{success:true,lat:lat,lng:lng,state:state,stateRaw:state,region:state,country:country,address:address,suggestedName:_label||name,category:category,mapsUrl:_gUrl||('https://www.google.com/maps?q='+lat+','+lng)};});
 exports.scanAllDuplicates=fn(async()=>{const sheets=getSheets();const meta=await sheets.spreadsheets.get({spreadsheetId:SPREADSHEET_ID,fields:'sheets.properties.title'});const stateSheets=meta.data.sheets.map(s=>s.properties.title).filter(n=>ALL_STATES.includes(n));if(!stateSheets.length)return{success:true,results:[]};const ranges=stateSheets.map(s=>`'${s}'!A:P`);const res=await sheets.spreadsheets.values.batchGet({spreadsheetId:SPREADSHEET_ID,ranges});const results=[];(res.data.valueRanges||[]).forEach((vr,idx)=>{const stateName=stateSheets[idx];const values=vr.values||[];const rows=[];for(let r=2;r<values.length;r++){const row=values[r];const naam=(row[0]||'').toString().trim();if(!naam||naam==='Naam')continue;if(naam===naam.toUpperCase()&&naam.length>2&&!/\d/.test(naam))continue;const lat=parseFloat(String(row[13]||'').replace(',','.'));const lng=parseFloat(String(row[14]||'').replace(',','.'));rows.push({naam,category:(row[7]||'').toString().trim(),lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,rowIndex:r+1});}const issues=[];for(let a=0;a<rows.length;a++){for(let b=a+1;b<rows.length;b++){const ra=rows[a],rb=rows[b];const sameName=ra.naam.toLowerCase()===rb.naam.toLowerCase();const sameCoords=ra.lat&&rb.lat&&Math.abs(ra.lat-rb.lat)<0.001&&Math.abs(ra.lng-rb.lng)<0.001;const sameCat=ra.category.toLowerCase()===rb.category.toLowerCase();if(sameName&&sameCat)issues.push({type:'EXACT_DUPLICATE',rowIndexA:ra.rowIndex,rowIndexB:rb.rowIndex,nameA:ra.naam,nameB:rb.naam,catA:ra.category,catB:rb.category});else if(sameName&&!sameCat)issues.push({type:'SAME_NAME_DIFF_CAT',rowIndexA:ra.rowIndex,rowIndexB:rb.rowIndex,nameA:ra.naam,nameB:rb.naam,catA:ra.category,catB:rb.category});else if(sameCoords&&!sameName)issues.push({type:'SAME_COORDS',rowIndexA:ra.rowIndex,rowIndexB:rb.rowIndex,nameA:ra.naam,nameB:rb.naam,catA:ra.category,catB:rb.category});}}if(issues.length)results.push({tab:stateName,issues});});return{success:true,results};});
 exports.deleteSheetRows=fn(async(deletions)=>{if(!Array.isArray(deletions)||!deletions.length)return{success:false,message:'No rows provided'};const sheets=getSheets();const meta=await sheets.spreadsheets.get({spreadsheetId:SPREADSHEET_ID,fields:'sheets.properties'});const sheetIdMap={};meta.data.sheets.forEach(s=>{sheetIdMap[s.properties.title]=s.properties.sheetId;});const byTab={};deletions.forEach(d=>{if(!byTab[d.tab])byTab[d.tab]=[];byTab[d.tab].push(d.rowIndex);});const requests=[];Object.keys(byTab).forEach(tabName=>{const sheetId=sheetIdMap[tabName];if(sheetId===undefined)return;byTab[tabName].sort((a,b)=>b-a).forEach(ri=>{requests.push({deleteDimension:{range:{sheetId,dimension:'ROWS',startIndex:ri-1,endIndex:ri}}});});});if(!requests.length)return{success:false,message:'No valid rows'};await sheets.spreadsheets.batchUpdate({spreadsheetId:SPREADSHEET_ID,requestBody:{requests}});return{success:true,deleted:deletions.length};});
 exports.createCountryTabs = functions
@@ -840,3 +848,50 @@ exports.brevoKeepAlive = functions.region(REGION).runWith({secrets:['BREVO_KEY']
     } catch (e) { console.error('Brevo keep-alive error', e); }
     return null;
   });
+
+
+/* ===== v190: Google Maps short links + share text ===== */
+async function t69ExpandMaps(input){
+  const txt=String(input||'').trim();
+  const m=txt.match(/https?:\/\/[^\s<>"']+/);
+  let url=m?m[0]:'';
+  const text=txt.replace(m?m[0]:'','').replace(/\s+/g,' ').trim();
+  if(url&&/(^|\/\/)(maps\.app\.goo\.gl|goo\.gl\/maps|g\.co\/kgs)/i.test(url)){
+    for(let i=0;i<6;i++){
+      try{const r=await fetch(url,{redirect:'manual',headers:{'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36','Accept-Language':'en-US,en;q=0.9'}});
+        const loc=r.headers.get('location');if(!loc)break;
+        let nx=new URL(loc,url).toString();
+        if(/consent\.google\./.test(nx)){const c=new URL(nx).searchParams.get('continue');if(c)nx=c;}
+        url=nx;if(/google\.[a-z.]+\/maps/.test(url)&&!/goo\.gl/.test(url))break;
+      }catch(e){console.warn('expand',e&&e.message);break;}}
+  }
+  return {url:url,text:text};
+}
+function t69PlaceLabel(s){s=String(s||'').trim();if(!s)return '';const parts=s.split(',').map(x=>x.trim()).filter(Boolean);
+  if(parts.length>=3&&(/\b\d{5}\b/.test(s)||/^\d/.test(parts[1]||'')))return parts[0];return s;}
+async function t69Photon(q){q=String(q||'').trim();if(!q)return null;
+  const lab=t69PlaceLabel(q);const tries=[];
+  if(lab&&lab!==q){const rest=q.slice(lab.length).replace(/^\s*,\s*/,'');tries.push(lab+', '+rest.split(',').slice(-2).join(','));tries.push(rest);}
+  tries.push(q);
+  for(const t of tries){const r=await t69Photon1(t);if(r)return r;}return null;}
+async function t69Photon1(q){try{const r=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(q)+'&limit=1');const j=await r.json();
+  const f=j&&j.features&&j.features[0];if(!f||!f.geometry)return null;const p=f.properties||{};
+  return {lat:f.geometry.coordinates[1],lng:f.geometry.coordinates[0],state:p.state||null,country:p.country||null,
+    address:[p.housenumber&&p.street?(p.housenumber+' '+p.street):(p.street||''),p.city||'',p.state||'',p.postcode||''].filter(Boolean).join(', ')};}catch(e){return null;}}
+exports.expandMapsLink=fn(async(data)=>{
+  const ex=await t69ExpandMaps((data&&data.url)||'');
+  const c=extractCoordsFromUrl(ex.url||'');
+  let name='';try{const m=(ex.url||'').match(/\/maps\/place\/([^\/@?]+)/);if(m)name=decodeURIComponent(m[1].replace(/\+/g,' ')).trim();}catch(e){}
+  if(!name)name=ex.text||'';
+  let lat=c?c.lat:null,lng=c?c.lng:null,src=c?'link':'',ph=null;
+  if(lat==null&&name){ph=await t69Photon(name);if(ph){lat=ph.lat;lng=ph.lng;src='photon';}}
+  const lab=t69PlaceLabel(name);
+  let address=(ph&&ph.address)||((lab&&lab!==name)?name.slice(lab.length).replace(/^\s*,\s*/,''):'');
+  let state=(ph&&ph.state)||null;const ab={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',DC:'District of Columbia'};
+  if(!state){const m2=address.match(/,\s*([A-Z]{2})\s+\d{5}/);if(m2)state=m2[1];}
+  if(state&&ab[state])state=ab[state];
+  let country=(ph&&ph.country)||null;if(country==='USA')country='United States';
+  const gUrl=(/google\.[a-z.]+\/maps\/place\//.test(ex.url||''))?ex.url.split('?')[0]:'';
+  return {success:lat!=null,url:ex.url,name:lab,query:name,lat:lat,lng:lng,src:src,state:state,country:country,address:address,
+    mapsUrl:gUrl||(lat!=null?('https://www.google.com/maps?q='+lat+','+lng):''),message:lat==null?'No position found for this link':''};
+});

@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v226  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v227  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -786,7 +786,7 @@ window.t69FillGaps=async function(list){
       if(r&&r.success===false)fail++;else ok++;}catch(e){fail++;}}
   t69ProgHide();
   toast('\uD83E\uDDE9 Filled gaps in '+ok+' existing location'+(ok===1?'':'s')+(fail?(' \u00b7 '+fail+' failed'):''));
-  try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}};
+  try{if(currentState){t69ReloadView();}}catch(e){}};
 function t69CoordFrom(raw,which){
   var t=String(raw||'').trim();if(!t)return null;
   var m=t.match(/(-?\d{1,3}[.,]\d{2,})\s*[,;\s\/|]\s*(-?\d{1,3}[.,]\d{2,})/);
@@ -923,7 +923,7 @@ preview.innerHTML='';
      +failList.slice(0,60).join('\n')+(failList.length>60?('\n\u2026and '+(failList.length-60)+' more'):'')
      +'\n\nFix the cause and import the file again \u2014 the rows that did save will be skipped as duplicates.');},400);}
    (_fill.length?t69FillGaps(_fill):Promise.resolve()).then(function(){setTimeout(function(){t69NoDataCheck(parsed);},400);});
-   ov.remove();loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);
+   ov.remove();t69ReloadView();setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);
    var gEl=document.getElementById('t69ImpG');var _names={};(toImportAll||[]).forEach(function(x){var k=((x.state&&x.state.trim())||currentState)+'|'+String(x.name||'').toLowerCase();_names[k]=1;});if(gEl&&gEl.checked){setTimeout(function(){t69FixImported(_names);},3500);}else if(doGeo){setTimeout(function(){t69PinsFreeImported(_names);},3500);}return;}
    var r=toImport.shift();
    var _st=(r.state&&r.state.trim())?r.state.trim():currentState;
@@ -955,12 +955,12 @@ function t69BulkBar(){var bar=document.getElementById('t69BulkBar');if(!t69BulkO
  var x=document.createElement('button');x.className='t69t-btn';x.textContent='\u2715';x.addEventListener('click',t69BulkToggle);bar.appendChild(x);}
 function t69BulkApply(field,value){var ids=Object.keys(t69BulkSel);if(!ids.length){toast('Select rows first');return;}
  var totB=ids.length;t69Prog('\u270F Updating',0,totB);var done=0;
- (function nx(){if(!ids.length){t69ProgHide();toast('\u2705 '+done+' updated');loadState(currentState);setTimeout(function(){t69RenderTable();t69BulkBar();},700);return;}var id=ids.shift();
+ (function nx(){if(!ids.length){t69ProgHide();toast('\u2705 '+done+' updated');t69ReloadView();setTimeout(function(){t69RenderTable();t69BulkBar();},700);return;}var id=ids.shift();
   callFn('fsUpdateLocationField',{state:t69RSById(id),rowIndex:id,field:field,value:value}).then(function(r){if(r&&r.success===false)throw new Error(r.message);done++;t69Prog('\u270F Updating',done,totB);setTimeout(nx,80);}).catch(function(){done++;t69Prog('\u270F Updating',done,totB);setTimeout(nx,80);});})();}
 function t69BulkDelete(){var ids=Object.keys(t69BulkSel);if(!ids.length){toast('Select rows first');return;}
  if(!confirm('Delete '+ids.length+' selected location(s)? This cannot be undone.'))return;
  var totD=ids.length;window._t69DelFail=0;window._t69DelErr='';t69Prog('\uD83D\uDDD1 Deleting',0,totD);var done=0;
- (function nx(){if(!ids.length){t69ProgHide();var _f=window._t69DelFail||0,_e=window._t69DelErr||'';window._t69DelFail=0;window._t69DelErr='';toast((_f?'\u26A0 ':'\u2705 ')+'Deleted '+(totD-_f)+(_f?(', failed '+_f+' \u2014 '+_e):''));loadState(currentState);setTimeout(function(){t69RenderTable();t69BulkBar();},700);return;}var id=ids.shift();
+ (function nx(){if(!ids.length){t69ProgHide();var _f=window._t69DelFail||0,_e=window._t69DelErr||'';window._t69DelFail=0;window._t69DelErr='';toast((_f?'\u26A0 ':'\u2705 ')+'Deleted '+(totD-_f)+(_f?(', failed '+_f+' \u2014 '+_e):''));t69ReloadView();setTimeout(function(){t69RenderTable();t69BulkBar();},700);return;}var id=ids.shift();
   callFn('fsDeleteLocation',{state:t69RSById(id),id:id}).then(function(r){if(r&&r.success===false){window._t69DelFail=(window._t69DelFail||0)+1;window._t69DelErr=window._t69DelErr||r.message;}done++;t69Prog('\uD83D\uDDD1 Deleting',done,totD);setTimeout(nx,80);}).catch(function(){done++;t69Prog('\uD83D\uDDD1 Deleting',done,totD);setTimeout(nx,80);});})();}
 
 function t69HlRoute(loc){try{
@@ -1005,7 +1005,7 @@ function t69ShowDups(r){var ov=document.getElementById('t69DupOv');if(ov)ov.remo
    var sp=document.createElement('span');sp.style.flex='1';sp.innerHTML=(it.name||'?')+' <span style="color:var(--muted);font-size:10px">\u00b7 '+it.state+' \u00b7 '+(it.category||'')+'</span>';row.appendChild(sp);
    var del=document.createElement('button');del.className='t69t-btn';del.style.cssText='width:92px;text-align:center';del.textContent='\uD83D\uDDD1 Delete';
    del.addEventListener('click',function(){if(!confirm('Delete "'+it.name+'" from '+it.state+'?'))return;del.disabled=true;
-    callFn('fsDeleteLocation',{state:it.state,id:it.id}).then(function(rr){if(rr&&rr.success){row.style.opacity='.35';del.remove();toast('\uD83D\uDDD1 Deleted');if(typeof currentState!=='undefined'&&currentState===it.state)loadState(it.state);}else{del.disabled=false;toast('\u274C Delete failed');}}).catch(function(e){del.disabled=false;toast('\u274C '+(e.message||e));});});
+    callFn('fsDeleteLocation',{state:it.state,id:it.id}).then(function(rr){if(rr&&rr.success){row.style.opacity='.35';del.remove();toast('\uD83D\uDDD1 Deleted');t69ReloadView();}else{del.disabled=false;toast('\u274C Delete failed');}}).catch(function(e){del.disabled=false;toast('\u274C '+(e.message||e));});});
    row.appendChild(del);box.appendChild(row);});
   card.appendChild(box);});
  var cl=document.createElement('div');cl.style.textAlign='right';var cb=document.createElement('button');cb.className='t69t-btn';cb.textContent='\u2715 Close';cb.addEventListener('click',function(){ov.remove();});cl.appendChild(cb);card.appendChild(cl);
@@ -1024,7 +1024,7 @@ window.t69Set=function(){return window.T69SET||{};};
 function t69Cats(){var base=((window.t69Set().categories&&window.t69Set().categories.length)?window.t69Set().categories.slice():['Bizarre','Nature','Restaurant','Museum','Historic','Hotel']);if(typeof allLocations!=='undefined')allLocations.forEach(function(l){if(l.category&&base.indexOf(l.category)<0)base.push(l.category);});return base;}
 function t69RO(){return (window.matchMedia&&matchMedia('(pointer:coarse)').matches)||window.innerWidth<720;}
 function openTableView(){if(!isFsMode()){toast('\u229E Table view is Firestore-only \u2014 switch Data source in Settings \u2192 Maintenance');return;}if(typeof currentState==='undefined'||!currentState){toast('Select a state first');return;}t69RenderTable();document.getElementById('t69Tbl').classList.add('open');}
-function closeTableView(){document.getElementById('t69Tbl').classList.remove('open');try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}}
+function closeTableView(){document.getElementById('t69Tbl').classList.remove('open');try{if(currentState){t69ReloadView();}}catch(e){}}
 function t69Esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 function t69MapsUrl(loc){if(loc.mapsUrl&&loc.mapsUrl.indexOf('http')===0)return loc.mapsUrl;if(loc.lat&&loc.lng)return 'https://www.google.com/maps?q='+loc.lat+','+loc.lng;return null;}
 function t69MapsCell(loc){var u=t69MapsUrl(loc);return '<td style="text-align:center">'+(u?'<a class="t69t-btn" href="'+t69Esc(u)+'" target="_blank" title="Open in Google Maps" style="text-decoration:none">🗺️</a>':'—')+'</td>';}
@@ -1578,8 +1578,8 @@ function t69SaveCell(id,key,el){var loc=t69Loc(id);if(!loc)return;var patch={},v
   if(typeof applyFilters==='function')applyFilters();
   if(key.indexOf('rating:')===0||key==='category'||key==='name')t69RenderTable();
   toast('\u2714 Saved');}).catch(function(e){toast('\u274C '+(e.message||e));});}
-function t69DeleteRow(id){var loc=t69Loc(id);if(!loc)return;if(!confirm('Delete "'+loc.name+'" from '+(t69RS(loc)||'?')+'?\n\nThis cannot be undone.'))return;callFn('fsDeleteLocation',{state:t69RS(loc),id:id}).then(function(r){if(r&&r.success){toast('\uD83D\uDDD1 Deleted');loadState(currentState);setTimeout(t69RenderTable,900);}else toast('\u274C '+(r&&r.message||'Delete failed'));}).catch(function(e){toast('\u274C '+(e.message||e));});}
-function t69AddRow(){if(String(currentState||'').indexOf('__ALL_')===0){toast('Open a single state first, or use + Add from Google Maps link');return;}var n=prompt('Name of the new location:');if(!n)return;callFn('fsAddLocation',{state:currentState,naam:n.trim(),category:'Bizarre',status:'Planning'}).then(function(r){if(r&&r.success){toast('\u2705 Added');loadState(currentState);setTimeout(t69RenderTable,900);}else toast('\u274C '+(r&&r.message||'Add failed'));}).catch(function(e){toast('\u274C '+(e.message||e));});}
+function t69DeleteRow(id){var loc=t69Loc(id);if(!loc)return;if(!confirm('Delete "'+loc.name+'" from '+(t69RS(loc)||'?')+'?\n\nThis cannot be undone.'))return;callFn('fsDeleteLocation',{state:t69RS(loc),id:id}).then(function(r){if(r&&r.success){toast('\uD83D\uDDD1 Deleted');t69ReloadView();setTimeout(t69RenderTable,900);}else toast('\u274C '+(r&&r.message||'Delete failed'));}).catch(function(e){toast('\u274C '+(e.message||e));});}
+function t69AddRow(){if(String(currentState||'').indexOf('__ALL_')===0){toast('Open a single state first, or use + Add from Google Maps link');return;}var n=prompt('Name of the new location:');if(!n)return;callFn('fsAddLocation',{state:currentState,naam:n.trim(),category:'Bizarre',status:'Planning'}).then(function(r){if(r&&r.success){toast('\u2705 Added');t69ReloadView();setTimeout(t69RenderTable,900);}else toast('\u274C '+(r&&r.message||'Add failed'));}).catch(function(e){toast('\u274C '+(e.message||e));});}
 function t69OpenGeoModal(loc,lat,lng,foundName){
  _t69GeoCur.lat=Math.round(lat*1e5)/1e5;_t69GeoCur.lng=Math.round(lng*1e5)/1e5;
  document.getElementById('t69GeoName').textContent=loc.name;
@@ -1610,7 +1610,13 @@ function t69Geocode(id,queued){var loc=t69Loc(id);if(!loc){t69GeoNext();return;}
 function t69GeoSave(){var c=_t69GeoCur;if(!c)return;callFn('fsSaveLocation',{state:t69RS(c.loc)||t69RSById(c.id),id:c.id,patch:{lat:c.lat,lng:c.lng,mapsUrl:'https://www.google.com/maps?q='+c.lat+','+c.lng}}).then(function(r){if(r&&r.success){c.loc.lat=c.lat;c.loc.lng=c.lng;toast('\u2705 GPS saved for '+c.loc.name);if(typeof applyFilters==='function')applyFilters();t69RenderTable();}else toast('\u274C '+(r&&r.message||'Save failed'));t69GeoClose();t69GeoNext();}).catch(function(e){toast('\u274C '+(e.message||e));t69GeoClose();t69GeoNext();});}
 function t69GeoToggleSat(){if(!_t69GeoMap)return;_t69GeoSat=!_t69GeoSat;if(_t69GeoBase)_t69GeoMap.removeLayer(_t69GeoBase);_t69GeoBase=L.tileLayer(_t69GeoSat?'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}':'https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(_t69GeoMap);var b=document.getElementById('t69GeoSat');if(b)b.textContent=_t69GeoSat?'\uD83D\uDDFA Map':'\uD83D\uDEF0 Satellite';}
 function t69GeoFromLink(){var lf=document.getElementById('t69GeoLinkIn');var u=(lf&&lf.value||'').trim();if(!u)return;
- if(u.indexOf('maps.app.goo.gl')>=0||u.indexOf('goo.gl/')>=0){toast('\u26A0\uFE0F Short link \u2014 open it in a tab first, then copy the FULL google.com/maps URL here');return;}
+ var _setPin=function(la,ln,how){_t69GeoCur.lat=la;_t69GeoCur.lng=ln;
+  if(_t69GeoMk)_t69GeoMk.setLatLng([la,ln]);if(_t69GeoMap)_t69GeoMap.setView([la,ln],16);
+  document.getElementById('t69GeoCoords').textContent=la.toFixed(5)+', '+ln.toFixed(5)+' ('+how+')';t69GeoLink();toast('\u2705 Pin moved \u2014 check it on the map');};
+ /* v227: short maps.app.goo.gl links and Google Maps share text are opened by the server */
+ if(/goo\.gl|g\.co\//i.test(u)||!/^https?:\/\//i.test(u)){toast('\uD83D\uDD0D Opening the link\u2026');
+  callFn('expandMapsLink',{url:u}).then(function(r){if(r&&r.success&&r.lat!=null)_setPin(+r.lat,+r.lng,r.src==='photon'?'from address \u2014 check':'from link');
+   else toast('\u26A0\uFE0F '+((r&&r.message)||'No position found')+' \u2014 tap the map to set the pin');}).catch(function(e){toast('\u274C '+(e.message||e));});return;}
  var m=u.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)||u.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/)||u.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
  if(!m){toast('\u26A0\uFE0F No coordinates found in that link');return;}
  var la=parseFloat(m[1]),ln=parseFloat(m[2]);_t69GeoCur.lat=la;_t69GeoCur.lng=ln;
@@ -1696,7 +1702,7 @@ window.t69PinsFreeImported=async function(nameSet){
     await new Promise(function(x){setTimeout(x,1100);});}
   t69ProgHide();
   toast('\uD83D\uDCCD Placed '+ok+' of '+todo.length+' pins'+(ok<todo.length?' \u2014 the rest need coordinates in the file':''));
-  try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}};
+  try{if(currentState){t69ReloadView();}}catch(e){}};
 window.t69FixImported=async function(nameSet){
   var regs={};Object.keys(nameSet).forEach(function(k){regs[k.split('|')[0]]=1;});
   var regions=Object.keys(regs),done=0,coords=0,webs=0,fail=0,total=0,todo=[];
@@ -1719,7 +1725,7 @@ window.t69FixImported=async function(nameSet){
   }
   t69ProgHide();
   toast('\u2705 '+done+' completed \u00b7 '+coords+' placed on map \u00b7 '+webs+' websites'+(fail?(' \u00b7 '+fail+' not found'):''));
-  try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}};
+  try{if(currentState){t69ReloadView();}}catch(e){}};
 window.t69FetchGoogleRegions=async function(regions){
   var done=0,webs=0,coords=0,fail=0,total=0;
   for(var ri=0;ri<regions.length;ri++){
@@ -1739,13 +1745,13 @@ window.t69FetchGoogleRegions=async function(regions){
   }
   t69ProgHide();
   toast('\u2705 Google: '+done+' updated \u00b7 '+webs+' websites \u00b7 '+coords+' placed on map'+(fail?(' \u00b7 '+fail+' not found'):''));
-  try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}};
+  try{if(currentState){t69ReloadView();}}catch(e){}};
 function t69FetchGoogle(force,silent){
  var list=(allLocations||[]).filter(function(l){if(force)return true;var w=(l.website||'');return !l.googleRating||!(w&&w.indexOf('http')===0);});
  if(!list.length){if(!silent)toast('\u2705 All locations already have a Google rating');return;}
  if(!silent&&!confirm('Fetch Google ratings for '+list.length+' location(s)?'))return;
  t69Prog('\u2B50 Google ratings + websites',0,list.length);var done=0,fail=0,webs=0,total=list.length;
- (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' updated'+(webs?(' \u00b7 '+webs+' website(s)'):'')+(fail?(' \u00b7 '+fail+' not found'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
+ (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' updated'+(webs?(' \u00b7 '+webs+' website(s)'):'')+(fail?(' \u00b7 '+fail+' not found'):''));t69ReloadView();setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();
   callFn('fsGoogleRating',{state:t69RS(l),rowIndex:l.rowIndex,name:l.name,address:l.address||'',lat:l.lat||null,lng:l.lng||null})
    .then(function(r){if(r&&r.success){
@@ -1757,7 +1763,7 @@ function t69FetchGoogle(force,silent){
    .then(function(){t69Prog('\u2B50 Google ratings',done+fail,total);setTimeout(nx,250);});})();}
 function t69GeocodeAll(){var list=allLocations.filter(function(l){return (!l.lat||!l.lng)&&(l.address||l.name);});if(!list.length){toast('\u2705 All locations already have GPS');return;}
  t69Prog('\uD83D\uDCCD Geocoding',0,list.length);var done=0,fail=0,total=list.length;
- (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));loadState(currentState);setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
+ (function nx(){if(!list.length){t69ProgHide();toast('\u2705 '+done+'/'+total+' geocoded'+(fail?(' \u00b7 '+fail+' not found \u2014 set via Edit'):''));t69ReloadView();setTimeout(function(){if(typeof t69RenderTable==='function')t69RenderTable();},900);return;}
   var l=list.shift();var q1=l.address?l.address:(l.name+', '+currentState);var q2=l.name+', '+currentState;
   t69GeoLookup(q1).then(function(c){if(c&&c.lat)return c;return t69GeoLookup(q2);}).then(function(c){if(c&&c.lat&&c.lng){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lat',value:c.lat}).then(function(){return callFn('fsUpdateLocationField',{state:t69RS(l),rowIndex:l.rowIndex,field:'lng',value:c.lng});}).then(function(){l.lat=c.lat;l.lng=c.lng;done++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);});}else{fail++;t69Prog('\uD83D\uDCCD Geocoding',done+fail,total);}}).catch(function(){fail++;}).then(function(){setTimeout(nx,1100);});})();}
 /* ===== end F0 v226 ===== */
@@ -1771,12 +1777,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v226</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v227</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v226</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v227</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -1829,7 +1835,7 @@ function signIn(){
     <div style="margin-bottom:10px"><a class="t69t-btn" id="t69GeoGmaps" href="#" target="_blank" style="text-decoration:none;display:inline-block">↗ Open in Google Maps to check this position</a></div>
     <div style="font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.05em;margin-bottom:4px">③ OR PASTE A GOOGLE MAPS LINK</div>
     <div style="display:flex;gap:6px;margin-bottom:12px">
-      <input id="t69GeoLinkIn" type="text" placeholder="Paste a full Google Maps link (short maps.app.goo.gl links: open them first, copy the long URL)" style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:5px 7px">
+      <input id="t69GeoLinkIn" type="text" placeholder="Paste a Google Maps link (short links OK)" style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:5px 7px">
       <button class="t69t-btn" onclick="t69GeoFromLink()">Use link</button>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -2090,7 +2096,7 @@ function signIn(){
     <div class="form-row">
       <label class="form-label">Google Maps URL</label>
       <div style="display:flex;gap:6px">
-        <input class="form-input" id="addUrl" placeholder="https://maps.google.com/..." style="flex:1">
+        <input class="form-input" id="addUrl" placeholder="Google Maps link — short links OK" style="flex:1">
         <button class="btn-primary" onclick="lookupUrl()" id="lookupBtn" style="flex:0 0 74px;padding:8px">Lookup</button>
       </div>
     </div>
@@ -2218,7 +2224,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v226</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v227</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2604,10 +2610,10 @@ function loadAllCountry(country){
   var states = country==='US' ? availableUS : availableCA;
   var label = country==='US' ? '🇺🇸 All USA' : '🇨🇦 All Canada';
   if(!states.length){ toast('No states available for '+label); return; }
-  currentState=label;
+  currentState=label;var _sf=!!window._t69Soft;
   showLoading(true);
   clearCurrentMarkers();
-  activeQuickFilter='all';updateStripActive();
+  activeQuickFilter=_sf?window._t69Soft.quick:'all';updateStripActive();
   document.getElementById('locCards').innerHTML='<div class="empty-state">Loading '+states.length+' states...</div>';
   document.getElementById('currentStateName').textContent=label;
   document.getElementById('routeStrip').classList.add('hidden');
@@ -2624,16 +2630,47 @@ function loadAllCountry(country){
       allLocations.forEach(function(loc){
         if(loc.lat&&loc.lng){ loc.pinned=!!individualPins[loc.lat+','+loc.lng]; }
       });
-      activeCats=new Set(allLocations.map(function(l){return l.category;}));
-      window._t69DoFit=true;
-      buildCatFilters(allLocations);applyFilters();
+      t69SoftCats();
+      window._t69DoFit=!window._t69Soft;
+      buildCatFilters(allLocations);applyFilters();window._t69Soft=null;
       toast('✅ '+allLocations.length+' locations across '+data.stateCount+' states');
     })
     .catch(function(e){ showLoading(false);toast('Error: '+(e.message||e)); })
     .getMultiStateData(states);
 }
 
-function loadState(n){if(!n)return;window._t69DoFit=true;currentState=n;showLoading(true);clearCurrentMarkers();activeQuickFilter='all';updateStripActive();document.getElementById('locCards').innerHTML='<div class="empty-state">Loading...</div>';document.getElementById('currentStateName').textContent=n;document.getElementById('routeStrip').classList.add('hidden');closeDetail();google.script.run.withSuccessHandler(onStateDataLoaded).catch(function(e){showLoading(false);toast('Error: '+(e.message||e));}).getStateData(n);}
+/* v227: reload what's on screen without resetting filters, closing the detail or moving the map */
+window.t69ReloadView=function(){var cs=String(currentState||'');if(!cs)return;
+  if(/Along route/.test(cs)){try{if(typeof applyFilters==='function')applyFilters();}catch(e){}return;}
+  var all=new Set();try{(allLocations||[]).forEach(function(l){all.add(l.category);});}catch(e){}
+  window._t69Soft={cats:new Set(activeCats||[]),allCats:all,quick:activeQuickFilter};
+  if(/All USA/.test(cs))loadAllCountry('US');else if(/All Canada/.test(cs))loadAllCountry('CA');else loadState(cs);};
+function t69SoftCats(){var nc=allLocations.map(function(l){return l.category;});var sf=window._t69Soft;
+  if(!sf){activeCats=new Set(nc);return;}
+  activeCats=new Set(nc.filter(function(c){return sf.cats.has(c)||!sf.allCats.has(c);}));}
+/* v227: show a newly added location at once (list + pin), keeping filters, route and zoom */
+window.t69AfterLocAdded=function(loc){if(!loc)return;
+  var st=loc.state||'',cs=String(currentState||'');
+  try{t69RegisterRegion(st);}catch(e){}
+  var inView=cs===st||(/All USA/.test(cs)&&typeof US_STATES!=='undefined'&&US_STATES.indexOf(st)>=0)||(/All Canada/.test(cs)&&typeof CA_PROVINCES!=='undefined'&&CA_PROVINCES.indexOf(st)>=0);
+  if(inView){
+    allLocations=(allLocations||[]).filter(function(l){return !(String(l.rowIndex)===String(loc.rowIndex)&&l.state===st);});
+    loc.category=normalizeCat(loc.category);allLocations.push(loc);
+    if(activeCats&&activeCats.add)activeCats.add(loc.category);
+    window._t69DoFit=false;try{buildCatFilters(allLocations);}catch(e){}applyFilters();
+    var _t=document.getElementById('t69Tbl');if(_t&&_t.classList.contains('open'))try{t69RenderTable();}catch(e){}
+    return;}
+  t69ShowToast('\u2705 Added to '+(st||'the database'),loc.lat!=null&&loc.lng!=null?'\uD83D\uDC41 Show':'',function(){
+    var g=function(){try{if(loc.lat!=null)map.setView([loc.lat,loc.lng],14);}catch(e){}};
+    if(st){onStateSelectChange(st);setTimeout(g,1800);}else g();});};
+function t69ShowToast(msg,btn,fn){var old=document.getElementById('t69ActToast');if(old)old.remove();
+  var d=document.createElement('div');d.id='t69ActToast';
+  d.style.cssText='position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:99999;background:#13253f;color:#fff;border:1px solid #2b4a72;border-radius:10px;padding:10px 12px;font-size:13px;display:flex;gap:10px;align-items:center;box-shadow:0 6px 20px rgba(0,0,0,.4);max-width:92vw';
+  var sp=document.createElement('span');sp.textContent=msg;d.appendChild(sp);
+  if(btn){var b=document.createElement('button');b.textContent=btn;b.style.cssText='background:#5BC0F8;color:#0a1628;border:0;border-radius:7px;padding:6px 10px;font-weight:700;cursor:pointer;white-space:nowrap';b.onclick=function(){d.remove();fn&&fn();};d.appendChild(b);}
+  var x=document.createElement('button');x.textContent='\u2715';x.setAttribute('aria-label','Close');x.style.cssText='background:none;border:0;color:#9fb3cc;font-size:15px;cursor:pointer';x.onclick=function(){d.remove();};d.appendChild(x);
+  document.body.appendChild(d);setTimeout(function(){if(d.parentNode)d.remove();},9000);}
+function loadState(n){if(!n)return;var _sf=!!window._t69Soft;window._t69DoFit=!_sf;currentState=n;showLoading(true);clearCurrentMarkers();activeQuickFilter=_sf?window._t69Soft.quick:'all';updateStripActive();if(!_sf)document.getElementById('locCards').innerHTML='<div class="empty-state">Loading...</div>';document.getElementById('currentStateName').textContent=n;document.getElementById('routeStrip').classList.add('hidden');if(!_sf)closeDetail();google.script.run.withSuccessHandler(onStateDataLoaded).catch(function(e){showLoading(false);toast('Error: '+(e.message||e));}).getStateData(n);}
 
 function onStateDataLoaded(data){showLoading(false);if(!data||data.error){toast('Error: '+(data?data.error:'No data'));return;}allLocations=data.locations||[];
 // Tag each location with its state
@@ -2651,7 +2688,7 @@ allLocations.forEach(function(loc){
     }
   }
 });
-activeCats=new Set(allLocations.map(function(l){return l.category;}));buildCatFilters(allLocations);applyFilters();
+t69SoftCats();buildCatFilters(allLocations);applyFilters();window._t69Soft=null;
 updatePinnedCount();
 var missing=allLocations.filter(function(l){return !l.lat||!l.lng;}).length;
 if(missing>0&&!isFsMode()){var bar=document.getElementById('extractingBar'),msg=document.getElementById('extractingMsg');if(bar)bar.style.display='flex';if(msg)msg.textContent='📍 Finding coordinates for '+missing+' locations...';google.script.run.withSuccessHandler(function(r){var b=document.getElementById('extractingBar');if(b)b.style.display='none';if(r&&r.success&&r.message.indexOf('0 updated')<0)loadState(currentState);}).catch(function(){var b=document.getElementById('extractingBar');if(b)b.style.display='none';}).extractCoordinatesForState(currentState);}
@@ -3471,8 +3508,13 @@ function lookupUrl(){
   function doGASLookup(finalUrl){
     st.textContent='🔍 Looking up...';
     google.script.run
-      .withSuccessHandler(function(r){
+      .withSuccessHandler(function _ok(r){
         document.getElementById('lookupBtn').disabled=false;
+        /* v227: Google limit reached or no Google result -> free lookup (opens short links, OpenStreetMap address search) */
+        if(!r.success&&!_ok._free){_ok._free=1;st.textContent='\uD83D\uDD0D Trying the free lookup\u2026';
+          callFn('expandMapsLink',{url:finalUrl}).then(function(x){
+            if(x&&x.success)_ok({success:true,lat:x.lat,lng:x.lng,mapsUrl:x.mapsUrl,suggestedName:x.name,state:x.state,region:x.state,country:x.country,address:x.address,category:''});
+            else _ok(r);}).catch(function(){_ok(r);});return;}
         if(!r.success){st.className='form-status err';st.textContent='❌ '+r.message;return;}
         addLat=r.lat;addLng=r.lng;addMapsUrl=r.mapsUrl;
         st.className='form-status ok';st.textContent='✅ '+(r.suggestedName||'Location')+((r.state||r.stateRaw)?(' · '+(r.state||r.stateRaw)):'')+(r.address?(' · '+r.address):'');
@@ -3493,9 +3535,8 @@ function lookupUrl(){
       .resolveLocationFromUrl(finalUrl);
   }
 
-  // Short Google Maps links cannot be resolved server-side (Google blocks automated requests).
-  // Show a one-click helper to open in browser and copy the full URL.
-  if(url.indexOf('maps.app.goo.gl')>=0||url.indexOf('goo.gl/maps')>=0){
+  /* v227: short links (maps.app.goo.gl) and pasted share text are resolved by the server */
+  if(false){
     document.getElementById('lookupBtn').disabled=false;
     st.className='form-status info';
     st.innerHTML='📋 <b>Short link detected.</b> Open it in a new tab, copy the full URL from the address bar, paste it back here then click Lookup again.'
@@ -3595,7 +3636,9 @@ function submitAdd(){
     toast('\u2705 "'+naam+'" added to '+state);
     try{if(window._t69SM&&_t69SM.length)t69ClearSearch();}catch(e){}
     setTimeout(function(){closeAddModal();},400);
-    Promise.all(after).then(function(){t69RegisterRegion(state);if(typeof currentState!=='undefined'&&currentState===state)loadState(state);});
+    var _nl={name:naam,website:payload.website||'N/A',mapsUrl:payload.mapsUrl||'',address:payload.adres||'',ratings:ratings,category:payload.category||'',subcategory:payload.subcategory||'',status:payload.status||'Planning',budget:parseFloat(payload.budget)||0,season:payload.season||'Year-round',notes:payload.notes||'',reservation:payload.reservation||'No',pinned:false,lat:(addLat!=null&&addLat!=='')?+addLat:null,lng:(addLng!=null&&addLng!=='')?+addLng:null,state:state,rowIndex:rowId,id:rowId,googleRating:window.addGR?window.addGR.rating:null,googleReviews:window.addGR?(window.addGR.reviews||0):0};
+    try{t69AfterLocAdded(_nl);}catch(e){console.error(e);}
+    Promise.all(after).catch(function(){});
   }).catch(function(e){document.getElementById('submitBtn').disabled=false;st2.className='form-status err';st2.textContent='\u274C '+(e.message||e);});}
 
 // ── Export ───────────────────────────────────────────────────
@@ -3657,7 +3700,7 @@ function settingsRecalcCoords(){
     .withSuccessHandler(function(r){
       if(bar)bar.style.display='none';
       toast('✅ '+(r&&r.message?r.message:'Done'));
-      if(currentState)loadState(currentState);
+      t69ReloadView();
     })
     .catch(function(e){if(bar)bar.style.display='none';toast('❌ '+(e.message||e));})
     .extractCoordinatesForState(currentState);
@@ -4158,7 +4201,15 @@ function renderRoutePanel(){
   el.innerHTML=html;el.scrollTop=_keepTop;
   updateRouteSummary();
   try{if(window.map&&typeof t69ApplyPinView==='function'){clearTimeout(window._t69PinT);window._t69PinT=setTimeout(t69ApplyPinView,150);}}catch(e){}
+  try{t69AutoRedrawSoon();}catch(e){}
 }
+/* v227: after any change to the stops, redraw the map lines by itself — never moving the map */
+function t69RouteSig(){try{return (routeSegments||[]).map(function(sg){return sg.id+':'+(sg.stops||[]).map(function(st){
+  return [st.id,(+st.lat||0).toFixed(5),(+st.lng||0).toFixed(5),st.sideKind||'',st.arriveBy||'',st.visitedDate?1:0].join(',');}).join(';');}).join('|');}catch(e){return '';}}
+function t69AutoRedrawSoon(){clearTimeout(window._t69AutoT);window._t69AutoT=setTimeout(function(){
+  if(!window._t69Drawn||window._t69DrawnTrip!==window.TRIP_ID||!window.map)return;
+  if(t69RouteSig()===window._t69DrawnSig)return;
+  try{drawAllSegments({keepView:true});}catch(e){console.error(e);}},800);}
 
 // ══════════════════════════════════════════════════════════════
 // SEGMENT ACTIONS
@@ -4386,7 +4437,7 @@ window.t69StopSheet=function(si,i){
     var _kEl=box.querySelector('input[name=t69SsKind]:checked'),_kCh=false;
     if(_kEl&&(st.sideKind||'')!==_kEl.value){st.sideKind=_kEl.value;_kCh=true;}
     var _hEl=box.querySelector('input[name=t69SsHow]:checked');if(_hEl&&(st.arriveBy||'')!==_hEl.value){st.arriveBy=_hEl.value;_kCh=true;}
-    t69SaveTouched(tw);ov.remove();renderRoutePanel();t69PubSoon();t69RefreshVisitedMap();toast(_kCh?'✅ Saved — press 🗺️ Draw to update the map':'✅ Saved');};};
+    t69SaveTouched(tw);ov.remove();renderRoutePanel();t69PubSoon();t69RefreshVisitedMap();toast('✅ Saved');};};
 /* trip counter under the route totals */
 function t69FlatStops(){var flat=[],lastDrive=null;
   (routeSegments||[]).forEach(function(sg,si){(sg.stops||[]).forEach(function(st,i){
@@ -5128,7 +5179,7 @@ function t69DoInsertSide(si,bi,kind){
  var seg=routeSegments[si];if(!loc||!seg)return;
  var pos=bi+1;while(pos<seg.stops.length&&t69IsSideAt(seg,pos))pos++;
  t69InsertStop(si,pos,loc,kind);
- toast('\u2705 Added as '+(kind==='hotel'?'hotel':'side trip')+' of '+(seg.stops[bi].name||'')+' \u2014 press \uD83D\uDDFA\uFE0F Draw to update the map');
+ toast('\u2705 Added as '+(kind==='hotel'?'hotel':'side trip')+' of '+(seg.stops[bi].name||''));
  switchRlistTab('route');
 }
 function t69DoInsertEnd(si){
@@ -5839,7 +5890,9 @@ async function t69ExportRoutePDF(){
   w.document.write(h.join(''));w.document.close();
   setTimeout(function(){try{w.focus();w.print();}catch(e){}},400);
   toast('\u{1F4C4} Choose "Save as PDF" in the print dialog');}
-function drawAllSegments(){
+function drawAllSegments(opts){
+  var _keep=!!(opts&&opts.keepView);
+  window._t69Drawn=true;window._t69DrawnTrip=window.TRIP_ID;window._t69DrawnSig=t69RouteSig();
   try{if(window._t69DatesLoaded)(routeSegments||[]).forEach(function(sg){t69SortSideByDate(sg.id);});}catch(e){}
   window._t69DrawGen=(window._t69DrawGen||0)+1;var _gen=window._t69DrawGen;
   // Clear existing route polylines
@@ -5856,18 +5909,18 @@ function drawAllSegments(){
     document.getElementById('routeTotalDist').textContent='—';document.getElementById('routeTotalTime').textContent='—';
     try{t69ApplyPinView();}catch(e){}
     var ll=[];(routeSegments||[]).forEach(function(s){(s.stops||[]).forEach(function(st){if(st.lat!=null&&st.lng!=null)ll.push([+st.lat,+st.lng]);});});
-    if(!ll.length){toast('No stops to draw yet');return;}
-    try{map.fitBounds(L.latLngBounds(ll),{padding:[40,40],maxZoom:13});}catch(e){}
-    toast('✅ Stops shown — a road line needs 2 route stops in a segment');return;}
-  toast('Drawing '+segsWithStops.length+' segment'+(segsWithStops.length!==1?'s':'')+'…');
+    if(!ll.length){if(!_keep)toast('No stops to draw yet');return;}
+    if(!_keep){try{map.fitBounds(L.latLngBounds(ll),{padding:[40,40],maxZoom:13});}catch(e){}
+    toast('✅ Stops shown — a road line needs 2 route stops in a segment');}return;}
+  if(!_keep)toast('Drawing '+segsWithStops.length+' segment'+(segsWithStops.length!==1?'s':'')+'…');
   var totalDist=0,totalTime=0,flyM=0,done=0,fails=0;
   var allBounds=[];
   function finish(){if(_gen!==window._t69DrawGen)return;
     document.getElementById('routeTotalDist').textContent=fmtDist(totalDist);window._t69DriveM=totalDist;window._t69FlyM=flyM;try{t69KmLine();}catch(e){}
     document.getElementById('routeTotalTime').textContent=fmtTime(totalTime);
-    toast(fails?('⚠️ '+fails+' segment'+(fails>1?'s':'')+' could not be drawn — press Draw again'):('✅ Route drawn — '+fmtDist(totalDist)+' driving'+(flyM?(' · ✈ '+fmtDist(flyM)+' flying'):'')));
+    if(_keep&&!fails){}else toast(fails?('⚠️ '+fails+' segment'+(fails>1?'s':'')+' could not be drawn — press Draw again'):('✅ Route drawn — '+fmtDist(totalDist)+' driving'+(flyM?(' · ✈ '+fmtDist(flyM)+' flying'):'')));
     try{t69ApplyPinView();}catch(e){}
-    if(allBounds.length>=4){
+    if(allBounds.length>=4&&!_keep){
       try{
         var b=[[Math.min.apply(null,allBounds.filter(function(_,i){return i%2===1;})),
                 Math.min.apply(null,allBounds.filter(function(_,i){return i%2===0;}))],
@@ -5927,6 +5980,7 @@ function exportSegToMaps(segId){
 // ══════════════════════════════════════════════════════════════
 function clearAllSegments(){
   if(!confirm('Clear all drawn routes from the map? (Segments are NOT deleted from Firestore)'))return;
+  window._t69Drawn=false;
   try{if(window.t69InAlongView&&t69InAlongView())t69CloseAlongRoute();}catch(e){}
   window._t69DrawGen=(window._t69DrawGen||0)+1;
   Object.keys(segPolylines).forEach(function(k){map.removeLayer(segPolylines[k]);});
@@ -6809,7 +6863,7 @@ window.t69MergeDupGroups=async function(groups,ov){
   t69ProgHide();
   toast('\uD83E\uDDE9 Merged '+kept+' group(s) \u00b7 removed '+deleted+' copies'+(fail?(' \u00b7 '+fail+' failed'):''));
   try{ov.remove();}catch(e){}
-  try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}};
+  try{if(currentState){t69ReloadView();}}catch(e){}};
 window.t69DupNames=async function(){
   try{
     toast('\u23F3 Scanning for duplicate names\u2026');
@@ -6857,7 +6911,7 @@ window.t69DupNames=async function(){
       box.appendChild(h);});
     var cl=document.createElement('button');cl.className='btn-primary';cl.textContent='Close';
     cl.style.cssText='margin-top:12px;padding:7px 14px;font-size:12px';
-    cl.onclick=function(){ov.remove();try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}};
+    cl.onclick=function(){ov.remove();try{if(currentState){t69ReloadView();}}catch(e){}};
     setTimeout(function(){var mb=document.getElementById('t69MergeAll');if(mb)mb.onclick=function(){t69MergeDupGroups(groups,ov);};},0);
     box.appendChild(cl);ov.appendChild(box);document.body.appendChild(ov);
   }catch(e){t69ProgHide();toast('\u274C '+(e.message||e));}};
@@ -6881,7 +6935,7 @@ window.t69ApplyRenames=async function(){
     }
     toast('\u2705 '+done+' renamed'+(miss.length?(' \u00b7 '+miss.length+' not found'):''));
     if(miss.length)alert('Not found:\n'+miss.join('\n'));
-    try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}
+    try{if(currentState){t69ReloadView();}}catch(e){}
   }catch(e){toast('\u274C '+(e.message||e));}};
 window.t69ExportNames=async function(){
   try{
@@ -7016,7 +7070,7 @@ window.t69ExportNames=async function(){
         .catch(function(e){b.disabled=false;toast('\u274C '+(e.message||e));});};});
     box.querySelectorAll('[data-merge]').forEach(function(b){b.onclick=function(){var o=items[+b.getAttribute('data-merge')];
       t69MergePicker(o.t,o.v,o.n,settings[o.t]||[],function(v){settings[o.t]=v;renderSettings();
-        try{if(currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}});};});};
+        try{if(currentState){t69ReloadView();}}catch(e){}});};});};
   function renderSettings(){
     var c=document.getElementById('t69-smgr');if(!c||!settings) return;
     c.innerHTML='<div class="t69-stitle">&#9881; Manage App Values</div>'
@@ -7066,7 +7120,7 @@ window.t69ExportNames=async function(){
         if(r.subcategories)settings.subcategories=r.subcategories;
         renderSettings();
         toast('\u2705 '+(r.moved||0)+' location(s) moved to "'+target+'"');
-        try{if(typeof loadState==='function'&&currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}
+        try{if(typeof loadState==='function'&&currentState){t69ReloadView();}}catch(e){}
       }
       catch(er){alert('Failed: '+er.message);btn.textContent='\u270E';btn.disabled=false;}
     }else if(a==='del'){
@@ -7076,7 +7130,7 @@ window.t69ExportNames=async function(){
         if(r2&&r2.success===false&&r2.inUse){
           t69MergePicker(type,val,r2.inUse,settings[type]||[],function(newVals){
             settings[type]=newVals;renderSettings();
-            try{if(typeof loadState==='function'&&currentState){window._t69DoFit=false;loadState(currentState);}}catch(e){}
+            try{if(typeof loadState==='function'&&currentState){t69ReloadView();}}catch(e){}
           });
           return;}
         if(!r2||!r2.success)throw new Error((r2&&r2.message)||'Failed');
@@ -8133,7 +8187,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v226: ready');
+  console.log('T1969 v227: ready');
 }
 function t69EvToDates(ev){var tz=(ev.start&&ev.start.timeZone)||undefined;
   function dmy(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
