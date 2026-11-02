@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v227  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v228  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -1777,12 +1777,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v227</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v228</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v227</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v228</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2224,7 +2224,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v227</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v228</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -3931,7 +3931,125 @@ function t69StopBudget(st){
     f=crossStatePins.find(function(l){return l.lat===st.lat&&l.lng===st.lng;});}}catch(e){}}
   return f?(parseFloat(f.budget)||0):0;
 }
-function t69SegBudget(seg){var t=0;(seg&&seg.stops||[]).forEach(function(st){t+=t69StopBudget(st);});return t;}
+/* ===== v228: trip costs — per-trip settings (people, food/day, fuel, passes), stop costs (planned / actual / pass), totals that don't depend on what's on screen ===== */
+var T69_COST_DEF={people:2,foodPerDay:0,fuelOn:false,fuelUnit:'mpg',fuelUse:17,fuelPrice:3.6,passes:[]};
+window._t69Cost=null;window._t69RouteLocs=[];
+function t69CostCfg(){var c=window._t69Cost||{};var o={};Object.keys(T69_COST_DEF).forEach(function(k){o[k]=(c[k]!==undefined&&c[k]!==null)?c[k]:T69_COST_DEF[k];});
+  if(!Array.isArray(o.passes))o.passes=[];o.people=Math.max(1,parseInt(o.people)||1);return o;}
+function t69CostLoad(){window._t69Cost=null;var tp=window.TRIP_PATH;if(!tp||typeof fsGet!=='function')return Promise.resolve();
+  return fsGet(tp).then(function(d){try{var o=fsDocToObj(d)||{};window._t69Cost=o.costJson?JSON.parse(o.costJson):null;}catch(e){window._t69Cost=null;}
+    try{updateRouteSummary();}catch(e){}}).catch(function(){});}
+function t69CostSave(cfg){window._t69Cost=cfg;try{updateRouteSummary();}catch(e){}
+  return fsPatch(window.TRIP_PATH,{costJson:JSON.stringify(cfg)},true);}
+/* all locations of the route's regions, loaded once per route load (so totals don't depend on the state on screen) */
+function t69RouteLocsLoad(){var need={};(routeSegments||[]).forEach(function(sg){(sg.stops||[]).forEach(function(st){var r=st.sourceSheet||st.state;if(r)need[r]=1;});});
+  var list=Object.keys(need);if(!list.length){window._t69RouteLocs=[];return Promise.resolve();}
+  var gen=(window._t69RLGen=(window._t69RLGen||0)+1),out=[],ps=[];
+  for(var i=0;i<list.length;i+=8)ps.push(callFn('fsGetMultiStateData',list.slice(i,i+8)).then(function(pd){((pd&&pd.locations)||[]).forEach(function(l){out.push(l);});}).catch(function(){}));
+  return Promise.all(ps).then(function(){if(gen!==window._t69RLGen)return;window._t69RouteLocs=out;window._t69PdfPool=out.slice();try{updateRouteSummary();}catch(e){}});}
+function t69StopLoc(st){if(!st)return null;var rid=String(st.sourceRow||''),reg=st.sourceSheet||st.state||'';
+  var pools=[window.allLocations||[],window._t69RouteLocs||[],(typeof crossStatePins!=='undefined'&&crossStatePins)||[]];
+  for(var p=0;p<pools.length;p++){var f=pools[p].find(function(l){return l&&rid&&String(l.rowIndex)===rid&&(!reg||!l.state||l.state===reg);});if(f)return f;}
+  for(var q=0;q<pools.length;q++){var g=pools[q].find(function(l){return l&&l.lat!=null&&st.lat!=null&&Math.abs(l.lat-st.lat)<0.0006&&Math.abs(l.lng-st.lng)<0.0006;});if(g)return g;}
+  return null;}
+function t69IsLodging(st,L){if(st&&st.sideKind==='hotel')return true;var c=String((L&&L.category)||(st&&st.category)||'');return /hotel|motel|lodg|resort|airbnb|cabin|campground|camping|rv park|hostel|inn\b|stay/i.test(c);}
+function t69StopNights(seg,st){try{var D=window._t69dates||{},r=(D[seg.id]||{})[window.sk?window.sk(st):st.id];
+  if(!r){Object.keys(D).forEach(function(k){if(!r&&D[k])r=D[k][window.sk?window.sk(st):st.id];});}
+  var pd=function(s){var m=String(s||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?new Date(+m[3],+m[2]-1,+m[1]):null;};
+  var a=pd(r&&r.arrivalDate),b=pd(r&&r.departureDate);if(!a||!b)return 0;return Math.max(0,Math.round((b-a)/86400000));}catch(e){return 0;}}
+function t69PlaceKey(st){return (st.sourceSheet||st.state||'')+'|'+(st.sourceRow||'')+'|'+(+(st.lat||0)).toFixed(4)+'_'+(+(st.lng||0)).toFixed(4);}
+function t69Num(v){return (v===''||v===null||v===undefined||isNaN(+v))?null:+v;}
+/* one stop: {planned, actual, kind, how, zero, repeat} */
+function t69StopCost(seg,st,seen){var cfg=t69CostCfg(),L=t69StopLoc(st),lod=t69IsLodging(st,L),o={planned:0,actual:0,kind:lod?'lodging':'activity',how:'',zero:false,repeat:false,loc:L};
+  var key=t69PlaceKey(st);
+  if(t69Num(st.cost)!==null){o.planned=+st.cost;o.how='your planned cost';}
+  else if(st.pass){o.planned=0;o.how='covered by '+st.pass;}
+  else if(seen&&!lod&&seen[key]){o.planned=0;o.repeat=true;o.how='same place as earlier — counted once';}
+  else{var b=L?(parseFloat(L.budget)||0):0;
+    if(lod){var n=t69StopNights(seg,st);o.planned=b*(n||1);o.how='$'+b+'/night × '+(n||1)+' night'+((n||1)===1?'':'s')+(n?'':' (no dates yet)');}
+    else{o.planned=b*cfg.people;o.how='$'+b+'/pp × '+cfg.people;}
+    if(!b&&!/^home$/i.test(String((L&&L.category)||st.category||''))&&!/^home\b/i.test(String(st.name||'')))o.zero=true;}
+  if(seen)seen[key]=1;
+  o.actual=t69Num(st.actual)!==null?+st.actual:o.planned;return o;}
+function t69TripDays(){var D=window._t69dates||{},mn=null,mx=null,pd=function(s){var m=String(s||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?new Date(+m[3],+m[2]-1,+m[1]):null;};
+  Object.keys(D).forEach(function(k){Object.keys(D[k]||{}).forEach(function(s){var r=D[k][s]||{};[r.arrivalDate,r.departureDate].forEach(function(x){var d=pd(x);if(d){if(!mn||d<mn)mn=d;if(!mx||d>mx)mx=d;}});});});
+  return (mn&&mx)?Math.round((mx-mn)/86400000)+1:0;}
+function t69FuelCost(){var cfg=t69CostCfg();if(!cfg.fuelOn)return {cost:0,on:false};var m=window._t69DriveM||0;if(!m)return {cost:0,on:true,noKm:true};
+  var km=m/1000,use=parseFloat(cfg.fuelUse)||0,pr=parseFloat(cfg.fuelPrice)||0;if(!use)return {cost:0,on:true};
+  var c=cfg.fuelUnit==='l100'?(km*use/100*pr):(km*0.621371/use*pr);return {cost:c,on:true,km:km};}
+/* the whole trip */
+function t69TripCost(){var cfg=t69CostCfg(),seen={},t={activity:0,lodging:0,actStops:0,lodStops:0,zero:[],actualStops:0,plannedStops:0,segs:{}};
+  (routeSegments||[]).forEach(function(sg){var s=0;(sg.stops||[]).forEach(function(st){var c=t69StopCost(sg,st,seen);
+    t[c.kind]+=c.planned;s+=c.planned;t.plannedStops+=c.planned;t.actualStops+=c.actual;if(c.zero&&!c.repeat)t.zero.push({seg:sg,st:st,lod:c.kind==='lodging'});});t.segs[sg.id]=s;});
+  t.passes=cfg.passes.reduce(function(a,p){return a+(parseFloat(p.price)||0)*(p.perPerson?cfg.people:1);},0);
+  t.days=t69TripDays();t.food=(parseFloat(cfg.foodPerDay)||0)*cfg.people*t.days;
+  var f=t69FuelCost();t.fuel=f.cost;t.fuelInfo=f;
+  t.planned=t.plannedStops+t.passes+t.food+t.fuel;t.actual=t.actualStops+t.passes+t.food+t.fuel;t.cfg=cfg;return t;}
+function t69SegBudget(seg){try{var t=window._t69TCache||t69TripCost();return t.segs[seg.id]||0;}catch(e){return 0;}}
+/* ── the costs window ── */
+window.t69CostDlg=function(){var cfg=JSON.parse(JSON.stringify(t69CostCfg()));
+  var D=t69CapBox(560),box=D.box,inp='background:var(--card);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;padding:6px 8px';
+  function M(v){return t69Money(v||0);}
+  function draw(){window._t69Cost=cfg;var t=t69TripCost();
+    var row=function(a,b,c){return '<tr><td style="padding:4px 0">'+a+'</td><td style="padding:4px 8px;color:var(--muted);font-size:11px">'+(c||'')+'</td><td style="padding:4px 0;text-align:right;font-weight:600">'+b+'</td></tr>';};
+    var h='<div style="font-weight:700;font-size:15px">💰 Trip costs</div><div style="color:var(--muted);font-size:11px;margin:2px 0 10px">'+t69Esc(t69TripName())+' · planned amounts are estimates, not live prices</div>'
+     +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
+     +row('🎯 Activities',M(t.activity),'budget/pp × '+cfg.people+' people')
+     +row('🏨 Hotels / stays',M(t.lodging),'price per night × nights')
+     +row('🎟 Passes',M(t.passes),cfg.passes.length+' pass'+(cfg.passes.length===1?'':'es'))
+     +row('🍔 Food',M(t.food),t.days?('$'+(cfg.foodPerDay||0)+'/pp/day × '+cfg.people+' × '+t.days+' days'):'needs stop dates')
+     +row('⛽ Fuel',t.fuelInfo.on?(t.fuelInfo.noKm?'—':M(t.fuel)):'off',t.fuelInfo.on?(t.fuelInfo.noKm?'press 🗺 Draw first (needs the driving km)':Math.round(t.fuelInfo.km)+' km driving'):'')
+     +'<tr><td colspan="3" style="border-top:1px solid var(--border)"></td></tr>'
+     +row('<b>Total planned</b>','<span style="font-size:15px">'+M(t.planned)+'</span>','')
+     +(Math.round(t.actual)!==Math.round(t.planned)?row('Total with what we actually paid',M(t.actual),'stops with an "actually paid" amount'):'')
+     +'</table>';
+    if(t.zero.length){h+='<details style="margin-top:10px"><summary style="cursor:pointer;color:#F59E0B">⚠ '+t.zero.length+' stop'+(t.zero.length===1?'':'s')+' at $0 — free, or no price filled in yet?</summary><div style="margin-top:6px;max-height:160px;overflow:auto">'
+      +t.zero.map(function(z){return '<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,.06)">'+(z.lod?'🏨 ':'')+t69Esc(z.st.name||'')+' <span style="color:var(--muted);font-size:11px">'+t69Esc(z.st.state||'')+'</span> <button class="t69t-btn" data-ss="'+z.seg.id+'|'+z.st.id+'" style="padding:2px 8px;font-size:11px">Set cost</button></div>';}).join('')+'</div></details>';}
+    h+='<div style="font-weight:700;margin:16px 0 6px">⚙️ Settings for this trip</div>'
+     +'<div style="display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center">'
+     +'<span>👥 Number of people</span><input id="cP" type="number" min="1" max="20" value="'+cfg.people+'" style="width:80px;'+inp+'">'
+     +'<span>🍔 Food per person per day ($)</span><input id="cF" type="number" min="0" step="1" value="'+(cfg.foodPerDay||0)+'" style="width:80px;'+inp+'">'
+     +'<span>⛽ Fuel estimate</span><label style="cursor:pointer"><input id="cFo" type="checkbox"'+(cfg.fuelOn?' checked':'')+'> on</label>'
+     +'<span style="padding-left:16px;color:var(--muted)">Truck uses</span><span><input id="cFu" type="number" min="0" step="0.1" value="'+cfg.fuelUse+'" style="width:64px;'+inp+'"> <select id="cFn" style="'+inp+'"><option value="mpg"'+(cfg.fuelUnit!=='l100'?' selected':'')+'>MPG</option><option value="l100"'+(cfg.fuelUnit==='l100'?' selected':'')+'>L/100 km</option></select></span>'
+     +'<span style="padding-left:16px;color:var(--muted)">Fuel price</span><span><input id="cFp" type="number" min="0" step="0.01" value="'+cfg.fuelPrice+'" style="width:64px;'+inp+'"> <span id="cFpu" style="color:var(--muted)">'+(cfg.fuelUnit==='l100'?'$/liter':'$/gallon')+'</span></span>'
+     +'</div>'
+     +'<div style="font-weight:700;margin:16px 0 6px">🎟 Passes &amp; memberships <span style="color:var(--muted);font-weight:400;font-size:11px">(counted once for the trip)</span></div><div id="cPs"></div>'
+     +'<button class="t69t-btn" id="cPa" style="margin-top:6px">＋ Add a pass</button>'
+     +'<div style="color:var(--muted);font-size:11px;margin-top:8px">Tip: in a stop’s window (tap the stop) you can set our own cost, what we actually paid, or “covered by pass”.</div>'
+     +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="t69t-btn" id="cX">Cancel</button><button class="t69t-btn" id="cS" style="background:var(--accent);color:#0D1B2E;font-weight:700">Save</button></div>';
+    box.innerHTML=h;t69AddX(box,close);
+    var ps=box.querySelector('#cPs');
+    cfg.passes.forEach(function(p,k){var r=document.createElement('div');r.style.cssText='display:flex;gap:6px;align-items:center;margin:4px 0;flex-wrap:wrap';
+      r.innerHTML='<input data-f="name" value="'+t69Esc(p.name||'')+'" placeholder="e.g. Ikon Pass" style="flex:1;min-width:120px;'+inp+'"><span>$</span><input data-f="price" type="number" min="0" step="1" value="'+(p.price||0)+'" style="width:80px;'+inp+'">'
+        +'<label style="cursor:pointer;font-size:12px"><input data-f="perPerson" type="checkbox"'+(p.perPerson?' checked':'')+'> per person</label><button class="t69t-btn" data-x="1" style="color:#E74C3C" title="Remove">✕</button>';
+      r.querySelectorAll('input').forEach(function(el){el.onchange=function(){var f=el.getAttribute('data-f');p[f]=f==='perPerson'?el.checked:(f==='price'?(parseFloat(el.value)||0):el.value.trim());draw();};});
+      r.querySelector('[data-x]').onclick=function(){cfg.passes.splice(k,1);draw();};ps.appendChild(r);});
+    box.querySelector('#cPa').onclick=function(){cfg.passes.push({name:'',price:0,perPerson:true});draw();var a=box.querySelectorAll('#cPs input[data-f=name]');if(a.length)a[a.length-1].focus();};
+    var num=function(id,k,int){var el=box.querySelector(id);el.onchange=function(){cfg[k]=int?Math.max(1,parseInt(el.value)||1):(parseFloat(el.value)||0);draw();};};
+    num('#cP','people',1);num('#cF','foodPerDay');num('#cFu','fuelUse');num('#cFp','fuelPrice');
+    box.querySelector('#cFo').onchange=function(){cfg.fuelOn=this.checked;draw();};
+    box.querySelector('#cFn').onchange=function(){cfg.fuelUnit=this.value;draw();};
+    box.querySelector('#cX').onclick=close;
+    box.querySelector('#cS').onclick=function(){cfg.passes=cfg.passes.filter(function(p){return (p.name||'').trim()||(parseFloat(p.price)||0)>0;});
+      t69CostSave(cfg).then(function(r){if(r&&r.error)toast('❌ Could not save: '+(r.error.message||''));else toast('✅ Trip costs saved');}).catch(function(e){toast('❌ '+(e.message||e));});
+      saved=true;D.ov.remove();};
+    box.querySelectorAll('[data-ss]').forEach(function(b){b.onclick=function(){var a=b.getAttribute('data-ss').split('|');window._t69Cost=orig;D.ov.remove();t69StopSheetById(a[0],a[1]);};});}
+  var orig=window._t69Cost,saved=false;
+  function close(){if(!saved){window._t69Cost=orig;try{updateRouteSummary();}catch(e){}}D.ov.remove();}
+  D.ov.addEventListener('click',function(e){if(e.target===D.ov)close();});
+  draw();};
+/* stop window: cost block */
+function t69StopCostHtml(sg,st,inp){var c=t69StopCost(sg,Object.assign({},st,{cost:null,actual:null,pass:''}),null),cfg=t69CostCfg();
+  var hasP=cfg.passes.length;
+  return '<div style="margin-bottom:12px;border:1px solid var(--border);border-radius:9px;padding:8px">'
+    +'<div style="font-weight:700;margin-bottom:4px">💰 Cost</div>'
+    +'<div style="color:var(--muted);font-size:11px;margin-bottom:6px">From the location: '+t69Money(c.planned)+' ('+t69Esc(c.how)+')'+(c.zero?' — $0: free or not filled in':'')+'</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+    +'<label style="font-size:12px">Our planned cost $ <input id="t69SsCost" type="number" min="0" step="1" value="'+(t69Num(st.cost)!==null?st.cost:'')+'" placeholder="'+Math.round(c.planned)+'" style="width:90px;'+inp+'"></label>'
+    +'<label style="font-size:12px">Actually paid $ <input id="t69SsAct" type="number" min="0" step="1" value="'+(t69Num(st.actual)!==null?st.actual:'')+'" placeholder="same" style="width:90px;'+inp+'"></label>'
+    +(hasP?'<label style="font-size:12px">Covered by <select id="t69SsPass" style="'+inp+'"><option value="">— no pass —</option>'+cfg.passes.map(function(p){return '<option'+(st.pass===p.name?' selected':'')+'>'+t69Esc(p.name)+'</option>';}).join('')+'</select></label>':'')
+    +'</div><div style="color:var(--muted);font-size:11px;margin-top:4px">Leave empty to use the location’s price. “Actually paid” is the total for all of us.</div></div>';}
+
 function t69Money(v){return '$'+Math.round(v).toLocaleString();}
 function t69GVal(loc){if(!loc)return null;var r=parseFloat(loc.googleRating);
  if(r)return{v:r,fb:false,n:parseInt(loc.googleReviews||0,10)};
@@ -3942,11 +4060,12 @@ function t69GStr(loc){var g=t69GVal(loc);if(!g)return '';
 function t69GCol(loc){var g=t69GVal(loc);return (g&&g.fb)?'var(--accent)':'#F5A623';}
 function updateRouteSummary(){
   try{t69TripCounter();}catch(e){}
-  var totalStops=0,totalBudget=0;
-  routeSegments.forEach(function(s){totalStops+=(s.stops||[]).length;totalBudget+=t69SegBudget(s);});
+  var totalStops=0,totalBudget=0;window._t69TCache=null;var _tc=null;try{_tc=t69TripCost();window._t69TCache=_tc;totalBudget=_tc.planned;}catch(e){console.warn('cost',e);}
+  routeSegments.forEach(function(s){totalStops+=(s.stops||[]).length;});
   document.getElementById('routeStopCount').textContent=totalStops;
   document.getElementById('routeSegCount').textContent=routeSegments.length;
-  var bEl=document.getElementById('routeBudget');if(bEl)bEl.textContent=totalBudget?t69Money(totalBudget):'\u2014';
+  var bEl=document.getElementById('routeBudget');if(bEl){bEl.textContent=totalBudget?t69Money(totalBudget):'\u2014';var _bp=bEl.parentNode;if(_bp&&!_bp._t69c){_bp._t69c=1;_bp.style.cursor='pointer';_bp.title='Trip costs \u2014 tap for the breakdown and settings';_bp.onclick=function(){t69CostDlg();};}
+    var _bl=_bp&&_bp.querySelector('.route-stat-lbl');if(_bl)_bl.innerHTML='Budget'+(_tc&&_tc.zero.length?' <span style="color:#F59E0B" title="'+_tc.zero.length+' stops at $0">\u26A0'+_tc.zero.length+'</span>':'');}
   (routeSegments||[]).forEach(function(seg){
     var el=document.getElementById('seg-total-'+seg.id);if(!el)return;
     var ex=el.querySelector('.t69sb');if(ex)ex.remove();
@@ -3956,6 +4075,7 @@ function updateRouteSummary(){
     d.textContent=ns+(ns===1?' stop':' stops')+(sb?(' \u00b7 '+t69Money(sb)):'');
     el.appendChild(d);if(ns)el.style.display='block';
   });
+  window._t69TCache=null;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3980,6 +4100,7 @@ function loadRouteFromFirestore(){
   }).then(function(segs){
     routeSegments=segs;
     _routeLoaded=true;
+    try{t69CostLoad();t69RouteLocsLoad();}catch(e){}
     try{if(window._t69DatesLoaded&&window.t69ReloadDates)t69ReloadDates();}catch(e){}
     try{t69LoadPub();}catch(e){}
     setTimeout(function(){try{t69HandleShare();}catch(e){}},600);
@@ -3999,7 +4120,7 @@ function saveSegmentToFirestore(seg){
       order:i+1,name:stop.name||'',state:stop.state||'',
       lat:stop.lat||0,lng:stop.lng||0,
       category:stop.category||'',status:stop.status||'Planning',
-      plannedDate:stop.plannedDate||'',visitedDate:stop.visitedDate||'',hidePublic:!!stop.hidePublic,showPublic:!!stop.showPublic,postsJson:stop.postsJson||'',sideKind:stop.sideKind||'',arriveBy:stop.arriveBy||'',
+      plannedDate:stop.plannedDate||'',visitedDate:stop.visitedDate||'',hidePublic:!!stop.hidePublic,showPublic:!!stop.showPublic,postsJson:stop.postsJson||'',sideKind:stop.sideKind||'',arriveBy:stop.arriveBy||'',cost:t69Num(stop.cost),actual:t69Num(stop.actual),pass:stop.pass||'',
       sourceSheet:stop.sourceSheet||'',sourceRow:stop.sourceRow||0
     };
     fsPatch(stopPath(seg.id,stop.id),stopData,true).catch(function(e){console.error('Stop save failed',e);});
@@ -4389,6 +4510,7 @@ window.t69StopSheet=function(si,i){
         +'<div style="color:var(--muted);font-size:11px;margin-top:2px">✈ = a flight from the route stop above: drawn as a curved line, not counted as driving. Only for route stops.</div></div>'
         +(k==='trip'&&fr?'<button class="t69t-btn" id="t69SsDir" style="margin-top:6px" data-u="https://www.google.com/maps/dir/'+encodeURIComponent(fr.lat+','+fr.lng)+'/'+encodeURIComponent(st.lat+','+st.lng)+'">🗺 Directions from '+t69Esc(fr.name||'')+'</button>':'')
         +'</div>';})()
+    +t69StopCostHtml(sg,st,inp)
     +'<label style="display:flex;align-items:center;gap:8px;margin-bottom:8px">✅ Visited on <input type="date" id="t69SsDate" value="'+t69Esc(st.visitedDate||'')+'" style="'+inp+'"> <button class="t69t-btn" id="t69SsClr">Not visited</button></label>'
     +'<div style="margin-bottom:14px"><div style="margin-bottom:4px">On the public map</div>'
     +'<label style="display:block;cursor:pointer;margin:2px 0"><input type="radio" name="t69SsPub" value="auto"'+(!hidden&&!shown?' checked':'')+'> Follow the trip\u2019s category settings</label>'
@@ -4437,6 +4559,7 @@ window.t69StopSheet=function(si,i){
     var _kEl=box.querySelector('input[name=t69SsKind]:checked'),_kCh=false;
     if(_kEl&&(st.sideKind||'')!==_kEl.value){st.sideKind=_kEl.value;_kCh=true;}
     var _hEl=box.querySelector('input[name=t69SsHow]:checked');if(_hEl&&(st.arriveBy||'')!==_hEl.value){st.arriveBy=_hEl.value;_kCh=true;}
+    try{st.cost=t69Num(box.querySelector('#t69SsCost').value);st.actual=t69Num(box.querySelector('#t69SsAct').value);var _ps=box.querySelector('#t69SsPass');if(_ps)st.pass=_ps.value;}catch(e){}
     t69SaveTouched(tw);ov.remove();renderRoutePanel();t69PubSoon();t69RefreshVisitedMap();toast('✅ Saved');};};
 /* trip counter under the route totals */
 function t69FlatStops(){var flat=[],lastDrive=null;
@@ -4605,6 +4728,7 @@ window.t69MoreMenu=function(){
       ['🖥️','Zoom clip 16:9','For YouTube',"exportMap('169')"],
       ['📁','Media folders','Day folders + inbox on your laptop disk','t69MediaDlg()',function(){return typeof t69MediaOk==='function'&&t69MediaOk()&&!(window.matchMedia&&matchMedia('(pointer:coarse)').matches&&!matchMedia('(pointer:fine)').matches);}]]],
     ['Route tools',[
+      ['\uD83D\uDCB0','Trip costs','Totals, passes, food per day, fuel estimate','t69CostDlg()'],
       ['🔎',"What's along this route",'Every location in your database near the route','t69LoadAlongRoute()'],
       ['✕','Clear the drawn route','Only removes the lines from the map — your stops stay','clearAllSegments()',null,'warn']]]];
   var D=t69CapBox(420),box=D.box,h='<div style="font-weight:700;font-size:15px">⋯ More</div><div style="color:var(--muted);font-size:11px;margin-top:2px">'+t69Esc(t69TripName())+'</div>';
@@ -5916,7 +6040,7 @@ function drawAllSegments(opts){
   var totalDist=0,totalTime=0,flyM=0,done=0,fails=0;
   var allBounds=[];
   function finish(){if(_gen!==window._t69DrawGen)return;
-    document.getElementById('routeTotalDist').textContent=fmtDist(totalDist);window._t69DriveM=totalDist;window._t69FlyM=flyM;try{t69KmLine();}catch(e){}
+    document.getElementById('routeTotalDist').textContent=fmtDist(totalDist);window._t69DriveM=totalDist;window._t69FlyM=flyM;try{t69KmLine();}catch(e){}try{updateRouteSummary();}catch(e){}
     document.getElementById('routeTotalTime').textContent=fmtTime(totalTime);
     if(_keep&&!fails){}else toast(fails?('⚠️ '+fails+' segment'+(fails>1?'s':'')+' could not be drawn — press Draw again'):('✅ Route drawn — '+fmtDist(totalDist)+' driving'+(flyM?(' · ✈ '+fmtDist(flyM)+' flying'):'')));
     try{t69ApplyPinView();}catch(e){}
@@ -7220,7 +7344,7 @@ async function loadDates(){
         else D[segId][k]=val;
       });
     });
-    window._t69dates=D;
+    window._t69dates=D;try{setTimeout(function(){if(typeof updateRouteSummary==='function')updateRouteSummary();},120);}catch(e){}
     try{setTimeout(function(){if(typeof paint==='function')paint();},80);}catch(e){}
     console.log('T1969 v47f loaded',JSON.stringify(D).slice(0,150));
   }catch(e){console.error('T1969 load',e);}
@@ -7839,7 +7963,7 @@ window.bulkSyncSegment=async function(segId){
       }
     }
   }
-  D[segId]=dates;window._t69dates=D;
+  D[segId]=dates;window._t69dates=D;try{updateRouteSummary();}catch(e){}
   await callFn('saveStopDates',{tripId:tid(),segId:segId,stopDates:dates});
   paint();
   tst(synced+' synced'+(skipped?', '+skipped+' skipped — no dates':''));
@@ -8187,7 +8311,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v227: ready');
+  console.log('T1969 v228: ready');
 }
 function t69EvToDates(ev){var tz=(ev.start&&ev.start.timeZone)||undefined;
   function dmy(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
