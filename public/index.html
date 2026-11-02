@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v228  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v229  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -1777,12 +1777,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v228</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v229</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v228</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v229</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2224,7 +2224,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v228</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v229</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -3932,7 +3932,7 @@ function t69StopBudget(st){
   return f?(parseFloat(f.budget)||0):0;
 }
 /* ===== v228: trip costs — per-trip settings (people, food/day, fuel, passes), stop costs (planned / actual / pass), totals that don't depend on what's on screen ===== */
-var T69_COST_DEF={people:2,foodPerDay:0,fuelOn:false,fuelUnit:'mpg',fuelUse:17,fuelPrice:3.6,passes:[]};
+var T69_COST_DEF={people:2,foodPerDay:0,avgNight:150,fuelOn:false,fuelUnit:'mpg',fuelUse:20,fuelPrice:3.6,passes:[]};
 window._t69Cost=null;window._t69RouteLocs=[];
 function t69CostCfg(){var c=window._t69Cost||{};var o={};Object.keys(T69_COST_DEF).forEach(function(k){o[k]=(c[k]!==undefined&&c[k]!==null)?c[k]:T69_COST_DEF[k];});
   if(!Array.isArray(o.passes))o.passes=[];o.people=Math.max(1,parseInt(o.people)||1);return o;}
@@ -3960,10 +3960,13 @@ function t69StopNights(seg,st){try{var D=window._t69dates||{},r=(D[seg.id]||{})[
 function t69PlaceKey(st){return (st.sourceSheet||st.state||'')+'|'+(st.sourceRow||'')+'|'+(+(st.lat||0)).toFixed(4)+'_'+(+(st.lng||0)).toFixed(4);}
 function t69Num(v){return (v===''||v===null||v===undefined||isNaN(+v))?null:+v;}
 /* one stop: {planned, actual, kind, how, zero, repeat} */
-function t69StopCost(seg,st,seen){var cfg=t69CostCfg(),L=t69StopLoc(st),lod=t69IsLodging(st,L),o={planned:0,actual:0,kind:lod?'lodging':'activity',how:'',zero:false,repeat:false,loc:L};
+function t69StopCost(seg,st,seen){var cfg=t69CostCfg(),L=t69StopLoc(st),lod=t69IsLodging(st,L),o={planned:0,actual:0,kind:lod?'lodging':'activity',how:'',zero:false,repeat:false,covered:false,loc:L};
   var key=t69PlaceKey(st);
-  if(t69Num(st.cost)!==null){o.planned=+st.cost;o.how='your planned cost';}
-  else if(st.pass){o.planned=0;o.how='covered by '+st.pass;}
+  var _pc=t69PassFor(st,L,cfg);
+  if(st.freeStay){o.kind='lodging';o.planned=0;o.how='free stay (BLM, friends, home)';}
+  else if(t69Num(st.cost)!==null){o.planned=+st.cost;o.how='your planned cost';}
+  else if(st.pass){o.planned=0;o.how='covered by '+st.pass;o.covered=true;}
+  else if(_pc){o.planned=0;o.how='covered by '+_pc.name+' (all '+normalizeCat((L&&L.category)||st.category||'')+')';o.covered=true;}
   else if(seen&&!lod&&seen[key]){o.planned=0;o.repeat=true;o.how='same place as earlier — counted once';}
   else{var b=L?(parseFloat(L.budget)||0):0;
     if(lod){var n=t69StopNights(seg,st);o.planned=b*(n||1);o.how='$'+b+'/night × '+(n||1)+' night'+((n||1)===1?'':'s')+(n?'':' (no dates yet)');}
@@ -3971,6 +3974,18 @@ function t69StopCost(seg,st,seen){var cfg=t69CostCfg(),L=t69StopLoc(st),lod=t69I
     if(!b&&!/^home$/i.test(String((L&&L.category)||st.category||''))&&!/^home\b/i.test(String(st.name||'')))o.zero=true;}
   if(seen)seen[key]=1;
   o.actual=t69Num(st.actual)!==null?+st.actual:o.planned;return o;}
+function t69CostCats(){var out=[];try{out=(t69Cats()||[]).slice();}catch(e){}
+  (window._t69RouteLocs||[]).forEach(function(l){var c=normalizeCat(l.category||'');if(c&&out.indexOf(c)<0)out.push(c);});
+  return out.sort(function(a,b){return a.localeCompare(b);});}
+function t69PassFor(st,L,cfg){var c=normalizeCat(String((L&&L.category)||st.category||''));if(!c)return null;
+  return (cfg.passes||[]).find(function(p){return Array.isArray(p.cats)&&p.cats.indexOf(c)>=0;})||null;}
+function t69PD(s){var m=String(s||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?new Date(+m[3],+m[2]-1,+m[1]):null;}
+function t69StopDR(seg,st){var D=window._t69dates||{},k=window.sk?window.sk(st):st.id,r=(D[seg.id]||{})[k];
+  if(!r)Object.keys(D).forEach(function(x){if(!r&&D[x])r=D[x][k];});return r||null;}
+/* nights of the trip that already have a stay (hotel, lodging or free stay) */
+function t69NightCover(){var set={};(routeSegments||[]).forEach(function(sg){(sg.stops||[]).forEach(function(st){
+  var L=t69StopLoc(st);if(!(st.freeStay||t69IsLodging(st,L)))return;var r=t69StopDR(sg,st);if(!r)return;
+  var a=t69PD(r.arrivalDate),b=t69PD(r.departureDate);if(!a||!b)return;for(var d=new Date(a);d<b;d.setDate(d.getDate()+1))set[d.toDateString()]=1;});});return set;}
 function t69TripDays(){var D=window._t69dates||{},mn=null,mx=null,pd=function(s){var m=String(s||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?new Date(+m[3],+m[2]-1,+m[1]):null;};
   Object.keys(D).forEach(function(k){Object.keys(D[k]||{}).forEach(function(s){var r=D[k][s]||{};[r.arrivalDate,r.departureDate].forEach(function(x){var d=pd(x);if(d){if(!mn||d<mn)mn=d;if(!mx||d>mx)mx=d;}});});});
   return (mn&&mx)?Math.round((mx-mn)/86400000)+1:0;}
@@ -3980,11 +3995,13 @@ function t69FuelCost(){var cfg=t69CostCfg();if(!cfg.fuelOn)return {cost:0,on:fal
 /* the whole trip */
 function t69TripCost(){var cfg=t69CostCfg(),seen={},t={activity:0,lodging:0,actStops:0,lodStops:0,zero:[],actualStops:0,plannedStops:0,segs:{}};
   (routeSegments||[]).forEach(function(sg){var s=0;(sg.stops||[]).forEach(function(st){var c=t69StopCost(sg,st,seen);
-    t[c.kind]+=c.planned;s+=c.planned;t.plannedStops+=c.planned;t.actualStops+=c.actual;if(c.zero&&!c.repeat)t.zero.push({seg:sg,st:st,lod:c.kind==='lodging'});});t.segs[sg.id]=s;});
+    t[c.kind]+=c.planned;s+=c.planned;t.plannedStops+=c.planned;t.actualStops+=c.actual;if(c.zero&&!c.repeat&&!c.covered)t.zero.push({seg:sg,st:st,lod:c.kind==='lodging'});});t.segs[sg.id]=s;});
   t.passes=cfg.passes.reduce(function(a,p){return a+(parseFloat(p.price)||0)*(p.perPerson?cfg.people:1);},0);
   t.days=t69TripDays();t.food=(parseFloat(cfg.foodPerDay)||0)*cfg.people*t.days;
+  t.nights=Math.max(0,t.days-1);t.covNights=Object.keys(t69NightCover()).length;t.openNights=Math.max(0,t.nights-t.covNights);
+  t.estLodging=t.openNights*(parseFloat(cfg.avgNight)||0);
   var f=t69FuelCost();t.fuel=f.cost;t.fuelInfo=f;
-  t.planned=t.plannedStops+t.passes+t.food+t.fuel;t.actual=t.actualStops+t.passes+t.food+t.fuel;t.cfg=cfg;return t;}
+  t.planned=t.plannedStops+t.passes+t.food+t.fuel+t.estLodging;t.actual=t.actualStops+t.passes+t.food+t.fuel+t.estLodging;t.cfg=cfg;return t;}
 function t69SegBudget(seg){try{var t=window._t69TCache||t69TripCost();return t.segs[seg.id]||0;}catch(e){return 0;}}
 /* ── the costs window ── */
 window.t69CostDlg=function(){var cfg=JSON.parse(JSON.stringify(t69CostCfg()));
@@ -3995,9 +4012,10 @@ window.t69CostDlg=function(){var cfg=JSON.parse(JSON.stringify(t69CostCfg()));
     var h='<div style="font-weight:700;font-size:15px">💰 Trip costs</div><div style="color:var(--muted);font-size:11px;margin:2px 0 10px">'+t69Esc(t69TripName())+' · planned amounts are estimates, not live prices</div>'
      +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
      +row('🎯 Activities',M(t.activity),'budget/pp × '+cfg.people+' people')
-     +row('🏨 Hotels / stays',M(t.lodging),'price per night × nights')
+     +row('\uD83C\uDFE8 Hotels / stays',M(t.lodging),'price per night \u00d7 nights')
+     +row('\uD83D\uDECF Nights without a stay yet',M(t.estLodging),t.nights?(t.openNights+' of '+t.nights+' nights \u00d7 $'+(cfg.avgNight||0)+' average'):'needs stop dates')
      +row('🎟 Passes',M(t.passes),cfg.passes.length+' pass'+(cfg.passes.length===1?'':'es'))
-     +row('🍔 Food',M(t.food),t.days?('$'+(cfg.foodPerDay||0)+'/pp/day × '+cfg.people+' × '+t.days+' days'):'needs stop dates')
+     +row('\uD83C\uDF54 Food',M(t.food),t.days?('$'+(cfg.foodPerDay||0)+'/pp/day \u00d7 '+cfg.people+' \u00d7 '+t.days+' days (first to last date)'):'needs stop dates')
      +row('⛽ Fuel',t.fuelInfo.on?(t.fuelInfo.noKm?'—':M(t.fuel)):'off',t.fuelInfo.on?(t.fuelInfo.noKm?'press 🗺 Draw first (needs the driving km)':Math.round(t.fuelInfo.km)+' km driving'):'')
      +'<tr><td colspan="3" style="border-top:1px solid var(--border)"></td></tr>'
      +row('<b>Total planned</b>','<span style="font-size:15px">'+M(t.planned)+'</span>','')
@@ -4008,7 +4026,8 @@ window.t69CostDlg=function(){var cfg=JSON.parse(JSON.stringify(t69CostCfg()));
     h+='<div style="font-weight:700;margin:16px 0 6px">⚙️ Settings for this trip</div>'
      +'<div style="display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center">'
      +'<span>👥 Number of people</span><input id="cP" type="number" min="1" max="20" value="'+cfg.people+'" style="width:80px;'+inp+'">'
-     +'<span>🍔 Food per person per day ($)</span><input id="cF" type="number" min="0" step="1" value="'+(cfg.foodPerDay||0)+'" style="width:80px;'+inp+'">'
+     +'<span>\uD83D\uDECF Average price per night ($) <small style="color:var(--muted);display:block">for nights without a hotel or free stay yet</small></span><input id="cN" type="number" min="0" step="5" value="'+(cfg.avgNight||0)+'" style="width:80px;'+inp+'">'
+     +'<span>\uD83C\uDF54 Food per person per day ($)</span><input id="cF" type="number" min="0" step="1" value="'+(cfg.foodPerDay||0)+'" style="width:80px;'+inp+'">'
      +'<span>⛽ Fuel estimate</span><label style="cursor:pointer"><input id="cFo" type="checkbox"'+(cfg.fuelOn?' checked':'')+'> on</label>'
      +'<span style="padding-left:16px;color:var(--muted)">Truck uses</span><span><input id="cFu" type="number" min="0" step="0.1" value="'+cfg.fuelUse+'" style="width:64px;'+inp+'"> <select id="cFn" style="'+inp+'"><option value="mpg"'+(cfg.fuelUnit!=='l100'?' selected':'')+'>MPG</option><option value="l100"'+(cfg.fuelUnit==='l100'?' selected':'')+'>L/100 km</option></select></span>'
      +'<span style="padding-left:16px;color:var(--muted)">Fuel price</span><span><input id="cFp" type="number" min="0" step="0.01" value="'+cfg.fuelPrice+'" style="width:64px;'+inp+'"> <span id="cFpu" style="color:var(--muted)">'+(cfg.fuelUnit==='l100'?'$/liter':'$/gallon')+'</span></span>'
@@ -4016,26 +4035,35 @@ window.t69CostDlg=function(){var cfg=JSON.parse(JSON.stringify(t69CostCfg()));
      +'<div style="font-weight:700;margin:16px 0 6px">🎟 Passes &amp; memberships <span style="color:var(--muted);font-weight:400;font-size:11px">(counted once for the trip)</span></div><div id="cPs"></div>'
      +'<button class="t69t-btn" id="cPa" style="margin-top:6px">＋ Add a pass</button>'
      +'<div style="color:var(--muted);font-size:11px;margin-top:8px">Tip: in a stop’s window (tap the stop) you can set our own cost, what we actually paid, or “covered by pass”.</div>'
-     +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="t69t-btn" id="cX">Cancel</button><button class="t69t-btn" id="cS" style="background:var(--accent);color:#0D1B2E;font-weight:700">Save</button></div>';
+     +'<div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:14px"><span id="cSt" style="color:var(--muted);font-size:11px;flex:1">'+(dirty?'Saving\u2026':'\u2713 Changes are saved automatically')+'</span><button class="t69t-btn" id="cX" style="background:var(--accent);color:#0D1B2E;font-weight:700">Close</button></div>';
     box.innerHTML=h;t69AddX(box,close);
     var ps=box.querySelector('#cPs');
     cfg.passes.forEach(function(p,k){var r=document.createElement('div');r.style.cssText='display:flex;gap:6px;align-items:center;margin:4px 0;flex-wrap:wrap';
       r.innerHTML='<input data-f="name" value="'+t69Esc(p.name||'')+'" placeholder="e.g. Ikon Pass" style="flex:1;min-width:120px;'+inp+'"><span>$</span><input data-f="price" type="number" min="0" step="1" value="'+(p.price||0)+'" style="width:80px;'+inp+'">'
         +'<label style="cursor:pointer;font-size:12px"><input data-f="perPerson" type="checkbox"'+(p.perPerson?' checked':'')+'> per person</label><button class="t69t-btn" data-x="1" style="color:#E74C3C" title="Remove">✕</button>';
       r.querySelectorAll('input').forEach(function(el){el.onchange=function(){var f=el.getAttribute('data-f');p[f]=f==='perPerson'?el.checked:(f==='price'?(parseFloat(el.value)||0):el.value.trim());draw();};});
-      r.querySelector('[data-x]').onclick=function(){cfg.passes.splice(k,1);draw();};ps.appendChild(r);});
+      r.querySelector('[data-x]').onclick=function(){cfg.passes.splice(k,1);draw();};ps.appendChild(r);
+      if(!Array.isArray(p.cats))p.cats=[];
+      var cr=document.createElement('div');cr.style.cssText='display:flex;gap:4px;flex-wrap:wrap;margin:0 0 10px;font-size:11px;align-items:center';
+      cr.innerHTML='<span style="color:var(--muted)">Covers every stop in:</span>'+t69CostCats().map(function(c){var on=p.cats.indexOf(c)>=0;
+        return '<button type="button" data-c="'+t69Esc(c)+'" style="border:1px solid '+(on?'var(--accent)':'var(--border)')+';background:'+(on?'var(--accent)':'transparent')+';color:'+(on?'#0D1B2E':'var(--text)')+';border-radius:12px;padding:2px 8px;font-size:11px;cursor:pointer">'+t69Esc(c)+'</button>';}).join('');
+      cr.querySelectorAll('[data-c]').forEach(function(b){b.onclick=function(){var c=b.getAttribute('data-c'),ix=p.cats.indexOf(c);if(ix>=0)p.cats.splice(ix,1);else p.cats.push(c);draw();};});
+      ps.appendChild(cr);});
     box.querySelector('#cPa').onclick=function(){cfg.passes.push({name:'',price:0,perPerson:true});draw();var a=box.querySelectorAll('#cPs input[data-f=name]');if(a.length)a[a.length-1].focus();};
     var num=function(id,k,int){var el=box.querySelector(id);el.onchange=function(){cfg[k]=int?Math.max(1,parseInt(el.value)||1):(parseFloat(el.value)||0);draw();};};
-    num('#cP','people',1);num('#cF','foodPerDay');num('#cFu','fuelUse');num('#cFp','fuelPrice');
+    num('#cP','people',1);num('#cF','foodPerDay');num('#cN','avgNight');num('#cFu','fuelUse');num('#cFp','fuelPrice');
     box.querySelector('#cFo').onchange=function(){cfg.fuelOn=this.checked;draw();};
     box.querySelector('#cFn').onchange=function(){cfg.fuelUnit=this.value;draw();};
     box.querySelector('#cX').onclick=close;
-    box.querySelector('#cS').onclick=function(){cfg.passes=cfg.passes.filter(function(p){return (p.name||'').trim()||(parseFloat(p.price)||0)>0;});
-      t69CostSave(cfg).then(function(r){if(r&&r.error)toast('❌ Could not save: '+(r.error.message||''));else toast('✅ Trip costs saved');}).catch(function(e){toast('❌ '+(e.message||e));});
-      saved=true;D.ov.remove();};
-    box.querySelectorAll('[data-ss]').forEach(function(b){b.onclick=function(){var a=b.getAttribute('data-ss').split('|');window._t69Cost=orig;D.ov.remove();t69StopSheetById(a[0],a[1]);};});}
-  var orig=window._t69Cost,saved=false;
-  function close(){if(!saved){window._t69Cost=orig;try{updateRouteSummary();}catch(e){}}D.ov.remove();}
+    box.querySelectorAll('[data-ss]').forEach(function(b){b.onclick=function(){var a=b.getAttribute('data-ss').split('|');close();t69StopSheetById(a[0],a[1]);};});
+    if(started)queueSave();started=true;}
+  var started=false,dirty=false,tmr=null;
+  function queueSave(){dirty=true;var e=box.querySelector('#cSt');if(e)e.textContent='Saving\u2026';clearTimeout(tmr);tmr=setTimeout(saveNow,700);}
+  function saveNow(){clearTimeout(tmr);if(!dirty)return Promise.resolve();dirty=false;var keep=JSON.parse(JSON.stringify(cfg));
+    keep.passes=keep.passes.filter(function(p){return (p.name||'').trim()||(parseFloat(p.price)||0)>0;});
+    return t69CostSave(keep).then(function(r){var e=box.querySelector('#cSt');if(r&&r.error){toast('\u274C Could not save: '+(r.error.message||''));if(e)e.textContent='\u274C Not saved';}
+      else if(e)e.textContent='\u2713 Saved';}).catch(function(x){toast('\u274C '+(x.message||x));});}
+  function close(){saveNow();try{updateRouteSummary();}catch(e){}D.ov.remove();}
   D.ov.addEventListener('click',function(e){if(e.target===D.ov)close();});
   draw();};
 /* stop window: cost block */
@@ -4048,7 +4076,8 @@ function t69StopCostHtml(sg,st,inp){var c=t69StopCost(sg,Object.assign({},st,{co
     +'<label style="font-size:12px">Our planned cost $ <input id="t69SsCost" type="number" min="0" step="1" value="'+(t69Num(st.cost)!==null?st.cost:'')+'" placeholder="'+Math.round(c.planned)+'" style="width:90px;'+inp+'"></label>'
     +'<label style="font-size:12px">Actually paid $ <input id="t69SsAct" type="number" min="0" step="1" value="'+(t69Num(st.actual)!==null?st.actual:'')+'" placeholder="same" style="width:90px;'+inp+'"></label>'
     +(hasP?'<label style="font-size:12px">Covered by <select id="t69SsPass" style="'+inp+'"><option value="">— no pass —</option>'+cfg.passes.map(function(p){return '<option'+(st.pass===p.name?' selected':'')+'>'+t69Esc(p.name)+'</option>';}).join('')+'</select></label>':'')
-    +'</div><div style="color:var(--muted);font-size:11px;margin-top:4px">Leave empty to use the location’s price. “Actually paid” is the total for all of us.</div></div>';}
+    +'</div><label style="display:block;margin-top:6px;font-size:12px;cursor:pointer"><input id="t69SsFree" type="checkbox"'+(st.freeStay?' checked':'')+'> \uD83C\uDFD5 Free stay \u2014 we sleep here for free (BLM land, friends, home)</label>'
+    +'<div style="color:var(--muted);font-size:11px;margin-top:4px">Leave empty to use the location\u2019s price. \u201cActually paid\u201d is the total for all of us. Nights with no hotel or free stay are estimated at the trip\u2019s average price per night.</div></div>';}
 
 function t69Money(v){return '$'+Math.round(v).toLocaleString();}
 function t69GVal(loc){if(!loc)return null;var r=parseFloat(loc.googleRating);
@@ -4120,7 +4149,7 @@ function saveSegmentToFirestore(seg){
       order:i+1,name:stop.name||'',state:stop.state||'',
       lat:stop.lat||0,lng:stop.lng||0,
       category:stop.category||'',status:stop.status||'Planning',
-      plannedDate:stop.plannedDate||'',visitedDate:stop.visitedDate||'',hidePublic:!!stop.hidePublic,showPublic:!!stop.showPublic,postsJson:stop.postsJson||'',sideKind:stop.sideKind||'',arriveBy:stop.arriveBy||'',cost:t69Num(stop.cost),actual:t69Num(stop.actual),pass:stop.pass||'',
+      plannedDate:stop.plannedDate||'',visitedDate:stop.visitedDate||'',hidePublic:!!stop.hidePublic,showPublic:!!stop.showPublic,postsJson:stop.postsJson||'',sideKind:stop.sideKind||'',arriveBy:stop.arriveBy||'',cost:t69Num(stop.cost),actual:t69Num(stop.actual),pass:stop.pass||'',freeStay:!!stop.freeStay,
       sourceSheet:stop.sourceSheet||'',sourceRow:stop.sourceRow||0
     };
     fsPatch(stopPath(seg.id,stop.id),stopData,true).catch(function(e){console.error('Stop save failed',e);});
@@ -4559,7 +4588,7 @@ window.t69StopSheet=function(si,i){
     var _kEl=box.querySelector('input[name=t69SsKind]:checked'),_kCh=false;
     if(_kEl&&(st.sideKind||'')!==_kEl.value){st.sideKind=_kEl.value;_kCh=true;}
     var _hEl=box.querySelector('input[name=t69SsHow]:checked');if(_hEl&&(st.arriveBy||'')!==_hEl.value){st.arriveBy=_hEl.value;_kCh=true;}
-    try{st.cost=t69Num(box.querySelector('#t69SsCost').value);st.actual=t69Num(box.querySelector('#t69SsAct').value);var _ps=box.querySelector('#t69SsPass');if(_ps)st.pass=_ps.value;}catch(e){}
+    try{st.cost=t69Num(box.querySelector('#t69SsCost').value);st.actual=t69Num(box.querySelector('#t69SsAct').value);var _ps=box.querySelector('#t69SsPass');if(_ps)st.pass=_ps.value;st.freeStay=!!box.querySelector('#t69SsFree').checked;}catch(e){}
     t69SaveTouched(tw);ov.remove();renderRoutePanel();t69PubSoon();t69RefreshVisitedMap();toast('✅ Saved');};};
 /* trip counter under the route totals */
 function t69FlatStops(){var flat=[],lastDrive=null;
@@ -8311,7 +8340,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v228: ready');
+  console.log('T1969 v229: ready');
 }
 function t69EvToDates(ev){var tz=(ev.start&&ev.start.timeZone)||undefined;
   function dmy(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
