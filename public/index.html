@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v229  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v231  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -1777,12 +1777,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v229</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v231</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v229</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v231</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2224,7 +2224,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v229</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v231</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -3932,7 +3932,7 @@ function t69StopBudget(st){
   return f?(parseFloat(f.budget)||0):0;
 }
 /* ===== v228: trip costs — per-trip settings (people, food/day, fuel, passes), stop costs (planned / actual / pass), totals that don't depend on what's on screen ===== */
-var T69_COST_DEF={people:2,foodPerDay:0,avgNight:150,fuelOn:false,fuelUnit:'mpg',fuelUse:20,fuelPrice:3.6,passes:[]};
+var T69_COST_DEF={people:2,foodPerDay:0,avgNight:150,fuelOn:false,fuelUnit:'mpg',fuelUse:19,fuelPrice:3.6,passes:[]};
 window._t69Cost=null;window._t69RouteLocs=[];
 function t69CostCfg(){var c=window._t69Cost||{};var o={};Object.keys(T69_COST_DEF).forEach(function(k){o[k]=(c[k]!==undefined&&c[k]!==null)?c[k]:T69_COST_DEF[k];});
   if(!Array.isArray(o.passes))o.passes=[];o.people=Math.max(1,parseInt(o.people)||1);return o;}
@@ -3952,7 +3952,7 @@ function t69StopLoc(st){if(!st)return null;var rid=String(st.sourceRow||''),reg=
   for(var p=0;p<pools.length;p++){var f=pools[p].find(function(l){return l&&rid&&String(l.rowIndex)===rid&&(!reg||!l.state||l.state===reg);});if(f)return f;}
   for(var q=0;q<pools.length;q++){var g=pools[q].find(function(l){return l&&l.lat!=null&&st.lat!=null&&Math.abs(l.lat-st.lat)<0.0006&&Math.abs(l.lng-st.lng)<0.0006;});if(g)return g;}
   return null;}
-function t69IsLodging(st,L){if(st&&st.sideKind==='hotel')return true;var c=String((L&&L.category)||(st&&st.category)||'');return /hotel|motel|lodg|resort|airbnb|cabin|campground|camping|rv park|hostel|inn\b|stay/i.test(c);}
+function t69IsLodging(st,L){if(st&&st.sideKind==='hotel')return true;var c=String((L&&L.category)||(st&&st.category)||'');return /hotel|motel|lodg|airbnb|cabin|campground|camping|rv park|hostel|\binn\b|\bstay\b/i.test(c)||(/resort/i.test(c)&&!/ski|golf|spa|theme|water/i.test(c));}
 function t69StopNights(seg,st){try{var D=window._t69dates||{},r=(D[seg.id]||{})[window.sk?window.sk(st):st.id];
   if(!r){Object.keys(D).forEach(function(k){if(!r&&D[k])r=D[k][window.sk?window.sk(st):st.id];});}
   var pd=function(s){var m=String(s||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?new Date(+m[3],+m[2]-1,+m[1]):null;};
@@ -3965,8 +3965,8 @@ function t69StopCost(seg,st,seen){var cfg=t69CostCfg(),L=t69StopLoc(st),lod=t69I
   var _pc=t69PassFor(st,L,cfg);
   if(st.freeStay){o.kind='lodging';o.planned=0;o.how='free stay (BLM, friends, home)';}
   else if(t69Num(st.cost)!==null){o.planned=+st.cost;o.how='your planned cost';}
-  else if(st.pass){o.planned=0;o.how='covered by '+st.pass;o.covered=true;}
-  else if(_pc){o.planned=0;o.how='covered by '+_pc.name+' (all '+normalizeCat((L&&L.category)||st.category||'')+')';o.covered=true;}
+  else if(st.pass&&st.pass!=='__none__'){o.planned=0;o.how='covered by '+st.pass;o.covered=true;}
+  else if(_pc&&st.pass!=='__none__'){o.planned=0;o.how='covered by '+_pc.name+' (all '+normalizeCat((L&&L.category)||st.category||'')+')';o.covered=true;}
   else if(seen&&!lod&&seen[key]){o.planned=0;o.repeat=true;o.how='same place as earlier — counted once';}
   else{var b=L?(parseFloat(L.budget)||0):0;
     if(lod){var n=t69StopNights(seg,st);o.planned=b*(n||1);o.how='$'+b+'/night × '+(n||1)+' night'+((n||1)===1?'':'s')+(n?'':' (no dates yet)');}
@@ -4004,12 +4004,15 @@ function t69TripCost(){var cfg=t69CostCfg(),seen={},t={activity:0,lodging:0,actS
   t.planned=t.plannedStops+t.passes+t.food+t.fuel+t.estLodging;t.actual=t.actualStops+t.passes+t.food+t.fuel+t.estLodging;t.cfg=cfg;return t;}
 function t69SegBudget(seg){try{var t=window._t69TCache||t69TripCost();return t.segs[seg.id]||0;}catch(e){return 0;}}
 /* ── the costs window ── */
-window.t69CostDlg=function(){var cfg=JSON.parse(JSON.stringify(t69CostCfg()));
+window.t69CostDlg=function(opts){opts=opts||{};var tab=opts.tab||'sum',flt=opts.filter||'zero',cfg=JSON.parse(JSON.stringify(t69CostCfg()));
   var D=t69CapBox(560),box=D.box,inp='background:var(--card);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;padding:6px 8px';
   function M(v){return t69Money(v||0);}
-  function draw(){window._t69Cost=cfg;var t=t69TripCost();
+  function tabs(t){var z=t.zero.length;return '<div style="display:flex;gap:6px;margin:0 0 10px"><button class="t69t-btn" data-tab="sum"'+(tab==='sum'?' style="background:var(--accent);color:#0D1B2E;font-weight:700"':'')+'>Summary &amp; settings</button>'
+    +'<button class="t69t-btn" data-tab="stops"'+(tab==='stops'?' style="background:var(--accent);color:#0D1B2E;font-weight:700"':'')+'>\uD83D\uDCCB Stops table'+(z?' <span style="color:#F59E0B">\u26A0'+z+'</span>':'')+'</button></div>';}
+  function bindTabs(){box.querySelectorAll('[data-tab]').forEach(function(b){b.onclick=function(){tab=b.getAttribute('data-tab');draw();};});}
+  function draw(){window._t69Cost=cfg;if(tab==='stops'){drawStops();return;}box.style.width='560px';var t=t69TripCost();
     var row=function(a,b,c){return '<tr><td style="padding:4px 0">'+a+'</td><td style="padding:4px 8px;color:var(--muted);font-size:11px">'+(c||'')+'</td><td style="padding:4px 0;text-align:right;font-weight:600">'+b+'</td></tr>';};
-    var h='<div style="font-weight:700;font-size:15px">💰 Trip costs</div><div style="color:var(--muted);font-size:11px;margin:2px 0 10px">'+t69Esc(t69TripName())+' · planned amounts are estimates, not live prices</div>'
+    var h='<div style="font-weight:700;font-size:15px">💰 Trip costs</div><div style="color:var(--muted);font-size:11px;margin:2px 0 10px">'+t69Esc(t69TripName())+' \u00b7 planned amounts are estimates, not live prices</div>'+tabs(t)
      +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
      +row('🎯 Activities',M(t.activity),'budget/pp × '+cfg.people+' people')
      +row('\uD83C\uDFE8 Hotels / stays',M(t.lodging),'price per night \u00d7 nights')
@@ -4021,8 +4024,7 @@ window.t69CostDlg=function(){var cfg=JSON.parse(JSON.stringify(t69CostCfg()));
      +row('<b>Total planned</b>','<span style="font-size:15px">'+M(t.planned)+'</span>','')
      +(Math.round(t.actual)!==Math.round(t.planned)?row('Total with what we actually paid',M(t.actual),'stops with an "actually paid" amount'):'')
      +'</table>';
-    if(t.zero.length){h+='<details style="margin-top:10px"><summary style="cursor:pointer;color:#F59E0B">⚠ '+t.zero.length+' stop'+(t.zero.length===1?'':'s')+' at $0 — free, or no price filled in yet?</summary><div style="margin-top:6px;max-height:160px;overflow:auto">'
-      +t.zero.map(function(z){return '<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,.06)">'+(z.lod?'🏨 ':'')+t69Esc(z.st.name||'')+' <span style="color:var(--muted);font-size:11px">'+t69Esc(z.st.state||'')+'</span> <button class="t69t-btn" data-ss="'+z.seg.id+'|'+z.st.id+'" style="padding:2px 8px;font-size:11px">Set cost</button></div>';}).join('')+'</div></details>';}
+    if(t.zero.length){h+='<button class="t69t-btn" id="cZ" style="margin-top:10px;color:#F59E0B">\u26A0 '+t.zero.length+' stop'+(t.zero.length===1?'':'s')+' at $0 \u2014 free, or no price yet? Check them in the stops table \u2192</button>';}
     h+='<div style="font-weight:700;margin:16px 0 6px">⚙️ Settings for this trip</div>'
      +'<div style="display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center">'
      +'<span>👥 Number of people</span><input id="cP" type="number" min="1" max="20" value="'+cfg.people+'" style="width:80px;'+inp+'">'
@@ -4036,10 +4038,12 @@ window.t69CostDlg=function(){var cfg=JSON.parse(JSON.stringify(t69CostCfg()));
      +'<button class="t69t-btn" id="cPa" style="margin-top:6px">＋ Add a pass</button>'
      +'<div style="color:var(--muted);font-size:11px;margin-top:8px">Tip: in a stop’s window (tap the stop) you can set our own cost, what we actually paid, or “covered by pass”.</div>'
      +'<div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:14px"><span id="cSt" style="color:var(--muted);font-size:11px;flex:1">'+(dirty?'Saving\u2026':'\u2713 Changes are saved automatically')+'</span><button class="t69t-btn" id="cX" style="background:var(--accent);color:#0D1B2E;font-weight:700">Close</button></div>';
-    box.innerHTML=h;t69AddX(box,close);
+    box.innerHTML=h;t69AddX(box,close);bindTabs();
+    (function(){var z=box.querySelector('#cZ');if(z)z.onclick=function(){tab='stops';flt='zero';draw();};})();
+    box.querySelectorAll('input[type=number]').forEach(function(el){el.addEventListener('focus',function(){try{el.select();}catch(e){}});});
     var ps=box.querySelector('#cPs');
     cfg.passes.forEach(function(p,k){var r=document.createElement('div');r.style.cssText='display:flex;gap:6px;align-items:center;margin:4px 0;flex-wrap:wrap';
-      r.innerHTML='<input data-f="name" value="'+t69Esc(p.name||'')+'" placeholder="e.g. Ikon Pass" style="flex:1;min-width:120px;'+inp+'"><span>$</span><input data-f="price" type="number" min="0" step="1" value="'+(p.price||0)+'" style="width:80px;'+inp+'">'
+      r.innerHTML='<input data-f="name" value="'+t69Esc(p.name||'')+'" placeholder="e.g. Ikon Pass" style="flex:1;min-width:120px;'+inp+'"><span>$</span> <input data-f="price" type="number" min="0" step="1" value="'+(p.price?p.price:'')+'" placeholder="0" style="width:80px;'+inp+'">'
         +'<label style="cursor:pointer;font-size:12px"><input data-f="perPerson" type="checkbox"'+(p.perPerson?' checked':'')+'> per person</label><button class="t69t-btn" data-x="1" style="color:#E74C3C" title="Remove">✕</button>';
       r.querySelectorAll('input').forEach(function(el){el.onchange=function(){var f=el.getAttribute('data-f');p[f]=f==='perPerson'?el.checked:(f==='price'?(parseFloat(el.value)||0):el.value.trim());draw();};});
       r.querySelector('[data-x]').onclick=function(){cfg.passes.splice(k,1);draw();};ps.appendChild(r);
@@ -4055,27 +4059,166 @@ window.t69CostDlg=function(){var cfg=JSON.parse(JSON.stringify(t69CostCfg()));
     box.querySelector('#cFo').onchange=function(){cfg.fuelOn=this.checked;draw();};
     box.querySelector('#cFn').onchange=function(){cfg.fuelUnit=this.value;draw();};
     box.querySelector('#cX').onclick=close;
-    box.querySelectorAll('[data-ss]').forEach(function(b){b.onclick=function(){var a=b.getAttribute('data-ss').split('|');close();t69StopSheetById(a[0],a[1]);};});
-    if(started)queueSave();started=true;}
+    if(started&&_cfgSig!==JSON.stringify(cfg))queueSave();started=true;_cfgSig=JSON.stringify(cfg);}
+  var _cfgSig='';
+  /* ── stops table: every stop with its price, our cost, what we paid, pass and free stay — edit in place ── */
+  var segQ={},segT=null;
+  function saveSegSoon(sg){segQ[sg.id]=sg;clearTimeout(segT);segT=setTimeout(function(){Object.keys(segQ).forEach(function(k){try{saveSegmentToFirestore(segQ[k]);}catch(e){}});segQ={};var e=box.querySelector('#cSt');if(e)e.textContent='\u2713 Saved';},800);
+    var e=box.querySelector('#cSt');if(e)e.textContent='Saving\u2026';}
+  function drawStops(){box.style.width='1040px';var t=t69TripCost(),seen={},rows=[],cnt={all:0,zero:0,lod:0,cov:0};
+    (routeSegments||[]).forEach(function(sg,si){(sg.stops||[]).forEach(function(st,i){var c=t69StopCost(sg,st,seen),L=c.loc,lod=c.kind==='lodging';
+      var z=c.zero&&!c.repeat&&!c.covered,cv=c.covered||!!st.freeStay;cnt.all++;if(z)cnt.zero++;if(lod)cnt.lod++;if(cv)cnt.cov++;
+      if(flt==='zero'&&!z)return;if(flt==='lod'&&!lod)return;if(flt==='cov'&&!cv)return;rows.push({sg:sg,si:si,i:i,st:st,c:c,L:L,lod:lod,z:z});});});
+    var ti='background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:4px 6px';
+    var ch=function(k,lb){return '<button class="t69t-btn" data-f="'+k+'"'+(flt===k?' style="background:var(--accent);color:#0D1B2E;font-weight:700"':'')+'>'+lb+' ('+cnt[k]+')</button>';};
+    var h='<div style="font-weight:700;font-size:15px">\uD83D\uDCB0 Trip costs</div><div style="color:var(--muted);font-size:11px;margin:2px 0 10px">'+t69Esc(t69TripName())+' \u00b7 total planned <b style="color:var(--text)">'+t69Money(t.planned)+'</b></div>'+tabs(t)
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+ch('zero','\u26A0 $0 / no price')+ch('all','All stops')+ch('lod','\uD83C\uDFE8 Stays')+ch('cov','\uD83C\uDF9F Pass / free')+'</div>'
+      +'<div id="cTW" style="overflow:auto;max-height:58vh;border:1px solid var(--border);border-radius:8px"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:860px">'
+      +'<tr style="position:sticky;top:0;background:var(--surface2,#1e2538);z-index:1">'+['Stop','How it\u2019s counted','Location price','Our cost (all of us)','Actually paid','Pass','Free stay',''].map(function(x){return '<th style="text-align:left;padding:6px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">'+x+'</th>';}).join('')+'</tr>';
+    if(!rows.length)h+='<tr><td colspan="8" style="padding:14px;color:var(--muted)">Nothing here \u2014 '+(flt==='zero'?'every stop has a price, a pass or a free stay. \uD83D\uDC4D':'no stops in this list.')+'</td></tr>';
+    rows.forEach(function(r){var k=r.si+'|'+r.i,st=r.st,L=r.L;
+      h+='<tr style="border-bottom:1px solid rgba(255,255,255,.06)'+(r.c.repeat?';opacity:.55':'')+'">'
+        +'<td style="padding:5px 6px"><b>'+t69Esc(st.name||'')+'</b><div style="color:var(--muted);font-size:10px">'+t69StopNo(r.sg,r.i)+' \u00b7 '+t69Esc(st.state||'')+(L&&L.category?' \u00b7 '+t69Esc(L.category):'')+'</div></td>'
+        +'<td style="padding:5px 6px;color:var(--muted);font-size:11px">'+t69Esc(r.c.how||'')+'<div style="color:var(--text);font-weight:600">'+t69Money(r.c.planned)+'</div></td>'
+        +'<td style="padding:5px 6px">'+(L?('<input data-k="'+k+'|loc" type="number" min="0" step="1" value="'+((parseFloat(L.budget)||0)?L.budget:'')+'" placeholder="0" style="width:72px;'+ti+'"> <span style="color:var(--muted);font-size:10px">'+(r.lod?'/night':'/pp')+'</span>'):'<span style="color:var(--muted);font-size:11px">not in database</span>')+'</td>'
+        +'<td style="padding:5px 6px"><input data-k="'+k+'|cost" type="number" min="0" step="1" value="'+(t69Num(st.cost)!==null?st.cost:'')+'" placeholder="auto" style="width:80px;'+ti+'"></td>'
+        +'<td style="padding:5px 6px"><input data-k="'+k+'|actual" type="number" min="0" step="1" value="'+(t69Num(st.actual)!==null?st.actual:'')+'" placeholder="same" style="width:80px;'+ti+'"></td>'
+        +'<td style="padding:5px 6px">'+(cfg.passes.length?('<select data-k="'+k+'|pass" style="'+ti+';max-width:130px"><option value="">auto</option><option value="__none__"'+(st.pass==='__none__'?' selected':'')+'>no pass</option>'+cfg.passes.map(function(p){return '<option'+(st.pass===p.name?' selected':'')+'>'+t69Esc(p.name)+'</option>';}).join('')+'</select>'):'<span style="color:var(--muted);font-size:11px">\u2014</span>')+'</td>'
+        +'<td style="padding:5px 6px;text-align:center"><input data-k="'+k+'|free" type="checkbox"'+(st.freeStay?' checked':'')+' title="Free stay: BLM, friends, home"></td>'
+        +'<td style="padding:5px 6px"><button class="t69t-btn" data-open="'+r.sg.id+'|'+st.id+'" title="Open the stop">\u2197</button></td></tr>';});
+    h+='</table></div><div style="color:var(--muted);font-size:11px;margin-top:6px"><b>Location price</b> changes the location itself (also for other trips): $ per person, or per night for hotels. <b>Our cost</b> overrides it for this trip only.</div>'
+      +'<div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:10px"><span id="cSt" style="color:var(--muted);font-size:11px;flex:1">\u2713 Changes are saved automatically</span><button class="t69t-btn" id="cX" style="background:var(--accent);color:#0D1B2E;font-weight:700">Close</button></div>';
+    var sc=(box.querySelector('#cTW')||{}).scrollTop||opts._scroll||0;opts._scroll=0;
+    box.innerHTML=h;t69AddX(box,close);bindTabs();box.querySelector('#cX').onclick=close;
+    var tw=box.querySelector('#cTW');if(tw)tw.scrollTop=sc;
+    box.querySelectorAll('[data-f]').forEach(function(b){if(b.tagName==='BUTTON')b.onclick=function(){flt=b.getAttribute('data-f');draw();};});
+    box.querySelectorAll('input[type=number]').forEach(function(el){el.addEventListener('focus',function(){try{el.select();}catch(e){}});});
+    box.querySelectorAll('[data-k]').forEach(function(el){el.onchange=function(){var a=el.getAttribute('data-k').split('|'),sg=routeSegments[+a[0]],st=sg&&sg.stops[+a[1]],f=a[2];if(!st)return;
+      if(f==='loc'){var L=t69StopLoc(st);if(!L)return;var v=parseFloat(el.value)||0;if(v===(parseFloat(L.budget)||0))return;
+        [window.allLocations||[],window._t69RouteLocs||[]].forEach(function(pool){pool.forEach(function(l){if(l&&String(l.rowIndex)===String(L.rowIndex)&&(l.state||'')===(L.state||''))l.budget=v;});});L.budget=v;
+        var e0=box.querySelector('#cSt');if(e0)e0.textContent='Saving\u2026';
+        callFn('fsSaveLocation',{state:L.state||st.sourceSheet||st.state,id:L.rowIndex,patch:{budget:v}}).then(function(r){var e=box.querySelector('#cSt');if(r&&r.success===false){toast('\u274C '+(r.message||'Not saved'));if(e)e.textContent='\u274C Not saved';}else if(e)e.textContent='\u2713 Saved';}).catch(function(x){toast('\u274C '+(x.message||x));});}
+      else{if(f==='cost')st.cost=t69Num(el.value);else if(f==='actual')st.actual=t69Num(el.value);else if(f==='pass')st.pass=el.value;else if(f==='free')st.freeStay=!!el.checked;saveSegSoon(sg);}
+      try{updateRouteSummary();}catch(e){}draw();};});
+    box.querySelectorAll('[data-open]').forEach(function(b){b.onclick=function(){var a=b.getAttribute('data-open').split('|'),scr=(box.querySelector('#cTW')||{}).scrollTop||0,f2=flt;
+      close();t69OpenStopThen(a[0],a[1],function(){t69CostDlg({tab:'stops',filter:f2,_scroll:scr});});};});}
   var started=false,dirty=false,tmr=null;
   function queueSave(){dirty=true;var e=box.querySelector('#cSt');if(e)e.textContent='Saving\u2026';clearTimeout(tmr);tmr=setTimeout(saveNow,700);}
   function saveNow(){clearTimeout(tmr);if(!dirty)return Promise.resolve();dirty=false;var keep=JSON.parse(JSON.stringify(cfg));
     keep.passes=keep.passes.filter(function(p){return (p.name||'').trim()||(parseFloat(p.price)||0)>0;});
     return t69CostSave(keep).then(function(r){var e=box.querySelector('#cSt');if(r&&r.error){toast('\u274C Could not save: '+(r.error.message||''));if(e)e.textContent='\u274C Not saved';}
       else if(e)e.textContent='\u2713 Saved';}).catch(function(x){toast('\u274C '+(x.message||x));});}
-  function close(){saveNow();try{updateRouteSummary();}catch(e){}D.ov.remove();}
+  function close(){saveNow();clearTimeout(segT);Object.keys(segQ).forEach(function(k){try{saveSegmentToFirestore(segQ[k]);}catch(e){}});segQ={};try{updateRouteSummary();}catch(e){}D.ov.remove();}
   D.ov.addEventListener('click',function(e){if(e.target===D.ov)close();});
   draw();};
+/* ===== v231: 📅 week overview (calendar-Gantt) — in the app and as landscape pages in the PDF ===== */
+var T69_ABBR={Alabama:'AL',Alaska:'AK',Arizona:'AZ',Arkansas:'AR',California:'CA',Colorado:'CO',Connecticut:'CT',Delaware:'DE',Florida:'FL',Georgia:'GA',Hawaii:'HI',Idaho:'ID',Illinois:'IL',Indiana:'IN',Iowa:'IA',Kansas:'KS',Kentucky:'KY',Louisiana:'LA',Maine:'ME',Maryland:'MD',Massachusetts:'MA',Michigan:'MI',Minnesota:'MN',Mississippi:'MS',Missouri:'MO',Montana:'MT',Nebraska:'NE',Nevada:'NV','New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND',Ohio:'OH',Oklahoma:'OK',Oregon:'OR',Pennsylvania:'PA','Rhode Island':'RI','South Carolina':'SC','South Dakota':'SD',Tennessee:'TN',Texas:'TX',Utah:'UT',Vermont:'VT',Virginia:'VA',Washington:'WA','West Virginia':'WV',Wisconsin:'WI',Wyoming:'WY','District of Columbia':'DC','British Columbia':'BC',Alberta:'AB',Saskatchewan:'SK',Manitoba:'MB',Ontario:'ON',Quebec:'QC','New Brunswick':'NB','Nova Scotia':'NS','Prince Edward Island':'PE','Newfoundland and Labrador':'NL',Yukon:'YT'};
+function t69Day0(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+function t69AddDays(d,n){var x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function t69DDiff(a,b){return Math.round((t69Day0(b)-t69Day0(a))/86400000);}
+function t69Monday(d){var x=t69Day0(d),w=(x.getDay()+6)%7;return t69AddDays(x,-w);}
+function t69IsoWeek(d){var x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));var dn=(x.getUTCDay()+6)%7;x.setUTCDate(x.getUTCDate()-dn+3);var fy=new Date(Date.UTC(x.getUTCFullYear(),0,4));return 1+Math.round(((x-fy)/86400000-3+((fy.getUTCDay()+6)%7))/7);}
+var T69_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+/* the stays: one block per route stop (dates of the stop, else of its hotel, else estimated between dated neighbours) */
+function t69OvStays(){var base=[];
+  (routeSegments||[]).forEach(function(sg,si){(sg.stops||[]).forEach(function(st,i){
+    if(t69IsSideAt(sg,i))return;var r=t69StopDR(sg,st),a=r&&t69PD(r.arrivalDate),b=r&&t69PD(r.departureDate);
+    var kids=[],j=i+1;while(j<sg.stops.length&&t69IsSideAt(sg,j)){kids.push(sg.stops[j]);j++;}
+    if(!a){kids.forEach(function(k){if(a||k.sideKind!=='hotel')return;var rr=t69StopDR(sg,k),ka=rr&&t69PD(rr.arrivalDate),kb=rr&&t69PD(rr.departureDate);if(ka){a=ka;b=kb||ka;}});}
+    var prev=base[base.length-1];
+    if(prev&&i===0&&typeof t69SamePlace==='function'&&t69SamePlace(prev.st,st)){if(a){if(!prev.a){prev.a=a;prev.b=b||a;}else if((b||a)>prev.b)prev.b=b||a;}prev.kids=prev.kids.concat(kids);return;}
+    base.push({seg:sg,si:si,i:i,st:st,a:a||null,b:a?(b&&b>=a?b:a):null,est:false,kids:kids,vis:!!st.visitedDate,fly:st.arriveBy==='fly'});});});
+  /* estimate undated stays between two dated ones */
+  for(var k=0;k<base.length;k++){if(base[k].a)continue;var p=k-1;while(p>=0&&!base[p].a)p--;var n=k;while(n<base.length&&!base[n].a)n++;
+    if(p<0||n>=base.length)continue;var from=base[p].b,to=base[n].a,cnt=n-p;
+    for(var q=p+1;q<n;q++){var d=t69AddDays(from,Math.round(t69DDiff(from,to)*(q-p)/cnt));base[q].a=d;base[q].b=d;base[q].est=true;}k=n;}
+  /* drop "Home" repeats at the very same day as the stop before (start/end) — keep everything else */
+  return base.filter(function(x){return x.a;});}
+function t69OvLabel(x){var ab=T69_ABBR[x.st.state||'']||'';var nm=String(x.st.name||'');return (x.fly?'✈ ':'')+nm+(ab&&nm.indexOf(', '+ab)<0?', '+ab:'');}
+/* weeks: [{mon, rows:[{x, c0, c1}], lanes, segStarts:[], cost}] */
+function t69OvWeeks(){var stays=t69OvStays();if(!stays.length)return {weeks:[],stays:stays};
+  var mn=stays[0].a,mx=stays[0].b;stays.forEach(function(x){if(x.a<mn)mn=x.a;if(x.b>mx)mx=x.b;});
+  var w0=t69Monday(mn),weeks=[];
+  var seen={},costByDay={};try{(routeSegments||[]).forEach(function(sg){(sg.stops||[]).forEach(function(st){var c=t69StopCost(sg,st,seen);var r=t69StopDR(sg,st),a=r&&t69PD(r.arrivalDate),bb=r&&t69PD(r.departureDate);if(!a||!c.planned)return;
+    var nn=(c.kind==='lodging'&&bb)?t69DDiff(a,bb):0;if(nn>0){for(var q=0;q<nn;q++){var kq=t69AddDays(a,q).toDateString();costByDay[kq]=(costByDay[kq]||0)+c.planned/nn;}}
+    else{var k=t69Day0(a).toDateString();costByDay[k]=(costByDay[k]||0)+c.planned;}});});}catch(e){}
+  var cfg=t69CostCfg(),food=(parseFloat(cfg.foodPerDay)||0)*cfg.people,cov=t69NightCover(),avg=parseFloat(cfg.avgNight)||0;
+  for(var m=w0;m<=mx;m=t69AddDays(m,7)){var wk={mon:m,items:[],segStarts:[],cost:0},end=t69AddDays(m,6);
+    stays.forEach(function(x){if(x.b<m||x.a>end)return;var c0=Math.max(0,t69DDiff(m,x.a)),c1=Math.min(6,t69DDiff(m,x.b));wk.items.push({x:x,c0:c0,c1:c1,cutL:x.a<m,cutR:x.b>end});
+      if(x.a>=m&&x.a<=end&&(x.i===0||(x.seg.stops[0]===x.st)))wk.segStarts.push(x.seg);});
+    for(var d=0;d<7;d++){var day=t69AddDays(m,d);if(day<t69Day0(mn)||day>t69Day0(mx))continue;var k=day.toDateString();wk.cost+=(costByDay[k]||0)+food;if(day<t69Day0(mx)&&!cov[k])wk.cost+=avg;}
+    /* lanes */
+    var lanes=[];wk.items.sort(function(a,b){return a.c0-b.c0||b.c1-a.c1;}).forEach(function(it){var L=0;while(lanes[L]!==undefined&&lanes[L]>=it.c0)L++;lanes[L]=it.c1;it.lane=L;});wk.lanes=Math.max(1,lanes.length);
+    weeks.push(wk);}
+  return {weeks:weeks,stays:stays};}
+function t69OvWeekLabel(m){var e=t69AddDays(m,6);return 'Wk '+t69IsoWeek(m)+' · '+m.getDate()+(m.getMonth()!==e.getMonth()?' '+T69_MON[m.getMonth()]:'')+'–'+e.getDate()+' '+T69_MON[e.getMonth()]+' '+e.getFullYear();}
+/* HTML for the app (print=false) or the PDF (print=true): rows of weeks, collapsed empty runs */
+function t69OvHtml(print,opt){opt=opt||{};var W=t69OvWeeks(),weeks=W.weeks,showCost=opt.cost!==false;
+  if(!weeks.length)return '<div style="padding:20px;color:#7EAAC8">No dates yet — give a few stops an arrival/departure date and the overview fills itself in.</div>';
+  var LH=print?17:22,css=print
+    ?'.ovw{display:grid;grid-template-columns:34mm repeat(7,1fr)'+(showCost?' 16mm':'')+';border-bottom:.4pt solid #d5dee6;page-break-inside:avoid}.ovh{font-size:7.5pt;color:#5a7285;padding:1mm 1.5mm}.ovd{border-left:.3pt solid #e6ecf1;position:relative}.ovc{font-size:7.5pt;text-align:right;padding:1mm 1.5mm;color:#14202e;font-weight:700}'
+    :'';
+  var h=[],emptyRun=[];
+  function flushEmpty(){if(!emptyRun.length)return;var a=emptyRun[0],b=emptyRun[emptyRun.length-1];
+    h.push('<div class="t69ovE">'+(emptyRun.length===1?t69OvWeekLabel(a):('Wk '+t69IsoWeek(a)+'–'+t69IsoWeek(b)+' · '+a.getDate()+' '+T69_MON[a.getMonth()]+' – '+t69AddDays(b,6).getDate()+' '+T69_MON[t69AddDays(b,6).getMonth()]))+' · nothing planned yet</div>');emptyRun=[];}
+  weeks.forEach(function(wk){if(!wk.items.length){emptyRun.push(wk.mon);return;}flushEmpty();
+    var hh='<div class="t69ovW" style="grid-template-rows:repeat('+wk.lanes+','+LH+'px)">'
+      +'<div class="t69ovH" style="grid-row:1/span '+wk.lanes+'"><b>'+t69OvWeekLabel(wk.mon)+'</b>'+wk.segStarts.map(function(sg){return '<span class="t69ovS">▸ '+t69Esc(sg.customLabel||segAutoName(sg)||'')+'</span>';}).join('')+'</div>';
+    for(var d=0;d<7;d++)hh+='<div class="t69ovD" style="grid-column:'+(d+2)+';grid-row:1/span '+wk.lanes+'"></div>';
+    wk.items.forEach(function(it){var x=it.x,col=segColor(x.si),cls='t69ovB'+(x.vis?' vis':'')+(x.est?' est':'')+(it.cutL?' cl':'')+(it.cutR?' cr':'');
+      var tip=t69OvLabel(x)+' · '+(x.est?'≈ ':'')+x.a.getDate()+' '+T69_MON[x.a.getMonth()]+(t69DDiff(x.a,x.b)?(' → '+x.b.getDate()+' '+T69_MON[x.b.getMonth()]):'')+(x.kids.length?(' · + '+x.kids.map(function(k){return k.name;}).join(', ')):'');
+      hh+='<div class="'+cls+'" title="'+t69Esc(tip)+'" data-s="'+x.seg.id+'|'+x.st.id+'" style="grid-column:'+(it.c0+2)+'/'+(it.c1+3)+';grid-row:'+(it.lane+1)+';--c:'+col+'">'
+        +(x.est?'≈ ':'')+t69Esc(t69OvLabel(x))+(function(){var n=x.kids.filter(function(k){return k.sideKind!=='hotel';}).length;return n?' <span class="k">+'+n+'</span>':'';})()+'</div>';});
+    if(showCost)hh+='<div class="t69ovC" style="grid-row:1/span '+wk.lanes+'">'+(wk.cost?t69Money(wk.cost):'')+'</div>';
+    hh+='</div>';h.push(hh);});
+  flushEmpty();
+  return h.join('');}
+var T69_OV_CSS='.t69ovHead,.t69ovW{display:grid;grid-template-columns:150px repeat(7,minmax(0,1fr)) 64px;column-gap:0}'
+ +'.t69ovHead{position:sticky;top:0;background:var(--surface2,#1e2538);z-index:2;font-size:11px;color:var(--muted,#7EAAC8);border-bottom:1px solid var(--border,#2b3a52);padding:4px 0}'
+ +'.t69ovHead div{text-align:center}.t69ovHead div:first-child,.t69ovHead div:last-child{text-align:left;padding-left:6px}'
+ +'.t69ovW{border-bottom:1px solid var(--border,#2b3a52);padding:3px 0;row-gap:2px}'
+ +'.t69ovH{grid-column:1;font-size:11px;padding:0 6px;line-height:1.3;overflow:hidden}.t69ovS{display:block;color:var(--accent,#5BC0F8);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+ +'.t69ovD{border-left:1px solid rgba(255,255,255,.06)}'
+ +'.t69ovB{position:relative;z-index:1;margin:0 2px;border-radius:5px;background:color-mix(in srgb,var(--c) 30%,transparent);border:1px solid var(--c);border-left:4px solid var(--c);font-size:11px;line-height:18px;padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:var(--text,#e8eef5)}'
+ +'.t69ovB.vis{background:rgba(16,185,129,.35);border-color:#10B981}.t69ovB.est{border-style:dashed;opacity:.75;font-style:italic}'
+ +'.t69ovB.cl{border-top-left-radius:0;border-bottom-left-radius:0}.t69ovB.cr{border-top-right-radius:0;border-bottom-right-radius:0}'
+ +'.t69ovB .k{font-size:10px;opacity:.8}'
+ +'.t69ovC{grid-column:9;font-size:11px;text-align:right;padding-right:6px;font-weight:700;align-self:center}'
+ +'.t69ovE{font-size:11px;color:var(--muted,#7EAAC8);padding:5px 6px;border-bottom:1px solid var(--border,#2b3a52);font-style:italic}'
+ +'.t69ovLeg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted,#7EAAC8);margin:8px 0}.t69ovLeg i{display:inline-block;width:18px;height:10px;border-radius:3px;vertical-align:middle;margin-right:4px}'
+ +'@media (max-width:700px){.t69ovHead,.t69ovW{grid-template-columns:86px repeat(7,minmax(0,1fr)) 0}.t69ovC,.t69ovHead div:last-child{display:none}.t69ovB{font-size:10px;padding:0 3px}.t69ovH{font-size:10px}}';
+function t69OvLegend(){return '<div class="t69ovLeg"><span><i style="background:rgba(91,192,248,.3);border:1px solid #5BC0F8;border-left:4px solid #5BC0F8"></i>planned (segment colour)</span><span><i style="background:rgba(16,185,129,.35);border:1px solid #10B981"></i>visited</span><span><i style="border:1px dashed #9fb3cc"></i>≈ estimated date (no date filled in)</span><span>+3 = side trips during that stay</span><span>$ = planned cost that week (stops, food, nights)</span></div>';}
+function t69OvHead(){var d=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];return '<div class="t69ovHead"><div>Week</div>'+d.map(function(x){return '<div>'+x+'</div>';}).join('')+'<div>Cost</div></div>';}
+window.t69OverviewDlg=function(){var D=t69CapBox(1180),box=D.box;box.style.width='1180px';box.style.maxWidth='98vw';box.style.maxHeight='92vh';
+  if(!document.getElementById('t69OvCss')){var st=document.createElement('style');st.id='t69OvCss';st.textContent=T69_OV_CSS;document.head.appendChild(st);}
+  box.innerHTML='<div style="font-weight:700;font-size:15px">📅 Week overview</div><div style="color:var(--muted);font-size:11px;margin:2px 0 4px">'+t69Esc(t69TripName())+' · tap a stay to open it · also in the PDF (landscape)</div>'
+    +t69OvLegend()+t69OvHead()+'<div id="t69OvBody">'+t69OvHtml(false)+'</div>';
+  t69AddX(box,function(){D.ov.remove();});D.ov.addEventListener('click',function(e){if(e.target===D.ov)D.ov.remove();});
+  box.querySelectorAll('.t69ovB').forEach(function(b){b.onclick=function(){var a=b.getAttribute('data-s').split('|');D.ov.remove();t69OpenStopThen(a[0],a[1],function(){t69OverviewDlg();});};});};
+/* PDF: landscape pages, 12 week rows per page */
+function t69OvPdf(){var W=t69OvWeeks();if(!W.weeks.length)return '';
+  var html=t69OvHtml(false);var tmp=document.createElement('div');tmp.innerHTML=html;var rows=[].slice.call(tmp.children);
+  var pages=[],cur=[],n=0;rows.forEach(function(r){var w=r.classList.contains('t69ovW')?(1+0.45*((r.style.gridTemplateRows.match(/repeat\((\d+)/)||[0,1])[1]-1)):0.5;if(n+w>13&&cur.length){pages.push(cur);cur=[];n=0;}cur.push(r.outerHTML);n+=w;});if(cur.length)pages.push(cur);
+  return pages.map(function(p,k){return '<div class="mappage ovpage"><div class="segh">Week overview'+(pages.length>1?(' ('+(k+1)+'/'+pages.length+')'):'')+'</div>'+t69OvLegend()+t69OvHead()+p.join('')+'</div>';}).join('');}
+var T69_OV_PCSS='.ovpage{font-size:9pt;--surface2:#fff;--muted:#5a7285;--border:#d5dee6;--text:#14202e;--accent:#2f6f9f}'
+ +'.ovpage .t69ovHead,.ovpage .t69ovW{grid-template-columns:40mm repeat(7,minmax(0,1fr)) 18mm}.ovpage .t69ovW{page-break-inside:avoid}'
+ +'.ovpage .t69ovB{color:#14202e;font-size:8pt;line-height:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.ovpage .t69ovD{border-left:.3pt solid #e6ecf1}'
+ +'.ovpage .t69ovH,.ovpage .t69ovC,.ovpage .t69ovE{font-size:8pt}.ovpage .t69ovLeg{font-size:7.5pt}.ovpage .t69ovLeg i{-webkit-print-color-adjust:exact;print-color-adjust:exact}';
+
+/* v231: after a stop window opened from the costs table / overview closes, go back there */
+function t69OpenStopThen(segId,stopId,fn){t69StopSheetById(segId,stopId);var ov=document.getElementById('t69StopOv');if(!ov||!fn)return;
+  var mo=new MutationObserver(function(){if(!document.body.contains(ov)){mo.disconnect();setTimeout(fn,60);}});mo.observe(document.body,{childList:true});}
 /* stop window: cost block */
-function t69StopCostHtml(sg,st,inp){var c=t69StopCost(sg,Object.assign({},st,{cost:null,actual:null,pass:''}),null),cfg=t69CostCfg();
+function t69StopCostHtml(sg,st,inp){var c=t69StopCost(sg,Object.assign({},st,{cost:null,actual:null,pass:'__none__',freeStay:false}),null),cfg=t69CostCfg();
+  var _auto=t69PassFor(st,t69StopLoc(st),cfg);
   var hasP=cfg.passes.length;
   return '<div style="margin-bottom:12px;border:1px solid var(--border);border-radius:9px;padding:8px">'
     +'<div style="font-weight:700;margin-bottom:4px">💰 Cost</div>'
-    +'<div style="color:var(--muted);font-size:11px;margin-bottom:6px">From the location: '+t69Money(c.planned)+' ('+t69Esc(c.how)+')'+(c.zero?' — $0: free or not filled in':'')+'</div>'
+    +'<div style="color:var(--muted);font-size:11px;margin-bottom:6px">From the location: '+t69Money(c.planned)+' ('+t69Esc(c.how)+')'+(c.zero?' \u2014 $0: free or not filled in':'')+(_auto?(' \u00b7 normally covered by <b>'+t69Esc(_auto.name)+'</b>'):'')+'</div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
     +'<label style="font-size:12px">Our planned cost $ <input id="t69SsCost" type="number" min="0" step="1" value="'+(t69Num(st.cost)!==null?st.cost:'')+'" placeholder="'+Math.round(c.planned)+'" style="width:90px;'+inp+'"></label>'
     +'<label style="font-size:12px">Actually paid $ <input id="t69SsAct" type="number" min="0" step="1" value="'+(t69Num(st.actual)!==null?st.actual:'')+'" placeholder="same" style="width:90px;'+inp+'"></label>'
-    +(hasP?'<label style="font-size:12px">Covered by <select id="t69SsPass" style="'+inp+'"><option value="">— no pass —</option>'+cfg.passes.map(function(p){return '<option'+(st.pass===p.name?' selected':'')+'>'+t69Esc(p.name)+'</option>';}).join('')+'</select></label>':'')
+    +(hasP?'<label style="font-size:12px">Pass <select id="t69SsPass" style="'+inp+'"><option value="">automatic (by category)</option><option value="__none__"'+(st.pass==='__none__'?' selected':'')+'>not covered by a pass</option>'+cfg.passes.map(function(p){return '<option'+(st.pass===p.name?' selected':'')+'>'+t69Esc(p.name)+'</option>';}).join('')+'</select></label>':'')
     +'</div><label style="display:block;margin-top:6px;font-size:12px;cursor:pointer"><input id="t69SsFree" type="checkbox"'+(st.freeStay?' checked':'')+'> \uD83C\uDFD5 Free stay \u2014 we sleep here for free (BLM land, friends, home)</label>'
     +'<div style="color:var(--muted);font-size:11px;margin-top:4px">Leave empty to use the location\u2019s price. \u201cActually paid\u201d is the total for all of us. Nights with no hotel or free stay are estimated at the trip\u2019s average price per night.</div></div>';}
 
@@ -4349,11 +4492,17 @@ function renderRoutePanel(){
   });
   html+='<button class="route-add-seg" onclick="addNewSegment()">＋ Add new segment</button>';
   el.innerHTML=html;el.scrollTop=_keepTop;
+  try{t69ApplyLegs();}catch(e){}
   updateRouteSummary();
   try{if(window.map&&typeof t69ApplyPinView==='function'){clearTimeout(window._t69PinT);window._t69PinT=setTimeout(t69ApplyPinView,150);}}catch(e){}
   try{t69AutoRedrawSoon();}catch(e){}
 }
 /* v227: after any change to the stops, redraw the map lines by itself — never moving the map */
+window._t69Leg={};window._t69SegTot={};
+/* v230: keep the drawn km/time per leg and per segment when the route list is rebuilt (and for the PDF) */
+function t69ApplyLegs(){var L=window._t69Leg||{},T=window._t69SegTot||{};
+  Object.keys(L).forEach(function(k){var el=document.getElementById('leg-'+k);if(el){var inf=el.querySelector('.seg-leg-info');if(inf)inf.textContent=L[k];}});
+  Object.keys(T).forEach(function(k){var el=document.getElementById('seg-total-'+k);if(el&&T[k].txt){el.textContent=T[k].txt;el.style.display='block';}});}
 function t69RouteSig(){try{return (routeSegments||[]).map(function(sg){return sg.id+':'+(sg.stops||[]).map(function(st){
   return [st.id,(+st.lat||0).toFixed(5),(+st.lng||0).toFixed(5),st.sideKind||'',st.arriveBy||'',st.visitedDate?1:0].join(',');}).join(';');}).join('|');}catch(e){return '';}}
 function t69AutoRedrawSoon(){clearTimeout(window._t69AutoT);window._t69AutoT=setTimeout(function(){
@@ -4757,7 +4906,8 @@ window.t69MoreMenu=function(){
       ['🖥️','Zoom clip 16:9','For YouTube',"exportMap('169')"],
       ['📁','Media folders','Day folders + inbox on your laptop disk','t69MediaDlg()',function(){return typeof t69MediaOk==='function'&&t69MediaOk()&&!(window.matchMedia&&matchMedia('(pointer:coarse)').matches&&!matchMedia('(pointer:fine)').matches);}]]],
     ['Route tools',[
-      ['\uD83D\uDCB0','Trip costs','Totals, passes, food per day, fuel estimate','t69CostDlg()'],
+      ['\uD83D\uDCC5','Week overview','Where we are on which date \u2014 also in the PDF','t69OverviewDlg()'],
+      ['\uD83D\uDCB0','Trip costs','Totals, stops table, passes, food per day, fuel','t69CostDlg()'],
       ['🔎',"What's along this route",'Every location in your database near the route','t69LoadAlongRoute()'],
       ['✕','Clear the drawn route','Only removes the lines from the map — your stops stay','clearAllSegments()',null,'warn']]]];
   var D=t69CapBox(420),box=D.box,h='<div style="font-weight:700;font-size:15px">⋯ More</div><div style="color:var(--muted);font-size:11px;margin-top:2px">'+t69Esc(t69TripName())+'</div>';
@@ -5944,13 +6094,22 @@ window.t69ToggleExSat=function(){
   var b=document.getElementById('t69ExSatBtn');
   if(b){b.textContent=on?'\uD83D\uDEF0 Satellite':'\uD83D\uDDFA Map';b.classList.toggle('active',on);}
   toast(on?'Video background: satellite':'Video background: map');};
+function t69Hav(a,b){var R=6371000,r=Math.PI/180,dl=(b.lat-a.lat)*r,dn=(b.lng-a.lng)*r,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dn/2)*Math.sin(dn/2);return 2*R*Math.asin(Math.sqrt(x));}
+function t69PdfCost(seg,st,seen){try{var c=t69StopCost(seg,st,seen);var tx='';
+  if(st.freeStay)tx='\uD83C\uDFD5 free stay';else if(c.covered)tx='\uD83C\uDF9F '+c.how.replace(/\s*\(all [^)]*\)/,'');else if(c.repeat)tx='';else if(c.planned>0)tx='\uD83D\uDCB0 '+t69Money(c.planned)+(t69Num(st.actual)!==null&&+st.actual!==c.planned?(' \u00b7 paid '+t69Money(+st.actual)):'');
+  return tx?'<br><span class="reg">'+t69PdfEsc(tx)+'</span>':'';}catch(e){return '';}}
 function t69SegStats(seg){
+  var T=(window._t69SegTot||{})[seg.id];
+  if(T&&(T.sd||T.sf))return {dist:T.sd?fmtDist(T.sd):'',time:T.sd?fmtTime(T.stt):'',fly:T.sf?fmtDist(T.sf):'',stops:(seg.stops||[]).length,budget:t69SegBudget(seg)};
   var el=document.getElementById('seg-total-'+seg.id);
   var txt=el?(el.textContent||''):'';
   var m=txt.match(/([\d.,]+\s*(?:km|mi))\s*[\u00b7\u2022-]\s*([\dhm ]+)/i);
   return {dist:m?m[1]:'',time:m?m[2].trim():'',stops:(seg.stops||[]).length,budget:t69SegBudget(seg)};}
 async function t69ExportRoutePDF(){
   if(!routeSegments||!routeSegments.length){toast('No route to export');return;}
+  /* v230: distances and drive times come from the drawn route — draw it first (without moving the map) when needed */
+  if(!Object.keys(window._t69SegTot||{}).length||window._t69DrawnSig!==t69RouteSig()){toast('Calculating distances\u2026');
+    try{drawAllSegments({keepView:true});var _w0=Date.now();while(window._t69DrawFin!==window._t69DrawGen&&Date.now()-_w0<30000)await new Promise(function(r){setTimeout(r,300);});}catch(e){console.warn(e);}}
   var MAPS={};try{MAPS=await t69RouteMaps();}catch(e){console.warn('pdf maps',e);}
   try{var need={},have={};
     routeSegments.forEach(function(sg){(sg.stops||[]).forEach(function(st){var r=st.sourceSheet||st.state;if(r)need[r]=1;});});
@@ -5988,7 +6147,7 @@ async function t69ExportRoutePDF(){
    +'tr{page-break-inside:avoid}'
    +'td.n{width:9mm;color:#5a7285;font-weight:700}td.d{width:28mm;white-space:nowrap;font-size:9pt}'
    +'td.leg{width:36mm;color:#5a7285;font-size:8.5pt;white-space:nowrap}tr.top td.rt,tr.top td.d,tr.top td.leg{border-bottom:none;padding-bottom:0}td.ds{font-size:8.5pt;line-height:1.35;color:#4a5d6e;padding-top:1mm;white-space:normal}.reg .cat{font-weight:700;color:#2a6f97}tr.top,tr.desc{page-break-inside:avoid}'
-   +'.reg{color:#5a7285;font-size:8.5pt}'+'a{color:#1a5fa8;text-decoration:none}.lnk{font-size:8.5pt}'+'td.rt{width:24mm;font-size:9pt;white-space:nowrap}'+'.gr{color:#b8860b;font-weight:700}.ov{color:#2f6f9f;font-weight:700}'+'.mappage{page:land;break-before:page;page-break-before:always;page-break-inside:avoid}'+'.maps .mapimg{width:100%;max-height:172mm;object-fit:contain}'+'.mapimg{width:100%;border:.5pt solid #b8c6d2;border-radius:2mm;margin-top:2mm}'+'.mapcap{font-size:8.5pt;color:#5a7285;margin:1mm 0 0}'
+   +'.reg{color:#5a7285;font-size:8.5pt}'+'a{color:#1a5fa8;text-decoration:none}.lnk{font-size:8.5pt}'+'td.rt{width:24mm;font-size:9pt;white-space:nowrap}'+'.gr{color:#b8860b;font-weight:700}.ov{color:#2f6f9f;font-weight:700}'+'.mappage{page:land;break-before:page;page-break-before:always;page-break-inside:avoid}'+T69_OV_CSS+T69_OV_PCSS+'.maps .mapimg{display:block;width:100%;height:176mm;object-fit:contain;margin:0 auto}.mappage .segh{font-size:12pt;margin-bottom:1mm}.mappage .mapcap{margin-bottom:1mm}@media screen{.mappage{max-width:279mm;margin:10mm auto}}'+'.mapimg{width:100%;border:.5pt solid #b8c6d2;border-radius:2mm;margin-top:2mm}'+'.mapcap{font-size:8.5pt;color:#5a7285;margin:1mm 0 0}'
    +'.foot{margin-top:10mm;font-size:7.5pt;color:#93a4b4;text-align:center;border-top:.4pt solid #d5dee6;padding-top:2mm}'+'.wrap{max-width:180mm;margin:0 auto;padding:10mm 8mm}@media print{.wrap{max-width:none;margin:0;padding:0}}'
    +'</style></head><body><div class="wrap">');
   h.push('<div class="brand">Travellers 1969</div><h1>'+esc(tripName)+'</h1>'
@@ -5998,6 +6157,7 @@ async function t69ExportRoutePDF(){
    +'<div><span class="v">'+esc(g('routeTotalTime'))+'</span><span class="l">DRIVE TIME</span></div>'
    +'<div><span class="v">'+esc(g('routeStopCount'))+'</span><span class="l">STOPS</span></div>'
    +'<div><span class="v">'+esc(g('routeBudget'))+'</span><span class="l">BUDGET</span></div></div>');
+  var _pdfSeen={};
   routeSegments.forEach(function(seg,si){
     var stops=seg.stops||[];if(!stops.length)return;
     var t=t69SegStats(seg);
@@ -6012,8 +6172,10 @@ async function t69ExportRoutePDF(){
     stops.forEach(function(x,i){
       var _sd=t69IsSideAt(seg,i),_lastBefore=i===stops.length-1||!t69IsSideAt(seg,i+1);
       var legEl=_sd?null:document.getElementById('leg-'+seg.id+'-'+i);
-      var leg=legEl?(((legEl.querySelector('.seg-leg-info')||{}).textContent)||''):'';
-      if(_sd){var _se=document.getElementById('side-'+seg.id+'-'+i);leg=(_se&&_se.textContent.replace(/^\s*·\s*/,''))||(x.sideKind==='hotel'?'hotel':'side trip');}
+      var leg=_sd?'':((window._t69Leg||{})[seg.id+'-'+i]||(legEl?(((legEl.querySelector('.seg-leg-info')||{}).textContent)||''):''));
+      if(leg==='→ —')leg='';
+      if(_sd){var _b=stops[t69BaseIx(seg,i)],_km='';try{if(_b&&_b.lat!=null&&x.lat!=null)_km=' \u00b7 \u2248'+fmtDist(t69Hav(_b,x));}catch(e){}
+        leg=(x.sideKind==='hotel'?'hotel':'side trip')+_km;}
       else if(!_lastBefore&&leg)leg='after the stay: '+leg;
       var _L=t69PdfLoc(x),_cat=(_L&&_L.category)||x.category||'',_note=String((_L&&_L.notes)||'').replace(/\s+/g,' ').trim();
       if(_note.length>260)_note=_note.slice(0,257).replace(/\s+\S*$/,'')+'\u2026';
@@ -6021,15 +6183,16 @@ async function t69ExportRoutePDF(){
       h.push('<tr class="top"><td class="n" rowspan="2">'+(_sd?(x.sideKind==='hotel'?'\uD83C\uDFE8':'\u21B3'):t69StopNo(seg,i).split('.')[1])+'</td><td rowspan="2"'+(_sd?' style="padding-left:14px"':'')+'><b>'+esc(x.name||'')+'</b>'
         +(_sd?('<br><span class="reg">'+(x.sideKind==='hotel'?'Hotel during ':'Side trip from ')+esc((stops[t69BaseIx(seg,i)]||{}).name||'')+'</span>'):'')
         +((x.state||_cat)?('<br><span class="reg">'+esc(x.state||'')+(x.state&&_cat?' \u00b7 ':'')+(_cat?('<span class="cat">'+esc(_cat)+'</span>'):'')+'</span>'):'')
-        +t69PdfMeta(x)+'</td>'
+        +t69PdfMeta(x)+t69PdfCost(seg,x,_pdfSeen)+'</td>'
         +'<td class="rt">'+t69PdfRating(x)+'</td>'
         +'<td class="d">'+esc(t69StopDate(seg,x)||'\u2014')+'</td>'
         +'<td class="leg">'+esc(leg.trim()||'\u2014')+'</td></tr>'
         +'<tr class="desc"><td colspan="3" class="ds">'+(_desc||'')+'</td></tr>');});
     h.push('</table></div>');});
-  var _hadMaps=!!(MAPS&&(MAPS.route||MAPS.pins));
+  var _ovp='';try{_ovp=t69OvPdf();}catch(e){console.warn('ov pdf',e);}
+  var _hadMaps=!!(MAPS&&(MAPS.route||MAPS.pins))||!!_ovp;
   if(_hadMaps){
-    h.push('<div class="foot">Travellers 1969 \u00b7 @travellers1969</div></div><div class="maps">');
+    h.push('<div class="foot">Travellers 1969 \u00b7 @travellers1969</div></div><div class="maps">'+_ovp);
     if(MAPS.route)h.push('<div class="mappage"><div class="segh">Route overview</div>'
       +'<div class="mapcap">Numbered stops (segment.stop) with the driving route</div>'
       +'<img class="mapimg" src="'+MAPS.route+'"></div>');
@@ -6047,7 +6210,7 @@ function drawAllSegments(opts){
   var _keep=!!(opts&&opts.keepView);
   window._t69Drawn=true;window._t69DrawnTrip=window.TRIP_ID;window._t69DrawnSig=t69RouteSig();
   try{if(window._t69DatesLoaded)(routeSegments||[]).forEach(function(sg){t69SortSideByDate(sg.id);});}catch(e){}
-  window._t69DrawGen=(window._t69DrawGen||0)+1;var _gen=window._t69DrawGen;
+  window._t69DrawGen=(window._t69DrawGen||0)+1;var _gen=window._t69DrawGen;window._t69Leg={};window._t69SegTot={};
   // Clear existing route polylines
   Object.keys(segPolylines).forEach(function(k){map.removeLayer(segPolylines[k]);});
   segPolylines={};
@@ -6062,13 +6225,13 @@ function drawAllSegments(opts){
     document.getElementById('routeTotalDist').textContent='—';document.getElementById('routeTotalTime').textContent='—';
     try{t69ApplyPinView();}catch(e){}
     var ll=[];(routeSegments||[]).forEach(function(s){(s.stops||[]).forEach(function(st){if(st.lat!=null&&st.lng!=null)ll.push([+st.lat,+st.lng]);});});
-    if(!ll.length){if(!_keep)toast('No stops to draw yet');return;}
+    window._t69DrawFin=_gen;if(!ll.length){if(!_keep)toast('No stops to draw yet');return;}
     if(!_keep){try{map.fitBounds(L.latLngBounds(ll),{padding:[40,40],maxZoom:13});}catch(e){}
     toast('✅ Stops shown — a road line needs 2 route stops in a segment');}return;}
   if(!_keep)toast('Drawing '+segsWithStops.length+' segment'+(segsWithStops.length!==1?'s':'')+'…');
   var totalDist=0,totalTime=0,flyM=0,done=0,fails=0;
   var allBounds=[];
-  function finish(){if(_gen!==window._t69DrawGen)return;
+  function finish(){if(_gen!==window._t69DrawGen)return;window._t69DrawFin=_gen;
     document.getElementById('routeTotalDist').textContent=fmtDist(totalDist);window._t69DriveM=totalDist;window._t69FlyM=flyM;try{t69KmLine();}catch(e){}try{updateRouteSummary();}catch(e){}
     document.getElementById('routeTotalTime').textContent=fmtTime(totalTime);
     if(_keep&&!fails){}else toast(fails?('⚠️ '+fails+' segment'+(fails>1?'s':'')+' could not be drawn — press Draw again'):('✅ Route drawn — '+fmtDist(totalDist)+' driving'+(flyM?(' · ✈ '+fmtDist(flyM)+' flying'):'')));
@@ -6093,19 +6256,20 @@ function drawAllSegments(opts){
         if(p.type==='road'){
           if(p.pts.length>1){layers.push(L.polyline(p.pts,{color:'#ffffff',weight:9,opacity:0.95,interactive:false}));layers.push(L.polyline(p.pts,{color:drawCol,weight:5,opacity:1}));}
           sd+=p.dist;stt+=p.dur;
-          p.legs.forEach(function(leg,i){var el=document.getElementById('leg-'+seg.id+'-'+p.idx[i]);
-            if(el){var inf=el.querySelector('.seg-leg-info');if(inf)inf.textContent=fmtDist(leg.d)+' · '+fmtTime(leg.t);}});}
+          p.legs.forEach(function(leg,i){var _tx=fmtDist(leg.d)+' · '+fmtTime(leg.t);window._t69Leg[seg.id+'-'+p.idx[i]]=_tx;var el=document.getElementById('leg-'+seg.id+'-'+p.idx[i]);
+            if(el){var inf=el.querySelector('.seg-leg-info');if(inf)inf.textContent=_tx;}});}
         else{var fv=!!p.b.visitedDate,fc=fv?'#10B981':'#334155';
           layers.push(L.polyline(p.pts,{color:'#ffffff',weight:6,opacity:0.9,interactive:false}));
           layers.push(L.polyline(p.pts,{color:fc,weight:3,opacity:1,dashArray:fv?null:'12 6 2 6',lineCap:'round'}));
           layers.push(L.marker(p.pts[Math.floor(p.pts.length/2)],{icon:t69PlaneIcon(p.a,p.b,fc),interactive:false,keyboard:false}));
           sf+=p.km*1000;
-          var el2=document.getElementById('leg-'+seg.id+'-'+p.from);if(el2){var inf2=el2.querySelector('.seg-leg-info');if(inf2)inf2.textContent='✈ flight · '+fmtDist(p.km*1000);}}});
+          window._t69Leg[seg.id+'-'+p.from]='✈ flight · '+fmtDist(p.km*1000);var el2=document.getElementById('leg-'+seg.id+'-'+p.from);if(el2){var inf2=el2.querySelector('.seg-leg-info');if(inf2)inf2.textContent='✈ flight · '+fmtDist(p.km*1000);}}});
       var poly=L.featureGroup(layers).addTo(map);
       segPolylines[seg.id]=poly;try{t69DrawDoneSoon();}catch(e){}
       if(!routeMarkers[seg.id])routeMarkers[seg.id]=[];
       try{allBounds=allBounds.concat(poly.getBounds().toBBoxString().split(',').map(Number));}catch(e){}
       totalDist+=sd;totalTime+=stt;flyM+=sf;
+      window._t69SegTot[seg.id]={sd:sd,stt:stt,sf:sf,txt:(sd?('📏 '+fmtDist(sd)+' · '+fmtTime(stt)):'')+(sf?((sd?' · ':'')+'✈ '+fmtDist(sf)):'')};
       var stEl=document.getElementById('seg-total-'+seg.id);if(stEl){stEl.textContent=(sd?('📏 '+fmtDist(sd)+' · '+fmtTime(stt)):'')+(sf?((sd?' · ':'')+'✈ '+fmtDist(sf)):'');stEl.style.display='block';var _sb=t69SegBudget(seg),_ns=(seg.stops||[]).length;var _d=document.createElement('div');_d.className='t69sb';_d.style.cssText='font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0';_d.textContent=_ns+(_ns===1?' stop':' stops')+(_sb?(' · '+t69Money(_sb)):'');stEl.appendChild(_d);}
     }).catch(function(e){console.error(e);fails++;toast('⚠️ Draw failed for segment '+(si+1));})
     .then(function(){done++;if(done===segsWithStops.length)finish();});
@@ -8340,7 +8504,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v229: ready');
+  console.log('T1969 v231: ready');
 }
 function t69EvToDates(ev){var tz=(ev.start&&ev.start.timeZone)||undefined;
   function dmy(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
