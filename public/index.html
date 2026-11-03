@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v234  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v236  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -1777,12 +1777,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v234</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v236</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v234</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v236</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2224,7 +2224,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v234</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v236</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -4037,7 +4037,7 @@ window.t69CostDlg=function(opts){opts=opts||{};var tab=opts.tab||'sum',flt=opts.
      +'<div style="font-weight:700;margin:16px 0 6px">🎟 Passes &amp; memberships <span style="color:var(--muted);font-weight:400;font-size:11px">(counted once for the trip)</span></div><div id="cPs"></div>'
      +'<button class="t69t-btn" id="cPa" style="margin-top:6px">＋ Add a pass</button>'
      +'<div style="color:var(--muted);font-size:11px;margin-top:8px">Tip: in a stop’s window (tap the stop) you can set our own cost, what we actually paid, or “covered by pass”.</div>'
-     +'<div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:14px"><span id="cSt" style="color:var(--muted);font-size:11px;flex:1">'+(dirty?'Saving\u2026':'\u2713 Changes are saved automatically')+'</span><button class="t69t-btn" id="cX" style="background:var(--accent);color:#0D1B2E;font-weight:700">Close</button></div>';
+     +'<div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:14px"><span id="cSt" style="color:var(--muted);font-size:11px;flex:1">'+(dirty?'Saving\u2026':'\u2713 Changes are saved automatically')+'</span></div>';
     box.innerHTML=h;t69AddX(box,close);bindTabs();
     (function(){var z=box.querySelector('#cZ');if(z)z.onclick=function(){tab='stops';flt='zero';draw();};})();
     box.querySelectorAll('input[type=number]').forEach(function(el){el.addEventListener('focus',function(){try{el.select();}catch(e){}});});
@@ -4058,7 +4058,7 @@ window.t69CostDlg=function(opts){opts=opts||{};var tab=opts.tab||'sum',flt=opts.
     num('#cP','people',1);num('#cF','foodPerDay');num('#cN','avgNight');num('#cFu','fuelUse');num('#cFp','fuelPrice');
     box.querySelector('#cFo').onchange=function(){cfg.fuelOn=this.checked;draw();};
     box.querySelector('#cFn').onchange=function(){cfg.fuelUnit=this.value;draw();};
-    box.querySelector('#cX').onclick=close;
+    
     if(started&&_cfgSig!==JSON.stringify(cfg))queueSave();started=true;_cfgSig=JSON.stringify(cfg);}
   var _cfgSig='';
   /* ── stops table: every stop with its price, our cost, what we paid, pass and free stay — edit in place ── */
@@ -4087,9 +4087,9 @@ window.t69CostDlg=function(opts){opts=opts||{};var tab=opts.tab||'sum',flt=opts.
         +'<td style="padding:5px 6px;text-align:center"><input data-k="'+k+'|free" type="checkbox"'+(st.freeStay?' checked':'')+' title="Free stay: BLM, friends, home"></td>'
         +'<td style="padding:5px 6px"><button class="t69t-btn" data-open="'+r.sg.id+'|'+st.id+'" title="Open the stop">\u2197</button></td></tr>';});
     h+='</table></div><div style="color:var(--muted);font-size:11px;margin-top:6px"><b>Location price</b> changes the location itself (also for other trips): $ per person, or per night for hotels. <b>Our cost</b> overrides it for this trip only.</div>'
-      +'<div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:10px"><span id="cSt" style="color:var(--muted);font-size:11px;flex:1">\u2713 Changes are saved automatically</span><button class="t69t-btn" id="cX" style="background:var(--accent);color:#0D1B2E;font-weight:700">Close</button></div>';
+      +'<div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:10px"><span id="cSt" style="color:var(--muted);font-size:11px;flex:1">\u2713 Changes are saved automatically</span></div>';
     var sc=(box.querySelector('#cTW')||{}).scrollTop||opts._scroll||0;opts._scroll=0;
-    box.innerHTML=h;t69AddX(box,close);bindTabs();box.querySelector('#cX').onclick=close;
+    box.innerHTML=h;t69AddX(box,close);bindTabs();
     var tw=box.querySelector('#cTW');if(tw)tw.scrollTop=sc;
     box.querySelectorAll('[data-f]').forEach(function(b){if(b.tagName==='BUTTON')b.onclick=function(){flt=b.getAttribute('data-f');draw();};});
     box.querySelectorAll('input[type=number]').forEach(function(el){el.addEventListener('focus',function(){try{el.select();}catch(e){}});});
@@ -4155,7 +4155,7 @@ function t69OvWeekLabel(m){var e=t69AddDays(m,6);return 'Wk '+t69IsoWeek(m)+' ·
 /* HTML for the app (print=false) or the PDF (print=true): rows of weeks, collapsed empty runs */
 function t69OvHtml(print,opt){opt=opt||{};var W=t69OvWeeks(),weeks=W.weeks,showCost=opt.cost!==false;
   if(!weeks.length)return '<div style="padding:20px;color:#7EAAC8">No dates yet — give a few stops an arrival/departure date and the overview fills itself in.</div>';
-  var LH=print?17:22,css=print
+  var LH=print?17:28,css=print
     ?'.ovw{display:grid;grid-template-columns:34mm repeat(7,1fr)'+(showCost?' 16mm':'')+';border-bottom:.4pt solid #d5dee6;page-break-inside:avoid}.ovh{font-size:7.5pt;color:#5a7285;padding:1mm 1.5mm}.ovd{border-left:.3pt solid #e6ecf1;position:relative}.ovc{font-size:7.5pt;text-align:right;padding:1mm 1.5mm;color:#14202e;font-weight:700}'
     :'';
   var h=[],emptyRun=[];
@@ -4173,17 +4173,17 @@ function t69OvHtml(print,opt){opt=opt||{};var W=t69OvWeeks(),weeks=W.weeks,showC
     hh+='</div>';h.push(hh);});
   flushEmpty();
   return h.join('');}
-var T69_OV_CSS='.t69ovHead,.t69ovW{display:grid;grid-template-columns:150px repeat(7,minmax(0,1fr)) 64px;column-gap:0}'
- +'.t69ovHead{position:sticky;top:0;background:var(--surface2,#1e2538);z-index:2;font-size:11px;color:var(--muted,#7EAAC8);border-bottom:1px solid var(--border,#2b3a52);padding:4px 0}'
+var T69_OV_CSS='.t69ovHead,.t69ovW{display:grid;grid-template-columns:170px repeat(7,minmax(0,1fr)) 72px;column-gap:0}'
+ +'.t69ovHead{position:sticky;top:0;background:var(--surface2,#1e2538);z-index:2;font-size:12px;font-weight:700;color:var(--muted,#7EAAC8);border-bottom:1px solid var(--border,#2b3a52);padding:4px 0}'
  +'.t69ovHead div{text-align:center}.t69ovHead div:first-child,.t69ovHead div:last-child{text-align:left;padding-left:6px}'
  +'.t69ovW{border-bottom:1px solid var(--border,#2b3a52);padding:3px 0;row-gap:2px}'
- +'.t69ovH{grid-column:1;font-size:11px;padding:0 6px;line-height:1.3;overflow:hidden}.t69ovS{display:block;color:var(--accent,#5BC0F8);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+ +'.t69ovH{grid-column:1;font-size:13px;padding:0 6px;line-height:1.3;overflow:hidden}.t69ovS{display:block;color:var(--accent,#5BC0F8);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
  +'.t69ovD{border-left:1px solid rgba(255,255,255,.06)}'
- +'.t69ovB{position:relative;z-index:1;margin:0 2px;border-radius:5px;background:color-mix(in srgb,var(--c) 30%,transparent);border:1px solid var(--c);border-left:4px solid var(--c);font-size:11px;line-height:18px;padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:var(--text,#e8eef5)}'
+ +'.t69ovB{position:relative;z-index:1;margin:0 2px;border-radius:5px;background:color-mix(in srgb,var(--c) 30%,transparent);border:1px solid var(--c);border-left:4px solid var(--c);font-size:13px;line-height:24px;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:var(--text,#e8eef5)}'
  +'.t69ovB.vis{background:rgba(16,185,129,.35);border-color:#10B981}.t69ovB.est{border-style:dashed;opacity:.75;font-style:italic}'
  +'.t69ovB.cl{border-top-left-radius:0;border-bottom-left-radius:0}.t69ovB.cr{border-top-right-radius:0;border-bottom-right-radius:0}'
  +'.t69ovB .k{font-size:10px;opacity:.8}'
- +'.t69ovC{grid-column:9;font-size:11px;text-align:right;padding-right:6px;font-weight:700;align-self:center}'
+ +'.t69ovC{grid-column:9;font-size:13px;text-align:right;padding-right:6px;font-weight:700;align-self:center}'
  +'.t69ovE{font-size:11px;color:var(--muted,#7EAAC8);padding:5px 6px;border-bottom:1px solid var(--border,#2b3a52);font-style:italic}'
  +'.t69ovLeg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted,#7EAAC8);margin:8px 0}.t69ovLeg i{display:inline-block;width:18px;height:10px;border-radius:3px;vertical-align:middle;margin-right:4px}'
  +'@media (max-width:700px){.t69ovHead,.t69ovW{grid-template-columns:86px repeat(7,minmax(0,1fr)) 0}.t69ovC,.t69ovHead div:last-child{display:none}.t69ovB{font-size:10px;padding:0 3px}.t69ovH{font-size:10px}}';
@@ -4198,12 +4198,12 @@ window.t69OverviewDlg=function(){var D=t69CapBox(1180),box=D.box;box.style.width
 /* PDF: landscape pages, 12 week rows per page */
 function t69OvPdf(){var W=t69OvWeeks();if(!W.weeks.length)return '';
   var html=t69OvHtml(false);var tmp=document.createElement('div');tmp.innerHTML=html;var rows=[].slice.call(tmp.children);
-  var pages=[],cur=[],n=0;rows.forEach(function(r){var w=r.classList.contains('t69ovW')?(1+0.45*((r.style.gridTemplateRows.match(/repeat\((\d+)/)||[0,1])[1]-1)):0.5;if(n+w>13&&cur.length){pages.push(cur);cur=[];n=0;}cur.push(r.outerHTML);n+=w;});if(cur.length)pages.push(cur);
+  var pages=[],cur=[],n=0;rows.forEach(function(r){var w=r.classList.contains('t69ovW')?(1+0.45*((r.style.gridTemplateRows.match(/repeat\((\d+)/)||[0,1])[1]-1)):0.5;if(n+w>9&&cur.length){pages.push(cur);cur=[];n=0;}cur.push(r.outerHTML);n+=w;});if(cur.length)pages.push(cur);
   return pages.map(function(p,k){return '<div class="mappage ovpage"><div class="segh">Week overview'+(pages.length>1?(' ('+(k+1)+'/'+pages.length+')'):'')+'</div>'+t69OvLegend()+t69OvHead()+p.join('')+'</div>';}).join('');}
 var T69_OV_PCSS='.ovpage{font-size:9pt;--surface2:#fff;--muted:#5a7285;--border:#d5dee6;--text:#14202e;--accent:#2f6f9f}'
  +'.ovpage .t69ovHead,.ovpage .t69ovW{grid-template-columns:40mm repeat(7,minmax(0,1fr)) 18mm}.ovpage .t69ovW{page-break-inside:avoid}'
- +'.ovpage .t69ovB{color:#14202e;font-size:8pt;line-height:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.ovpage .t69ovD{border-left:.3pt solid #e6ecf1}'
- +'.ovpage .t69ovH,.ovpage .t69ovC,.ovpage .t69ovE{font-size:8pt}.ovpage .t69ovLeg{font-size:7.5pt}.ovpage .t69ovLeg i{-webkit-print-color-adjust:exact;print-color-adjust:exact}';
+ +'.ovpage .t69ovB{color:#14202e;font-size:10pt;line-height:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.ovpage .t69ovD{border-left:.3pt solid #e6ecf1}'
+ +'.ovpage .t69ovH,.ovpage .t69ovC,.ovpage .t69ovE{font-size:10pt}.ovpage .t69ovHead{font-size:10pt}.ovpage .t69ovLeg{font-size:8.5pt}.ovpage .t69ovLeg i{-webkit-print-color-adjust:exact;print-color-adjust:exact}';
 
 /* v231: after a stop window opened from the costs table / overview closes, go back there */
 function t69OpenStopThen(segId,stopId,fn){t69StopSheetById(segId,stopId);var ov=document.getElementById('t69StopOv');if(!ov||!fn)return;
@@ -4273,7 +4273,7 @@ function loadRouteFromFirestore(){
     routeSegments=segs;
     _routeLoaded=true;
     try{t69CostLoad();t69RouteLocsLoad();}catch(e){}
-    try{if(window._t69DatesLoaded&&window.t69ReloadDates)t69ReloadDates();}catch(e){}
+    try{if(window.t69ReloadDates)t69ReloadDates();}catch(e){}
     try{t69LoadPub();}catch(e){}
     setTimeout(function(){try{t69HandleShare();}catch(e){}},600);
     renderRoutePanel();
@@ -4467,7 +4467,7 @@ function renderRoutePanel(){
         +'<span class="seg-stop-num" title="'+(_side?(stop.sideKind==='hotel'?'Hotel for ':'Side trip from ')+t69Esc((stops[_bi]||{}).name||''):'')+'">'+t69StopNo(seg,i).split('.')[1]+'</span>'
         +'<div class="seg-stop-info" onclick="t69StopSheet('+si+','+i+')" style="cursor:pointer" title="Tap: visited date, posts, hide from public">'
           +'<div class="seg-stop-name">'+(t69IsFly(seg,i)?'✈ ':'')+stop.name+'</div>'
-          +'<div class="seg-stop-sub">'+(stop.state||'')+(stop.plannedDate?' · '+stop.plannedDate:'')+(visited?' · <span style="color:#10B981">✓ '+t69ShortD(stop.visitedDate)+'</span>':'')+(t69Posts(stop).length?' · 🔗'+t69Posts(stop).length:'')+(stop.hidePublic?' · 🙈':(stop.showPublic?' · 👁':''))+(_side?(' · <span style="color:#F59E0B">'+(stop.sideKind==='hotel'?'🏨 hotel':'↳ side trip')+'</span><span id="side-'+seg.id+'-'+i+'"></span>'):'')+'</div>'
+          +'<div class="seg-stop-sub">'+(stop.state||'')+(stop.plannedDate?' · '+stop.plannedDate:'')+(visited?' · <span style="color:#10B981">✓ visited '+t69ShortD(stop.visitedDate)+'</span>':'')+(t69Posts(stop).length?' · 🔗'+t69Posts(stop).length:'')+(stop.hidePublic?' · 🙈':(stop.showPublic?' · 👁':''))+(_side?(' · <span style="color:#F59E0B">'+(stop.sideKind==='hotel'?'🏨 hotel':'↳ side trip')+'</span><span id="side-'+seg.id+'-'+i+'"></span>'):'')+'</div>'
         +'</div>'
         +'<button class="seg-stop-vis'+(visited?' done':'')+'" title="'+(visited?'Mark unvisited':'Mark visited')+'" '
           +'onclick="toggleVisited(\''+seg.id+'\',\''+stop.id+'\','+si+','+i+')">'+(visited?'✅':'⬜')+'</button>'
@@ -4673,6 +4673,7 @@ window.t69StopOf=function(loc){if(!loc||loc.lat==null||loc.lng==null)return null
 window.t69RouteStopRow=function(loc){var h=t69StopOf(loc);if(!h)return '';var n=t69Posts(h.st).length,v=h.st.visitedDate;
   return '<div class="d-row" style="flex-direction:column;align-items:stretch;gap:4px"><strong>On your route \u00b7 stop '+t69StopNo(h.seg,h.i)+'</strong>'
     +'<button class="t69t-btn" style="align-self:flex-start" onclick="t69StopSheet('+h.si+','+h.i+')">'+(v?'\u2705 Visited '+t69ShortD(v):'\u2B1C Not visited yet')+' \u00b7 \uD83D\uDD17 Posts'+(n?' ('+n+')':'')+'</button></div>';};
+function t69SsSnap(box){return [].slice.call(box.querySelectorAll('input,select,textarea')).filter(function(el){return el.id!=='t69SsUrl'&&el.id!=='t69SsLbl';}).map(function(el){return el.type==='checkbox'||el.type==='radio'?(el.checked?1:0):el.value;}).join('|');}
 window.t69StopSheet=function(si,i){
   var sg=routeSegments[si],st=sg&&sg.stops[i];if(!st)return;
   var tw=t69Twins(si,i),posts=[],seen={};
@@ -4718,7 +4719,7 @@ window.t69StopSheet=function(si,i){
     +'<input id="t69SsLbl" placeholder="Label (optional \u2014 filled in from YouTube/TikTok/Facebook when it can)" style="'+inp+'">'
     +'<button class="t69t-btn" id="t69SsAdd" style="align-self:flex-start">\uFF0B Add post(s)</button>'
     +'<div style="color:var(--muted);font-size:11px">Posts are saved right away \u2014 no need to press Save for them.</div></div>'
-    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="t69t-btn" id="t69SsCancel">Cancel</button>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><span id="t69SsCancel" style="display:none"></span>'
     +'<button class="t69t-btn" id="t69SsSave" style="background:var(--accent);color:#0D1B2E;font-weight:700">Save</button></div>';
   ov.appendChild(box);document.body.appendChild(ov);
   function draw(){var L=box.querySelector('#t69SsList');box.querySelector('#t69SsN').textContent=posts.length?('('+posts.length+')'):'';
@@ -4761,7 +4762,10 @@ window.t69StopSheet=function(si,i){
         added.forEach(function(p){if(T[p.u]&&!any)any=T[p.u];});if(!any)return;
         var ch=false;added.forEach(function(p){if(!p.l){p.l=T[p.u]||any;ch=true;}});
         if(ch){draw();persistPosts();toast('\u270F\uFE0F Label filled in: '+any.slice(0,60));}}).catch(function(){});}};
-  box.querySelector('#t69SsCancel').onclick=function(){ov.remove();};t69AddX(box,function(){ov.remove();});
+  var _ssSnap=null;setTimeout(function(){_ssSnap=t69SsSnap(box);},0);
+  var _ssClose=function(){if(_ssSnap!==null&&t69SsSnap(box)!==_ssSnap&&!confirm('Close without saving your changes?\n(Posts are already saved.)'))return;ov.remove();};
+  box.querySelector('#t69SsCancel').onclick=_ssClose;t69AddX(box,_ssClose);
+  ov.addEventListener('click',function(e){if(e.target===ov)_ssClose();});
   box.querySelector('#t69SsSave').onclick=function(){
     var pend=box.querySelector('#t69SsUrl').value.trim();
     if(pend&&!confirm('The link in the box was not added yet. Save without it?'))return;
@@ -4891,7 +4895,11 @@ window.t69Publish=async function(silent,preview){
       if(sg0&&t69IsSideAt(sg0,p0[1])){o.sd=f.st.sideKind==='hotel'?2:1;o.b=(sg0.stops[t69BaseIx(sg0,p0[1])]||{}).name||'';}return o;};
     var visited=flat.filter(function(f){return f.vd&&f.pub;}).map(function(f){var o=pt(f);o.d=f.vd;
       o.p=f.posts.map(function(p){var q={u:p.u,l:p.l||'',d:p.d||'',t:t69Plat(p.u)};if(p.g)q.g=p.g;return q;});return o;});
-    var next=stats.all?[]:flat.slice(lastPubIx+1).filter(function(f){return !f.vd&&f.pub;}).slice(0,3).map(pt);
+    var _dt=function(f){try{var p0=f.pos[0],sg0=routeSegments[p0[0]],r=t69StopDR(sg0,sg0.stops[p0[1]]);if(!r||!r.arrivalDate)return '';
+        return r.arrivalDate+(r.departureDate&&r.departureDate!==r.arrivalDate?(' \u2192 '+r.departureDate):'');}catch(e){return '';}};
+    var next=stats.all?[]:flat.slice(lastPubIx+1).filter(function(f){return !f.vd&&f.pub;});
+    /* v236: the private preview shows the WHOLE plan with dates (for friends who want to join); the public map only the next 3 */
+    next=preview?next.map(function(f){var o=pt(f),d=_dt(f);if(d)o.dt=d;return o;}):next.slice(0,3).map(pt);
     var allPts=sp.done.concat(sp.ahead),bb=[90,180,-90,-180];
     allPts.forEach(function(p){bb[0]=Math.min(bb[0],p[0]);bb[1]=Math.min(bb[1],p[1]);bb[2]=Math.max(bb[2],p[0]);bb[3]=Math.max(bb[3],p[1]);});
     var status=stats.all?'done':(stats.visited?'live':'soon');
@@ -4971,8 +4979,7 @@ window.t69MoreMenu=function(){
     ['Route tools',[
       ['\uD83D\uDCC5','Week overview','Where we are on which date \u2014 also in the PDF','t69OverviewDlg()'],
       ['\uD83D\uDCB0','Trip costs','Totals, stops table, passes, food per day, fuel','t69CostDlg()'],
-      ['🔎',"What's along this route",'Every location in your database near the route','t69LoadAlongRoute()'],
-      ['✕','Clear the drawn route','Only removes the lines from the map — your stops stay','clearAllSegments()',null,'warn']]]];
+      ['🔎',"What's along this route",'Every location in your database near the route','t69LoadAlongRoute()']]]];
   var D=t69CapBox(420),box=D.box,h='<div style="font-weight:700;font-size:15px">⋯ More</div><div style="color:var(--muted);font-size:11px;margin-top:2px">'+t69Esc(t69TripName())+'</div>';
   var acts=[];
   groups.forEach(function(g){var items=g[1].filter(function(it){return !it[4]||it[4]();});if(!items.length)return;
@@ -4982,7 +4989,24 @@ window.t69MoreMenu=function(){
   D.ov.addEventListener('click',function(e){if(e.target===D.ov)D.ov.remove();});
   box.querySelectorAll('.t69mm-i').forEach(function(b){b.onclick=function(){var a=acts[+b.getAttribute('data-a')];D.ov.remove();
     try{if(typeof isMobile==='function'&&isMobile()&&typeof toggleMobList==='function'&&/exportMap|t69LoadAlongRoute|clearAllSegments/.test(a)){var rp=document.getElementById('rlist');if(rp&&rp.classList.contains('mob-open'))toggleMobList('route');}}catch(e){}
-    (new Function(a))();};});};
+    var before=t69Overlays();(new Function(a))();t69BackToMore(before);};});};
+/* v235: one way to close every window — the ✕ top-right. Older windows with a "Close"/"Cancel" text button get the ✕ (doing the same) and lose the text button */
+(function(){var RX=/^\s*(\u2715\s*)?(close|cancel)\s*$/i;
+  function norm(ov){if(!ov||ov.nodeType!==1||ov.getAttribute('data-t69n'))return;var st=ov.getAttribute('style')||'';if(!/position:\s*fixed/.test(st)||!/inset/.test(st))return;
+    ov.setAttribute('data-t69n','1');setTimeout(function(){if(!document.body.contains(ov))return;
+      var btns=[].slice.call(ov.querySelectorAll('button')).filter(function(b){return RX.test(b.textContent||'')&&!b.classList.contains('t69x');});
+      if(!btns.length)return;var hasX=!!ov.querySelector('.t69x');
+      if(!hasX){var box=ov.firstElementChild;if(!box)return;var b0=btns[0];t69AddX(box,function(){b0.click();});}
+      btns.forEach(function(b){b.style.display='none';});},60);}
+  new MutationObserver(function(ms){ms.forEach(function(m){[].forEach.call(m.addedNodes||[],norm);});}).observe(document.documentElement.querySelector('body')||document.documentElement,{childList:true});
+  var c=document.createElement('style');c.textContent='#addModal .btn-secondary[onclick="closeAddModal()"]{display:none}';document.head.appendChild(c);})();
+/* v235: windows opened from ⋯ More go back to ⋯ More when closed (not to the map) */
+function t69Overlays(){return [].slice.call(document.body.children).filter(function(el){var cs=el.style||{};return cs.position==='fixed'&&(+cs.zIndex||0)>=9000&&/inset/.test(el.getAttribute('style')||'');});}
+function t69BackToMore(before){var t0=Date.now();(function wait(){var now=t69Overlays().filter(function(x){return before.indexOf(x)<0;});
+    if(!now.length){if(Date.now()-t0<2500)return setTimeout(wait,120);return;}
+    var mo=new MutationObserver(function(){var open=t69Overlays().filter(function(x){return before.indexOf(x)<0;});
+      if(!open.length){mo.disconnect();setTimeout(function(){if(!t69Overlays().filter(function(x){return before.indexOf(x)<0;}).length&&!document.getElementById('t69StopOv'))t69MoreMenu();},80);}});
+    mo.observe(document.body,{childList:true});})();}
 /* ===== v226: one close button for every window — ✕ top-right ===== */
 (function(){var c=document.createElement('style');c.textContent='.t69x{position:absolute;top:-10px;right:-10px;z-index:3;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface2,#1e2538);color:var(--text);font-size:16px;line-height:1;cursor:pointer;padding:0;box-shadow:0 2px 10px rgba(0,0,0,.5)}.t69x:hover{border-color:var(--accent);color:var(--accent)}';document.head.appendChild(c);})();
 window.t69AddX=function(box,onClose){var b=document.createElement('button');b.type='button';b.className='t69x';b.title='Close';b.textContent='\u2715';b.onclick=onClose;
@@ -5327,6 +5351,9 @@ window.t69Unpublish=async function(slug,tripId){
   var idxRaw=await fsGet('public/index'),idx=[];try{idx=JSON.parse(fsDocToObj(idxRaw||{}).json||'[]');}catch(e){}
   idx=idx.filter(function(e){return e&&e.trip!==tripId&&e.slug!==slug;});
   await fsPatch('public/index',{json:JSON.stringify(idx),updated:new Date().toISOString()});};
+/* v235: folding sections, remembered per device */
+function t69SecOpen(id,def,set){var k='t69_sec_'+id;try{if(set!==undefined&&set!==null){localStorage.setItem(k,set?'1':'0');return set;}var v=localStorage.getItem(k);return v===null?!!def:v==='1';}catch(e){return !!def;}}
+(function(){var c=document.createElement('style');c.textContent='.t69sec{border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,.02)}.t69sec>summary{cursor:pointer;list-style:none;padding:9px 12px;display:flex;align-items:center;gap:8px}.t69sec>summary::-webkit-details-marker{display:none}.t69sec>summary:before{content:"\\25B8";color:var(--muted);transition:transform .15s}.t69sec[open]>summary:before{transform:rotate(90deg)}.t69sec>summary span{margin-left:auto;color:var(--muted);font-size:11px}.t69secb{padding:0 12px 12px}';document.head.appendChild(c);})();
 window.t69FollowDlg=async function(){
   if(!routeSegments||!routeSegments.length){toast('Open a trip with a route first');return;}
   var P=await t69LoadPub(),oldSlug=P.slug,oldOn=P.on;
@@ -5337,32 +5364,35 @@ window.t69FollowDlg=async function(){
   var box=document.createElement('div');
   box.style.cssText='background:var(--surface2,#1e2538);border:1px solid var(--border);border-radius:14px;padding:16px;width:480px;max-width:96vw;max-height:88vh;overflow:auto;font-size:13px';
   var inp='background:var(--card);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;padding:6px 8px';
+  var sec=function(id,title,sub,body,open){var o=t69SecOpen(id,open);return '<details class="t69sec" data-sec="'+id+'"'+(o?' open':'')+'><summary><b>'+title+'</b>'+(sub?'<span>'+sub+'</span>':'')+'</summary><div class="t69secb">'+body+'</div></details>';};
   box.innerHTML='<div style="font-weight:700;font-size:15px">📢 Share with followers</div>'
-    +'<div style="color:var(--muted);font-size:11px;margin:2px 0 12px">'+t69Esc(t69TripName())+'</div>'
-    +'<label style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-bottom:10px;font-weight:700"><input type="checkbox" id="t69FwOn"'+(P.on?' checked':'')+'> Publish this trip on the public map</label>'
-    +'<div style="margin-bottom:10px">Short link name<br><span style="color:var(--muted);font-size:11px">'+t69Esc(base)+'/</span>'
-    +'<input id="t69FwSlug" value="'+t69Esc(P.slug||t69Slug(t69TripName()))+'" style="'+inp+';width:190px"> '
-    +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"><button class="t69t-btn" id="t69FwCopy1">\uD83D\uDCCB Copy this trip\u2019s link</button>'
-    +'<button class="t69t-btn" id="t69FwOpen1">\u2197 Open</button><button class="t69t-btn" id="t69FwBio">\uD83D\uDCCB Copy bio link (all trips)</button>'
-    +'<button class="t69t-btn" id="t69FwPv" title="See this trip on the follower site exactly as followers would, with a secret link only you have — also before you publish">\uD83D\uDC41 Preview (only for us)</button>'
-    +'<button class="t69t-btn" id="t69FwStory" title="9:16 image for Instagram/TikTok/Facebook stories: map, we\u2019re here, stats and your link">\uD83D\uDCF8 Story image</button>'
-    +'<button class="t69t-btn" id="t69FwFb" title="Opens Facebook\u2019s Sharing Debugger with this trip\u2019s link filled in \u2014 press Scrape Again there">\uD83D\uDD04 Refresh Facebook preview</button></div>'
-    +'<div style="color:var(--muted);font-size:11px;margin-top:4px">\u201cCopy this trip\u2019s link\u201d adds a small code to the link, so WhatsApp and Facebook always show the newest preview.</div></div>'
-    +'<div style="margin-bottom:4px">Never show stops in these categories <span style="color:var(--muted);font-size:11px">(where you sleep, etc.)</span></div>'
-    +'<div id="t69FwCats" style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-bottom:10px"></div>'
-    +'<div style="color:var(--muted);font-size:11px;line-height:1.5;margin-bottom:12px">Followers see: stops you marked ✅ with their posts, the next 3 stops, and the rest of the route as a line. '
-    +'Never: notes, scores, budget, bookings, stops set to 🙈 Never show, or these categories (unless a stop is set to 👁 Always show). It updates by itself when you mark a stop or add a post.</div>'
-    +'<div style="border-top:1px solid var(--border);margin:6px 0 10px"></div>'
-    +'<div style="margin-bottom:4px">Message on the follower home page <span style="color:var(--muted);font-size:11px">(for everyone, all trips — leave empty to hide)</span></div>'
-    +'<textarea id="t69FwNote" rows="2" placeholder="e.g. Preparing our one-year road trip through the USA — subscribe below to hear when we leave!" style="'+inp+';width:100%;box-sizing:border-box;font-family:inherit"></textarea>'
-    +'<div style="display:flex;gap:8px;align-items:center;margin:6px 0 12px"><button class="t69t-btn" id="t69FwNoteGo">💾 Save message</button><span id="t69FwNoteSt" style="color:var(--muted);font-size:11px"></span></div>'
-    +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">📬 <span id="t69FwSubN">Email subscribers: …</span><button class="t69t-btn" id="t69FwSubDl" title="A list you can import into Brevo (or any mail program) to send an update">⬇️ Download list (CSV)</button><a class="t69t-btn" href="https://app.brevo.com/contact/list-listing" target="_blank" rel="noopener" style="text-decoration:none" title="Open your Brevo account (lists, campaigns)">\u2709\uFE0F Open Brevo</a></div>'
-    +'<div style="border:1px solid var(--border);border-radius:9px;padding:8px;margin-bottom:12px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>\uD83D\uDCF2 Clips from OpusClip</b>'
-    +'<button class="t69t-btn" id="t69SoRun">\u21BB Import posts now</button><a class="t69t-btn" href="https://docs.google.com/spreadsheets/d/1Jw36zGTsFEMolQ4x59zloSnr1ybLGCVQ9MOE9aOhYw0/edit" target="_blank" rel="noopener" style="text-decoration:none">\uD83D\uDCC4 Sheet</a></div>'
-    +'<div style="color:var(--muted);font-size:11px;margin-top:4px">Checked automatically every 10 minutes: a clip\u2019s links are added to its stop about 5\u201315 minutes after it goes live.</div><div id="t69SoList" style="margin-top:6px;font-size:12px"></div></div>'
-    +'<div id="t69FwSt" style="color:var(--muted);font-size:11px;margin-bottom:10px">'+(P.updated?('Last updated '+new Date(P.updated).toLocaleString()):'')+'</div>'
-    +'<div style="display:flex;gap:8px;justify-content:flex-end">'
-    +'<button class="t69t-btn" id="t69FwGo" style="background:var(--accent);color:#0D1B2E;font-weight:700">Save settings</button></div>';
+    +'<div style="color:var(--muted);font-size:11px;margin:2px 0 10px">'+t69Esc(t69TripName())+'</div>'
+    +sec('pub','🌍 Public map',P.on?'live':'not public',
+      '<label style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-bottom:8px;font-weight:700"><input type="checkbox" id="t69FwOn"'+(P.on?' checked':'')+'> Publish this trip on the public map</label>'
+      +'<div style="margin-bottom:8px">Link: <span style="color:var(--muted);font-size:11px">'+t69Esc(base)+'/</span><input id="t69FwSlug" value="'+t69Esc(P.slug||t69Slug(t69TripName()))+'" style="'+inp+';width:180px"></div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"><button class="t69t-btn" id="t69FwCopy1">📋 Copy link</button><button class="t69t-btn" id="t69FwOpen1">↗ Open</button></div>'
+      +'<details style="margin-bottom:8px"><summary style="cursor:pointer;color:var(--muted);font-size:12px">Hidden categories &amp; what followers see</summary>'
+      +'<div style="margin:6px 0 4px">Never show stops in these categories:</div><div id="t69FwCats" style="display:flex;flex-wrap:wrap;gap:4px 12px;margin-bottom:6px"></div>'
+      +'<div style="color:var(--muted);font-size:11px;line-height:1.5">Followers see: visited stops with their videos, the next 3 stops, and the rest of the route as a line. Never: notes, scores, budget, bookings, stops set to 🙈 Never show, or these categories.</div></details>'
+      +'<div style="display:flex;gap:8px;align-items:center"><button class="t69t-btn" id="t69FwGo" style="background:var(--accent);color:#0D1B2E;font-weight:700">Save &amp; publish</button>'
+      +'<span id="t69FwSt" style="color:var(--muted);font-size:11px">'+(P.updated?('Last updated '+new Date(P.updated).toLocaleString()):'')+'</span></div>'
+      +'<div style="color:var(--muted);font-size:11px;margin-top:4px">After this it updates by itself when you mark a stop or a video is added.</div>',true)
+    +sec('pv','👁 Preview for friends','whole trip, private link',
+      '<div style="color:var(--muted);font-size:12px;margin-bottom:6px">The complete route with everything still to come. Not listed anywhere — only people with the link can see it. They can zoom and tap, not change anything.</div>'
+      +'<button class="t69t-btn" id="t69FwPv">👁 Open / copy the preview link</button>',false)
+    +sec('clips','📲 Clips from OpusClip','automatic',
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="t69t-btn" id="t69SoRun">↻ Import posts now</button><a class="t69t-btn" href="https://docs.google.com/spreadsheets/d/1Jw36zGTsFEMolQ4x59zloSnr1ybLGCVQ9MOE9aOhYw0/edit" target="_blank" rel="noopener" style="text-decoration:none">📄 Sheet</a></div>'
+      +'<div style="color:var(--muted);font-size:11px;margin-top:4px">Checked every 10 minutes: a clip’s links land on its stop 5–15 minutes after it goes live.</div><div id="t69SoList" style="margin-top:6px;font-size:12px"></div>',false)
+    +sec('promo','📸 Story image & links','',
+      '<div style="display:flex;flex-wrap:wrap;gap:6px"><button class="t69t-btn" id="t69FwStory" title="9:16 image for stories: map, we’re here, stats and your link">📸 Story image</button>'
+      +'<button class="t69t-btn" id="t69FwBio">📋 Copy bio link (all trips)</button>'
+      +'<button class="t69t-btn" id="t69FwFb" title="Opens Facebook’s Sharing Debugger with this trip’s link — press Scrape Again there">🔄 Refresh Facebook preview</button></div>',false)
+    +sec('subs','📬 Subscribers & home page','',
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px"><span id="t69FwSubN">Email subscribers: …</span><button class="t69t-btn" id="t69FwSubDl" title="A list you can import into Brevo or any mail program">⬇️ Download list (CSV)</button></div>'
+      +'<div style="margin-bottom:4px">Message on the follower home page <span style="color:var(--muted);font-size:11px">(all trips — empty = hidden)</span></div>'
+      +'<textarea id="t69FwNote" rows="2" placeholder="e.g. Preparing our one-year road trip through the USA — subscribe below to hear when we leave!" style="'+inp+';width:100%;box-sizing:border-box;font-family:inherit"></textarea>'
+      +'<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><button class="t69t-btn" id="t69FwNoteGo">💾 Save message</button><span id="t69FwNoteSt" style="color:var(--muted);font-size:11px"></span></div>',false);
+  box.querySelectorAll('details.t69sec').forEach(function(d){d.addEventListener('toggle',function(){t69SecOpen(d.getAttribute('data-sec'),null,d.open);});});
   var cw=box.querySelector('#t69FwCats');
   cats.forEach(function(c){var l=document.createElement('label');l.style.cssText='cursor:pointer;font-size:12px';
     l.innerHTML='<input type="checkbox" value="'+t69Esc(c)+'"'+(hs[c]?' checked':'')+'> '+t69Esc(c);cw.appendChild(l);});
@@ -5434,7 +5464,7 @@ window.t69HandleShare=function(){var raw='';try{raw=sessionStorage.getItem('t69_
     +'<div style="color:var(--muted);font-size:11px;margin-bottom:4px">Trip: '+t69Esc(t69TripName())+'</div>'
     +'<input id="t69ShLbl" value="'+t69Esc(guess)+'" placeholder="Short label" style="'+inp+';margin-bottom:8px">'
     +'<div id="t69ShList" style="max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:9px"></div>'
-    +'<div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="t69t-btn" id="t69ShX">Cancel</button></div>';
+    +'<span id="t69ShX" style="display:none"></span>';
   var L=box.querySelector('#t69ShList');t69FetchTitle(url,box.querySelector('#t69ShLbl'));
   order.forEach(function(o){var f=o.f,b=document.createElement('div');
     b.style.cssText='padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer;display:flex;gap:8px;align-items:center';
@@ -6252,7 +6282,7 @@ async function t69ExportRoutePDF(){
         +((x.state||_cat)?('<br><span class="reg">'+esc(x.state||'')+(x.state&&_cat?' \u00b7 ':'')+(_cat?('<span class="cat">'+esc(_cat)+'</span>'):'')+'</span>'):'')
         +t69PdfMeta(x)+t69PdfCost(seg,x,_pdfSeen)+'</td>'
         +'<td class="rt">'+t69PdfRating(x)+'</td>'
-        +'<td class="d">'+esc(t69StopDate(seg,x)||'\u2014')+'</td>'
+        +'<td class="d">'+esc(t69StopDate(seg,x)||'\u2014')+(x.visitedDate?'<br><span style="color:#0f9d6b">\u2713 visited '+esc(t69ShortD(x.visitedDate))+'</span>':'')+'</td>'
         +'<td class="leg">'+esc(leg.trim()||'\u2014')+'</td></tr>'
         +'<tr class="desc"><td colspan="3" class="ds">'+(_desc||'')+'</td></tr>');});
     h.push('</table></div>');});
@@ -7585,7 +7615,7 @@ async function loadDates(){
     var _forTrip=tid(),_gen=(window._t69DateGen=(window._t69DateGen||0)+1);
     var r=await callFn('loadTripStopDates',{tripId:_forTrip});
     /* v232: ignore an answer that arrives after we switched to another trip (it showed the other trip's dates/nights) */
-    if(_forTrip!==tid()||_gen!==window._t69DateGen){console.warn('T1969 dates: stale answer for',_forTrip,'ignored');return;}
+    if(_forTrip!==tid()||_gen!==window._t69DateGen){console.warn('T1969 dates: stale answer for',_forTrip,'ignored');if(_forTrip!==tid())setTimeout(loadDates,0);return;}
     window._t69DatesLoaded=true;
     var raw=r.stopDates||{};D={};
     var segMap={};
@@ -8575,7 +8605,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v234: ready');
+  console.log('T1969 v236: ready');
 }
 function t69EvToDates(ev){var tz=(ev.start&&ev.start.timeZone)||undefined;
   function dmy(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}

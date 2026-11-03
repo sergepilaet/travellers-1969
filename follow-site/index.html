@@ -190,7 +190,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 <script>
 function setHdr(){var h=document.querySelector('.top');if(h)document.documentElement.style.setProperty('--hdr',h.offsetHeight+'px');}
 setHdr();window.addEventListener('resize',function(){setHdr();if(window.map&&map.invalidateSize)map.invalidateSize();});
-var SITE_V='v17';
+var SITE_V='v18';
 var BASE='https://firestore.googleapis.com/v1/projects/travellers-1969-b3a8e/databases/(default)/documents/public/';
 var KEY='AIzaSyAxPJoDENiNy3wA2rFs-MFcJkUwBN1YwK8';
 var SOC=[['ig','Instagram','https://www.instagram.com/travellers_1969/'],['tt','TikTok','https://www.tiktok.com/@travellers_1969'],
@@ -344,7 +344,7 @@ function showTrip(slug){$('trip').style.display='block';
       byKey['v'+k]=m;});
     (t.next||[]).forEach(function(n,k){
       var m=L.marker([n.a,n.o],{icon:divIcon('<div class="ndot'+(n.sd?' sd':'')+'">'+(k+1)+'</div>',24)}).addTo(map)
-        .bindPopup('<div class="pp"><div class="n">'+esc(n.n)+'</div><div class="s">'+esc(n.s)+' · coming up'+(n.sd?(' · '+(n.sd===2?'where we stay in ':'side trip from ')+esc(n.b||'')):'')+'</div></div>');
+        .bindPopup('<div class="pp"><div class="n">'+esc(n.n)+'</div><div class="s">'+esc(n.s)+' · '+(n.dt?esc(n.dt):'coming up')+(n.sd?(' · '+(n.sd===2?'where we stay in ':'side trip from ')+esc(n.b||'')):'')+'</div></div>');
       byKey['n'+k]=m;});
     if(t.here){byKey.here=L.marker([t.here.a,t.here.o],{icon:divIcon('<div class="pulse"><img src="/pin-travellers.png" alt=""></div>',58),zIndexOffset:1000}).addTo(map)
       .bindPopup('<div class="pp"><div class="n">'+(t.status==='done'?'Last stop':'We’re here')+'</div><div class="s">'+esc(t.here.n)+', '+esc(t.here.s)+'</div></div>');}
@@ -363,7 +363,7 @@ function showTrip(slug){$('trip').style.display='block';
           +(done?tile(num(posts)+' '+(posts===1?'video':'videos'),'on our socials'):tile(num(s.visited)+'/'+num(s.total)+' stops',num(Math.max(0,s.total-s.visited))+' to go'))
           +'</div>';})();
     if(t.here&&t.status!=='done')h+='<div class="here" data-k="here"><img src="/pin-travellers.png" alt=""><div><small>'+(t.status==='done'?'Last stop':'We’re here')+'</small><b>'+esc(t.here.n)+'</b><small>'+esc(t.here.s)+'</small></div></div>';
-    if(t.next&&t.next.length)h+='<h4>Coming up</h4>'+t.next.map(function(n,k){return '<div class="next" data-k="n'+k+'"><span class="num'+(n.sd?' sd':'')+'">'+(k+1)+'</span><span>'+(n.fl?'✈ ':'')+esc(n.n)+' <span style="color:var(--muted);font-size:12px">'+esc(n.s)+'</span>'+(n.sd?('<br><span class="sdl">'+(n.sd===2?'🏨 where we stay in ':'↳ side trip from ')+esc(n.b||'')+'</span>'):'')+'</span></div>';}).join('');
+    if(t.next&&t.next.length)h+='<h4>'+(t.preview?('The whole plan \u00b7 '+t.next.length+' stops'):'Coming up')+'</h4>'+t.next.map(function(n,k){return '<div class="next" data-k="n'+k+'"><span class="num'+(n.sd?' sd':'')+'">'+(k+1)+'</span><span>'+(n.fl?'✈ ':'')+esc(n.n)+' <span style="color:var(--muted);font-size:12px">'+esc(n.s)+'</span>'+(n.dt?'<br><span style="color:var(--sky);font-size:12px">\uD83D\uDCC5 '+esc(n.dt)+'</span>':'')+(n.sd?('<br><span class="sdl">'+(n.sd===2?'🏨 where we stay in ':'↳ side trip from ')+esc(n.b||'')+'</span>'):'')+'</span></div>';}).join('');
     var vis=(t.visited||[]).map(function(v,k){return {v:v,k:k};});
     if(vis.length){h+='<h4>Where we\u2019ve been</h4>';
       if(vis.length>6){
