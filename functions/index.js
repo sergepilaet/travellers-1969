@@ -918,7 +918,7 @@ exports.postInfo=fn(async(data)=>{
    Every 10 min: read the Clips tab (1 Sheets call + 1 Firestore read); only when a clip's publish time + 5 min has passed,
    ask OpusClip for its post links and add them to the stop(s) as auto posts (field autoPostsJson). */
 const SOCIAL_SHEET='1Jw36zGTsFEMolQ4x59zloSnr1ybLGCVQ9MOE9aOhYw0';
-const SOC_TABS={Stops:['stop_code','trip','segment','stop no','stop name','state','dates (arrival → departure)','category'],
+const SOC_TABS={Stops:['stop_code','trip','segment','stop no','stop name','state','dates (arrival → departure)','category','lat','lng','visited (yyyy-mm-dd)','folder name'],
   Clips:['clip_id','project_id','stop_code(s)','clip title','original date (yyyy-mm-dd)','publish_at (UTC)','added_at']};
 const SOC_PLAT={INSTAGRAM_BUSINESS:'ig',INSTAGRAM:'ig',TIKTOK_BUSINESS:'tt',TIKTOK:'tt',YOUTUBE:'yt',FACEBOOK_PAGE:'fb',FACEBOOK:'fb'};
 const socState=()=>admin.firestore().collection('config').doc('socialState');
@@ -943,9 +943,13 @@ async function socSyncStops(sheets){const db=admin.firestore(),trips=(await db.c
       for(const st of stops){const isSide=st.d.sideKind==='trip'||st.d.sideKind==='hotel';let no;if(isSide){side++;no=(si+1)+'.'+n+String.fromCharCode(96+side);}else{n++;side=0;no=(si+1)+'.'+n;}
         let sc=st.d.code;if(!sc){seq++;sc=code+'-'+String(seq).padStart(3,'0');await st.ref.set({code:sc},{merge:true});}
         await db.collection('socialCodes').doc(sc).set({trip:t.id,seg:sg.id,stop:st.id,name:st.d.name||''},{merge:true});
-        const dr=dates[st.id]||{};rows.push([sc,td.name||'',sd.customLabel||sd.name||('Segment '+(si+1)),no,st.d.name||'',st.d.state||'',(dr.arrivalDate?(dr.arrivalDate+(dr.departureDate&&dr.departureDate!==dr.arrivalDate?' → '+dr.departureDate:'')):''),st.d.category||'']);}}
+        const dr=dates[st.id]||{},day=st.d.visitedDate||socDmyToIso(dr.arrivalDate)||'';
+        const fold=day?(day+' '+String(st.d.name||'').replace(/[\\/:*?"<>|]/g,'').trim()+' ('+sc+')'):'';
+        rows.push([sc,td.name||'',sd.customLabel||sd.name||('Segment '+(si+1)),no,st.d.name||'',st.d.state||'',(dr.arrivalDate?(dr.arrivalDate+(dr.departureDate&&dr.departureDate!==dr.arrivalDate?' → '+dr.departureDate:'')):''),st.d.category||'',
+          st.d.lat!=null?Number(st.d.lat).toFixed(5):'',st.d.lng!=null?Number(st.d.lng).toFixed(5):'',st.d.visitedDate||'',fold]);}}
     if(seq!==(td.codeSeq||0))await t.ref.set({codeSeq:seq},{merge:true});}
-  await sheets.spreadsheets.values.clear({spreadsheetId:SOCIAL_SHEET,range:"'Stops'!A2:H"});
+  await sheets.spreadsheets.values.update({spreadsheetId:SOCIAL_SHEET,range:"'Stops'!A1",valueInputOption:'RAW',requestBody:{values:[SOC_TABS.Stops]}});
+  await sheets.spreadsheets.values.clear({spreadsheetId:SOCIAL_SHEET,range:"'Stops'!A2:L"});
   if(rows.length)await sheets.spreadsheets.values.update({spreadsheetId:SOCIAL_SHEET,range:"'Stops'!A2",valueInputOption:'RAW',requestBody:{values:rows}});
   return rows.length;}
 async function socReadClips(sheets){const r=await sheets.spreadsheets.values.get({spreadsheetId:SOCIAL_SHEET,range:"'Clips'!A2:G"});
