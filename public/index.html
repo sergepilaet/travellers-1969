@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v231  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v233  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -1777,12 +1777,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v231</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v233</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v231</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v233</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2224,7 +2224,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v231</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v233</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -4278,6 +4278,8 @@ function loadRouteFromFirestore(){
     setTimeout(function(){try{t69HandleShare();}catch(e){}},600);
     renderRoutePanel();
     updateRouteSummary();
+    /* v232: a newly opened trip draws its own route by itself (the old trip's lines are already gone) */
+    try{if(window.map&&window._t69DrawnTrip!==window.TRIP_ID&&routeSegments.some(function(s){return (s.stops||[]).length;})){var _tid=window.TRIP_ID;setTimeout(function(){if(window.TRIP_ID===_tid&&window._t69DrawnTrip!==_tid)drawAllSegments();},400);}}catch(e){}
     toast('✅ Route loaded — '+routeSegments.length+' segment'+(routeSegments.length!==1?'s':''));
   }).catch(function(e){console.error(e);toast('⚠️ Failed to load route: '+e.message);});
 }
@@ -4503,6 +4505,14 @@ window._t69Leg={};window._t69SegTot={};
 function t69ApplyLegs(){var L=window._t69Leg||{},T=window._t69SegTot||{};
   Object.keys(L).forEach(function(k){var el=document.getElementById('leg-'+k);if(el){var inf=el.querySelector('.seg-leg-info');if(inf)inf.textContent=L[k];}});
   Object.keys(T).forEach(function(k){var el=document.getElementById('seg-total-'+k);if(el&&T[k].txt){el.textContent=T[k].txt;el.style.display='block';}});}
+/* v232: remove the drawn lines of the previous trip (no question asked) — used when switching trips */
+function t69ClearDrawn(){window._t69DrawGen=(window._t69DrawGen||0)+1;window._t69Drawn=false;window._t69DrawnTrip=null;window._t69Leg={};window._t69SegTot={};
+  try{Object.keys(segPolylines).forEach(function(k){map.removeLayer(segPolylines[k]);});segPolylines={};}catch(e){}
+  try{Object.keys(routeMarkers).forEach(function(k){routeMarkers[k].forEach(function(m){map.removeLayer(m);});});routeMarkers={};}catch(e){}
+  try{if(window._t69DoneLayer){map.removeLayer(window._t69DoneLayer);window._t69DoneLayer=null;}}catch(e){}
+  try{if(window._t69SideGrp){map.removeLayer(window._t69SideGrp);window._t69SideGrp=null;}}catch(e){}
+  window._t69DriveM=0;window._t69SideM=0;window._t69FlyM=0;
+  try{document.getElementById('routeTotalDist').textContent='\u2014';document.getElementById('routeTotalTime').textContent='\u2014';}catch(e){}}
 function t69RouteSig(){try{return (routeSegments||[]).map(function(sg){return sg.id+':'+(sg.stops||[]).map(function(st){
   return [st.id,(+st.lat||0).toFixed(5),(+st.lng||0).toFixed(5),st.sideKind||'',st.arriveBy||'',st.visitedDate?1:0].join(',');}).join(';');}).join('|');}catch(e){return '';}}
 function t69AutoRedrawSoon(){clearTimeout(window._t69AutoT);window._t69AutoT=setTimeout(function(){
@@ -4697,10 +4707,10 @@ window.t69StopSheet=function(si,i){
     +'<div style="font-weight:700;margin-bottom:6px">🔗 Posts <span id="t69SsN" style="color:var(--muted);font-weight:400"></span></div>'
     +'<div id="t69SsList"></div>'
     +'<div style="border:1px dashed var(--border);border-radius:9px;padding:8px;margin-top:8px;display:flex;flex-direction:column;gap:6px">'
-    +'<input id="t69SsUrl" placeholder="Paste the post link (Instagram, TikTok, YouTube, Facebook)" style="'+inp+'">'
-    +'<div style="display:flex;gap:6px"><input id="t69SsLbl" placeholder="Short label, e.g. Day 2 – Old Faithful" style="flex:1;min-width:0;'+inp+'">'
-    +'<input type="date" id="t69SsPd" value="'+t69Esc(st.visitedDate||t69Today())+'" style="'+inp+'"></div>'
-    +'<button class="t69t-btn" id="t69SsAdd" style="align-self:flex-start">＋ Add post</button></div>'
+    +'<textarea id="t69SsUrl" rows="3" placeholder="Paste one or more post links (Instagram, TikTok, YouTube, Facebook) \u2014 all at once is fine" style="resize:vertical;'+inp+'"></textarea>'
+    +'<input id="t69SsLbl" placeholder="Label (optional \u2014 filled in from YouTube/TikTok/Facebook when it can)" style="'+inp+'">'
+    +'<button class="t69t-btn" id="t69SsAdd" style="align-self:flex-start">\uFF0B Add post(s)</button>'
+    +'<div style="color:var(--muted);font-size:11px">Posts are saved right away \u2014 no need to press Save for them.</div></div>'
     +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="t69t-btn" id="t69SsCancel">Cancel</button>'
     +'<button class="t69t-btn" id="t69SsSave" style="background:var(--accent);color:#0D1B2E;font-weight:700">Save</button></div>';
   ov.appendChild(box);document.body.appendChild(ov);
@@ -4709,11 +4719,12 @@ window.t69StopSheet=function(si,i){
     posts.forEach(function(p,k){var r=document.createElement('div');
       r.style.cssText='display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06)';
       r.innerHTML='<span style="flex:1;min-width:0"><a href="'+t69Esc(p.u)+'" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">'+T69_PLAT[t69Plat(p.u)]+'</a> '
-        +'<span>'+t69Esc(p.l||'')+'</span> <span style="color:var(--muted);font-size:11px">'+t69Esc(p.d||'')+'</span></span>'
+        +'<span data-a="lbl" style="cursor:pointer;border-bottom:1px dashed var(--border)" title="Tap to edit the label">'+t69Esc(p.l||'(add a label)')+'</span></span>'
         +(k>0?'<button class="t69t-btn" data-a="up">↑</button>':'')+(k<posts.length-1?'<button class="t69t-btn" data-a="dn">↓</button>':'')
         +'<button class="t69t-btn" data-a="x" style="color:#E74C3C">✕</button>';
       r.querySelectorAll('button').forEach(function(b){b.onclick=function(){var a=b.getAttribute('data-a');
-        if(a==='x')posts.splice(k,1);else if(a==='up'){var t=posts[k-1];posts[k-1]=posts[k];posts[k]=t;}else{var t2=posts[k+1];posts[k+1]=posts[k];posts[k]=t2;}draw();};});
+        if(a==='x'){if(!confirm('Remove this post from the stop?'))return;posts.splice(k,1);}else if(a==='up'){var t=posts[k-1];posts[k-1]=posts[k];posts[k]=t;}else{var t2=posts[k+1];posts[k+1]=posts[k];posts[k]=t2;}draw();persistPosts();};});
+      var sl=r.querySelector('[data-a=lbl]');if(sl)sl.onclick=function(){var v=prompt('Label for this post:',p.l||'');if(v===null)return;p.l=v.trim();draw();persistPosts();};
       L.appendChild(r);});}
   draw();
   box.querySelector('#t69SsClr').onclick=function(){box.querySelector('#t69SsDate').value='';};
@@ -4721,11 +4732,27 @@ window.t69StopSheet=function(si,i){
   (function(){var b=box.querySelector('#t69SsDir');if(b)b.onclick=function(){window.open(b.getAttribute('data-u'),'_blank');};})();
   (function(){var ui=box.querySelector('#t69SsUrl'),li=box.querySelector('#t69SsLbl');
     var go=function(){setTimeout(function(){t69FetchTitle(t69MaybeFix(ui.value),li);},50);};ui.addEventListener('paste',go);ui.addEventListener('change',go);})();
-  box.querySelector('#t69SsAdd').onclick=function(){var u=t69MaybeFix(box.querySelector('#t69SsUrl').value);
-    if(!/^https?:\/\/\S+\.\S+/.test(u)){toast('Paste a post link first');return;}
-    if(posts.some(function(p){return p.u===u;})){toast('That post is already on this stop');return;}
-    posts.push({u:u,l:box.querySelector('#t69SsLbl').value.trim(),d:box.querySelector('#t69SsPd').value||''});
-    box.querySelector('#t69SsUrl').value='';box.querySelector('#t69SsLbl').value='';draw();};
+  /* v233: posts save at once (Cancel/✕ no longer loses them); several links at once; label from the platform */
+  function persistPosts(){
+    tw.forEach(function(p,k){t69SetPosts(routeSegments[p[0]].stops[p[1]],k===0?posts:[]);});
+    if(posts.length&&!box.querySelector('#t69SsDate').value){var pd=t69PlanDate(si,i),vd=(pd&&pd<=t69Today())?pd:t69Today();
+      box.querySelector('#t69SsDate').value=vd;tw.forEach(function(p){routeSegments[p[0]].stops[p[1]].visitedDate=vd;});
+      toast('\u2705 Marked visited on '+vd+' (posts only show for visited stops) \u2014 change it above if needed');}
+    startN=posts.length;try{t69SaveTouched(tw);t69PubSoon();renderRoutePanel();t69RefreshVisitedMap();}catch(e){console.warn(e);}}
+  box.querySelector('#t69SsAdd').onclick=function(){
+    var raw=box.querySelector('#t69SsUrl').value,lbl=box.querySelector('#t69SsLbl').value.trim();
+    var urls=(raw.match(/https?:\/\/[^\s<>"']+/g)||[]).map(function(u){return t69MaybeFix(u.replace(/[),.;]+$/,''));});
+    if(!urls.length){var one=t69MaybeFix(raw.trim());if(/^https?:\/\/\S+\.\S+/.test(one))urls=[one];}
+    if(!urls.length){toast('Paste a post link first');return;}
+    var added=[],dup=0;urls.forEach(function(u){if(posts.some(function(p){return p.u===u;})||added.some(function(p){return p.u===u;})){dup++;return;}added.push({u:u,l:lbl,d:t69Today()});});
+    if(!added.length){toast('Already on this stop');return;}
+    added.forEach(function(p){posts.push(p);});
+    box.querySelector('#t69SsUrl').value='';box.querySelector('#t69SsLbl').value='';draw();persistPosts();
+    toast('\u2705 '+added.length+' post'+(added.length>1?'s':'')+' saved'+(dup?(' \u00b7 '+dup+' already there'):''));
+    if(!lbl){callFn('postInfo',{urls:added.map(function(p){return p.u;})}).then(function(r){var T=(r&&r.titles)||{},any='';
+        added.forEach(function(p){if(T[p.u]&&!any)any=T[p.u];});if(!any)return;
+        var ch=false;added.forEach(function(p){if(!p.l){p.l=T[p.u]||any;ch=true;}});
+        if(ch){draw();persistPosts();toast('\u270F\uFE0F Label filled in: '+any.slice(0,60));}}).catch(function(){});}};
   box.querySelector('#t69SsCancel').onclick=function(){ov.remove();};t69AddX(box,function(){ov.remove();});
   box.querySelector('#t69SsSave').onclick=function(){
     var pend=box.querySelector('#t69SsUrl').value.trim();
@@ -5293,7 +5320,7 @@ window.t69FollowDlg=async function(){
     +'<div style="margin-bottom:4px">Message on the follower home page <span style="color:var(--muted);font-size:11px">(for everyone, all trips — leave empty to hide)</span></div>'
     +'<textarea id="t69FwNote" rows="2" placeholder="e.g. Preparing our one-year road trip through the USA — subscribe below to hear when we leave!" style="'+inp+';width:100%;box-sizing:border-box;font-family:inherit"></textarea>'
     +'<div style="display:flex;gap:8px;align-items:center;margin:6px 0 12px"><button class="t69t-btn" id="t69FwNoteGo">💾 Save message</button><span id="t69FwNoteSt" style="color:var(--muted);font-size:11px"></span></div>'
-    +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">📬 <span id="t69FwSubN">Email subscribers: …</span><button class="t69t-btn" id="t69FwSubDl" title="A list you can import into Brevo (or any mail program) to send an update">⬇️ Download list (CSV)</button></div>'
+    +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">📬 <span id="t69FwSubN">Email subscribers: …</span><button class="t69t-btn" id="t69FwSubDl" title="A list you can import into Brevo (or any mail program) to send an update">⬇️ Download list (CSV)</button><a class="t69t-btn" href="https://app.brevo.com/contact/list-listing" target="_blank" rel="noopener" style="text-decoration:none" title="Open your Brevo account (lists, campaigns)">\u2709\uFE0F Open Brevo</a></div>'
     +'<div id="t69FwSt" style="color:var(--muted);font-size:11px;margin-bottom:10px">'+(P.updated?('Last updated '+new Date(P.updated).toLocaleString()):'')+'</div>'
     +'<div style="display:flex;gap:8px;justify-content:flex-end">'
     +'<button class="t69t-btn" id="t69FwGo" style="background:var(--accent);color:#0D1B2E;font-weight:700">Save settings</button></div>';
@@ -6902,6 +6929,7 @@ function createCountry(){
     window._routeLoaded=false;
     try{t69ClearStopLayer();}catch(e){}
     try{if(window.t69InAlongView&&t69InAlongView())t69CloseAlongRoute();}catch(e){}
+    try{t69ClearDrawn();}catch(e){}
     fillDD();
     if(typeof loadRouteFromFirestore==='function') loadRouteFromFirestore();
   }
@@ -7514,7 +7542,10 @@ async function loadDates(){
   if(!window.callFn||!window.TRIP_ID){setTimeout(loadDates,800);return;}
   if(!window.routeSegments||!routeSegments.length){setTimeout(loadDates,600);return;}
   try{
-    var r=await callFn('loadTripStopDates',{tripId:tid()});
+    var _forTrip=tid(),_gen=(window._t69DateGen=(window._t69DateGen||0)+1);
+    var r=await callFn('loadTripStopDates',{tripId:_forTrip});
+    /* v232: ignore an answer that arrives after we switched to another trip (it showed the other trip's dates/nights) */
+    if(_forTrip!==tid()||_gen!==window._t69DateGen){console.warn('T1969 dates: stale answer for',_forTrip,'ignored');return;}
     window._t69DatesLoaded=true;
     var raw=r.stopDates||{};D={};
     var segMap={};
@@ -8504,7 +8535,7 @@ function watchRoute(){
   var list=document.getElementById('routeStopsList');
   if(!list){setTimeout(watchRoute,600);return;}
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v231: ready');
+  console.log('T1969 v233: ready');
 }
 function t69EvToDates(ev){var tz=(ev.start&&ev.start.timeZone)||undefined;
   function dmy(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}

@@ -895,3 +895,20 @@ exports.expandMapsLink=fn(async(data)=>{
   return {success:lat!=null,url:ex.url,name:lab,query:name,lat:lat,lng:lng,src:src,state:state,country:country,address:address,
     mapsUrl:gUrl||(lat!=null?('https://www.google.com/maps?q='+lat+','+lng):''),message:lat==null?'No position found for this link':''};
 });
+
+/* ===== v191: post title for the stop window (YouTube oEmbed; TikTok oEmbed; others best effort via og:title) ===== */
+exports.postInfo=fn(async(data)=>{
+  const urls=((data&&data.urls)||[]).slice(0,8).map(u=>String(u||'').trim()).filter(u=>/^https?:\/\//.test(u));
+  const titles={};
+  const getJson=async(u)=>{try{const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),6000);const r=await fetch(u,{signal:ctl.signal});clearTimeout(t);return r.ok?await r.json():null;}catch(e){return null;}};
+  const ogTitle=async(u)=>{try{const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),6000);
+    const r=await fetch(u,{signal:ctl.signal,headers:{'User-Agent':'facebookexternalhit/1.1','Accept-Language':'en'}});clearTimeout(t);if(!r.ok)return '';
+    const h=(await r.text()).slice(0,200000);const m=h.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)||h.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i);
+    const v=m?m[1]:'';return /^(facebook|instagram|tiktok)$/i.test(v.trim())?'':v;}catch(e){return '';}};
+  const clean=s=>String(s||'').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/\s*#Shorts\b/ig,'').replace(/\s+/g,' ').trim().slice(0,120);
+  for(const u of urls){let t='';
+    if(/youtube\.com|youtu\.be/i.test(u)){const j=await getJson('https://www.youtube.com/oembed?format=json&url='+encodeURIComponent(u));t=j&&j.title||'';}
+    else if(/tiktok\.com/i.test(u)){const j=await getJson('https://www.tiktok.com/oembed?url='+encodeURIComponent(u));t=j&&j.title||'';}
+    if(!t)t=await ogTitle(u);
+    if(t)titles[u]=clean(t);}
+  return {success:true,titles:titles};});
