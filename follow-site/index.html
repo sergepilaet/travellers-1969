@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<!-- Travellers 1969 · public follower page · v6 · own site · v15 (with app v226) -->
+<!-- Travellers 1969 · public follower page · v6 · own site · v16 (with app v226) -->
 <style>
 :root{--ink:#0D1B2E;--deep:#112240;--card:#162B4A;--line:#2A4E78;--sky:#5BC8F5;--sand:#D8B07A;--text:#F0F8FF;--muted:#8FB3CF;--green:#10B981}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -54,7 +54,7 @@ a{color:var(--sky)}
 /* message + subscribe */
 .notice{background:linear-gradient(135deg,rgba(216,176,122,.18),rgba(91,200,245,.10));border:1px solid rgba(216,176,122,.45);border-radius:16px;padding:16px 18px;margin:0 0 18px;font-size:16px;line-height:1.5;white-space:pre-line}
 .notice b{color:var(--sand)}
-.sub{background:var(--deep);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:22px}
+.sub{background:var(--deep);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:0}
 .sub h4{margin:0 0 4px;color:var(--text);font-size:16px}.sub p{margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.5}
 .sub form{display:flex;flex-wrap:wrap;gap:8px}
 .sub input[type=email],.sub input[type=text]{flex:1 1 180px;min-width:0;background:var(--ink);border:1px solid var(--line);border-radius:10px;color:var(--text);font:inherit;font-size:15px;padding:10px 12px}
@@ -106,7 +106,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 .st::before{content:'';position:absolute;left:-19px;top:9px;width:12px;height:12px;border-radius:50%;background:var(--sky);border:2px solid var(--ink)}
 .st .n{font-weight:600;font-size:15px}
 .st .s{font-size:12px;color:var(--muted)}
-.posts{margin-top:6px;display:flex;flex-direction:column;gap:5px}
+.posts{margin-top:6px;display:flex;flex-direction:column;gap:6px}.posts .more{flex-direction:column;gap:6px}.clip{background:var(--deep);border:1px solid var(--line);border-radius:10px;padding:7px 10px}.clip .cl{font-size:13px;line-height:1.3;margin-bottom:6px}.clip .cb{display:flex;gap:6px}.pb{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.04)}.pb svg{width:17px;height:17px;fill:var(--text)}.pb:hover{border-color:var(--sky)}.moreb{align-self:flex-start;background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer}
 .post{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);background:var(--deep);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px}
 .post:hover{border-color:var(--sky)}
 .post svg{width:16px;height:16px;fill:var(--text);flex-shrink:0}
@@ -167,8 +167,8 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
     <p>A Belgian-American couple, both born in 1969, on the road and travelling the world. Pick a trip to see where we've been, where we're heading next, and the posts from every stop.</p></div>
   </section>
   <div id="notice" class="notice" style="display:none"></div>
-  <div class="grid" id="trips"><div class="empty">Loading…</div></div>
   <div class="subwrap" id="subHome"></div>
+  <div class="grid" id="trips" style="margin-top:22px"><div class="empty">Loading…</div></div>
 </main>
 
 <div id="shOv" role="dialog" aria-modal="true" aria-label="Share Travellers 1969"><div id="shBox">
@@ -190,7 +190,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 <script>
 function setHdr(){var h=document.querySelector('.top');if(h)document.documentElement.style.setProperty('--hdr',h.offsetHeight+'px');}
 setHdr();window.addEventListener('resize',function(){setHdr();if(window.map&&map.invalidateSize)map.invalidateSize();});
-var SITE_V='v15';
+var SITE_V='v17';
 var BASE='https://firestore.googleapis.com/v1/projects/travellers-1969-b3a8e/databases/(default)/documents/public/';
 var KEY='AIzaSyAxPJoDENiNy3wA2rFs-MFcJkUwBN1YwK8';
 var SOC=[['ig','Instagram','https://www.instagram.com/travellers_1969/'],['tt','TikTok','https://www.tiktok.com/@travellers_1969'],
@@ -280,7 +280,7 @@ function miniSvg(line){if(!line||line.length<2)return '<svg class="mini"></svg>'
    +'<circle cx="'+first[0]+'" cy="'+first[1]+'" r="4.5" fill="#D8B07A"/><circle cx="'+last[0]+'" cy="'+last[1]+'" r="4.5" fill="#fff" stroke="#5BC8F5" stroke-width="2"/></svg>';}
 function showHome(){$('home').style.display='block';showNotice();$('subHome').innerHTML=subHtml('home');subBind($('subHome'));
   load('index').then(function(list){list=(list||[]).filter(function(t){return t&&t.slug;});
-    if(!list.length){$('trips').innerHTML='<div class="empty">No trips shared right now — subscribe below or follow us on the socials above.</div>';return;}
+    if(!list.length){$('trips').innerHTML='<div class="empty">No trips shared right now — subscribe above or follow us on the socials.</div>';return;}
     var rank={live:0,soon:1,done:2};
     list.sort(function(x,y){return (rank[x.status]-rank[y.status])||String(y.from||'').localeCompare(String(x.from||''));});
     $('trips').innerHTML=list.map(function(t){var c=CHIP[t.status]||CHIP.soon,s=t.stats||{};
@@ -298,9 +298,19 @@ function showHome(){$('home').style.display='block';showNotice();$('subHome').in
 /* ---------- one trip ---------- */
 var map,marks=[];
 function divIcon(html,size){return L.divIcon({html:html,className:'',iconSize:[size,size],iconAnchor:[size/2,size/2],popupAnchor:[0,-size/2]});}
-function postsHtml(p){if(!p||!p.length)return '';
-  return '<div class="posts">'+p.slice().sort(function(a,b){return String(b.d||'').localeCompare(String(a.d||''));}).map(function(x){
-    return '<a class="post" href="'+esc(safeUrl(x.u))+'" target="_blank" rel="noopener">'+(ICON[x.t]||ICON.web)+'<span>'+esc(x.l||PNAME[x.t]||'Post')+'</span><span class="pd">'+esc(fmtShort(x.d))+'</span></a>';}).join('')+'</div>';}
+/* v17: one row per clip (same clip = same group id, or the same title) with small platform buttons; newest first; 3 shown, the rest behind "+n more" */
+var PORD={ig:1,tt:2,yt:3,fb:4,web:5};
+function vidN(p){var k={};(p||[]).forEach(function(x){if(x&&x.u)k[x.g?('g:'+x.g):('l:'+String(x.l||'').trim().toLowerCase()||x.u)]=1;});return Object.keys(k).length;}
+function postsHtml(p){if(!p||!p.length)return '';var G={},order=[];
+  p.forEach(function(x){if(!x||!x.u)return;var k=x.g?('g:'+x.g):('l:'+String(x.l||'').trim().toLowerCase()||x.u);
+    if(!G[k]){G[k]={l:'',d:'',items:[]};order.push(k);}var g=G[k];g.items.push(x);if(!g.l&&x.l)g.l=x.l;if(String(x.d||'')>g.d)g.d=String(x.d||'');});
+  var groups=order.map(function(k){return G[k];}).sort(function(a,b){return b.d.localeCompare(a.d);});
+  var row=function(g){var items=g.items.slice().sort(function(a,b){return (PORD[a.t]||9)-(PORD[b.t]||9);});
+    return '<div class="clip"><div class="cl">'+esc(g.l||'Video')+'</div><div class="cb">'+items.map(function(x){
+      return '<a class="pb" href="'+esc(safeUrl(x.u))+'" target="_blank" rel="noopener" title="'+esc(PNAME[x.t]||'Link')+'" aria-label="'+esc(PNAME[x.t]||'Link')+'">'+(ICON[x.t]||ICON.web)+'</a>';}).join('')+'</div></div>';};
+  var h='<div class="posts">'+groups.slice(0,3).map(row).join('');
+  if(groups.length>3)h+='<div class="more" style="display:none">'+groups.slice(3).map(row).join('')+'</div><button type="button" class="moreb" onclick="var m=this.previousElementSibling;m.style.display=\'flex\';this.remove();">+'+(groups.length-3)+' more video'+(groups.length-3===1?'':'s')+'</button>';
+  return h+'</div>';}
 function showTrip(slug){$('trip').style.display='block';
   map=L.map('map',{zoomControl:true,attributionControl:true,worldCopyJump:true}).setView([44,-100],4);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,
@@ -344,13 +354,13 @@ function showTrip(slug){$('trip').style.display='block';
     var h=(t.preview?'<div class="pvbar">👁 <b>Preview</b> — only people with this link can see it. Followers don’t see this page; it’s updated when you press Preview in the planner.</div>':'')
       +'<a class="back" href="/">← All trips</a><h2>'+esc(t.name)+'</h2>'
       +'<span class="chip '+c[0]+'">'+c[1]+'</span><div class="dates">'+esc(dateRange(t))+'</div>'
-      +(function(){var done=t.status==='done',left=s.kmLeft||0,posts=0;(t.visited||[]).forEach(function(v){posts+=(v.p||[]).length;});
+      +(function(){var done=t.status==='done',left=s.kmLeft||0,posts=0;(t.visited||[]).forEach(function(v){posts+=vidN(v.p);});
         function tile(big,small){return '<div class="stat"><b>'+big+'</b><span>'+small+'</span></div>';}
         return '<div class="stats">'
           +tile(num(s.days)+' '+(s.days===1?'day':'days'),done?'travelled':'on the road')
           +tile(num(s.km)+' km',num(mi)+' mi driven')
           +(done?tile(num(s.visited)+' stops','all visited'):tile(num(left)+' km',num(Math.round(left/1.609344))+' mi to go'))
-          +(done?tile(num(posts)+' '+(posts===1?'post':'posts'),'on our socials'):tile(num(s.visited)+'/'+num(s.total)+' stops',num(Math.max(0,s.total-s.visited))+' to go'))
+          +(done?tile(num(posts)+' '+(posts===1?'video':'videos'),'on our socials'):tile(num(s.visited)+'/'+num(s.total)+' stops',num(Math.max(0,s.total-s.visited))+' to go'))
           +'</div>';})();
     if(t.here&&t.status!=='done')h+='<div class="here" data-k="here"><img src="/pin-travellers.png" alt=""><div><small>'+(t.status==='done'?'Last stop':'We’re here')+'</small><b>'+esc(t.here.n)+'</b><small>'+esc(t.here.s)+'</small></div></div>';
     if(t.next&&t.next.length)h+='<h4>Coming up</h4>'+t.next.map(function(n,k){return '<div class="next" data-k="n'+k+'"><span class="num'+(n.sd?' sd':'')+'">'+(k+1)+'</span><span>'+(n.fl?'✈ ':'')+esc(n.n)+' <span style="color:var(--muted);font-size:12px">'+esc(n.s)+'</span>'+(n.sd?('<br><span class="sdl">'+(n.sd===2?'🏨 where we stay in ':'↳ side trip from ')+esc(n.b||'')+'</span>'):'')+'</span></div>';}).join('');
@@ -366,7 +376,7 @@ function showTrip(slug){$('trip').style.display='block';
     h+=subHtml('trip:'+(t.slug||''));
     $('panel').innerHTML='<div id="grab"><i></i><small id="grabT">Swipe up for the list</small></div>'+h;subBind($('panel'));
     function stHtml(o){var v=o.v;return '<div class="st" data-k="v'+o.k+'"><div class="n">'+(v.fl?'✈ ':'')+esc(v.n)+'</div><div class="s">'+esc(v.s)+(v.d?(' \u00b7 '+esc(fmtD(v.d))):'')
-      +(v.p&&v.p.length?(' \u00b7 '+v.p.length+' post'+(v.p.length===1?'':'s')):'')+'</div>'+postsHtml(v.p)+'</div>';}
+      +(v.p&&v.p.length?(' \u00b7 '+vidN(v.p)+' video'+(vidN(v.p)===1?'':'s')):'')+'</div>'+postsHtml(v.p)+'</div>';}
     function drawTL(){var tl=$('tl');if(!tl)return;var q=($('q')&&$('q').value||'').trim().toLowerCase(),fs=$('fs')?$('fs').value:'',
         wp=$('wp')&&$('wp').checked;
       var L=vis.filter(function(o){return (!q||(o.v.n+' '+o.v.s).toLowerCase().indexOf(q)>=0)&&(!fs||o.v.s===fs)&&(!wp||(o.v.p&&o.v.p.length));});

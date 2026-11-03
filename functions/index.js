@@ -912,3 +912,107 @@ exports.postInfo=fn(async(data)=>{
     if(!t)t=await ogTitle(u);
     if(t)titles[u]=clean(t);}
   return {success:true,titles:titles};});
+
+/* ===== v192: OpusClip posts -> route stops (see claude/T1969_Request_SocialLinks_Import_v1.md) =====
+   Sheet "T1969 Social Links": tab Stops (written here) + tab Clips (written by the content chat).
+   Every 10 min: read the Clips tab (1 Sheets call + 1 Firestore read); only when a clip's publish time + 5 min has passed,
+   ask OpusClip for its post links and add them to the stop(s) as auto posts (field autoPostsJson). */
+const SOCIAL_SHEET='1Jw36zGTsFEMolQ4x59zloSnr1ybLGCVQ9MOE9aOhYw0';
+const SOC_TABS={Stops:['stop_code','trip','segment','stop no','stop name','state','dates (arrival → departure)','category'],
+  Clips:['clip_id','project_id','stop_code(s)','clip title','original date (yyyy-mm-dd)','publish_at (UTC)','added_at']};
+const SOC_PLAT={INSTAGRAM_BUSINESS:'ig',INSTAGRAM:'ig',TIKTOK_BUSINESS:'tt',TIKTOK:'tt',YOUTUBE:'yt',FACEBOOK_PAGE:'fb',FACEBOOK:'fb'};
+const socState=()=>admin.firestore().collection('config').doc('socialState');
+async function socEnsureTabs(sheets){const m=await sheets.spreadsheets.get({spreadsheetId:SOCIAL_SHEET,fields:'sheets.properties'});
+  const have=(m.data.sheets||[]).map(s=>s.properties.title),req=[];
+  Object.keys(SOC_TABS).forEach(t=>{if(have.indexOf(t)<0)req.push({addSheet:{properties:{title:t,gridProperties:{frozenRowCount:1}}}});});
+  if(req.length){await sheets.spreadsheets.batchUpdate({spreadsheetId:SOCIAL_SHEET,requestBody:{requests:req}});
+    for(const t of Object.keys(SOC_TABS))if(have.indexOf(t)<0)await sheets.spreadsheets.values.update({spreadsheetId:SOCIAL_SHEET,range:`'${t}'!A1`,valueInputOption:'RAW',requestBody:{values:[SOC_TABS[t]]}});}}
+function socTripCode(name,used){const w=String(name||'Trip').normalize('NFD').replace(/[̀-ͯ]/g,'').match(/[A-Za-z]+/g)||['T'];
+  const y=(String(name||'').match(/(?:19|20)(\d\d)/)||[])[1]||'';let base=w.filter(x=>!/^(oct|nov|dec|jan|feb|mar|apr|may|jun|jul|aug|sep|the|and|of)$/i.test(x)).slice(0,3).map(x=>x[0].toUpperCase()).join('')||'T';base+=y;
+  let c=base,k=2;while(used[c]){c=base+'-'+k;k++;}used[c]=1;return c;}
+function socDmyToIso(s){const m=String(s||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2):'';}
+/* give every stop a fixed code, keep a code -> stop index, rewrite the Stops tab */
+async function socSyncStops(sheets){const db=admin.firestore(),trips=(await db.collection('trips').get()).docs,used={},rows=[];
+  trips.forEach(t=>{const c=(t.data()||{}).code;if(c)used[c]=1;});
+  for(const t of trips){const td=t.data()||{};if(td.archived)continue;let code=td.code,seq=td.codeSeq||0;
+    if(!code){code=socTripCode(td.name,used);await t.ref.set({code:code},{merge:true});}
+    const segs=(await t.ref.collection('segments').get()).docs.sort((a,b)=>(a.data().order||0)-(b.data().order||0));
+    for(let si=0;si<segs.length;si++){const sg=segs[si],sd=sg.data()||{},dates=sd.stopDates||{};
+      const stops=(await sg.ref.collection('stops').get()).docs.map(d=>({ref:d.ref,id:d.id,d:d.data()||{}})).sort((a,b)=>(a.d.order||0)-(b.d.order||0));
+      let n=0,side=0;
+      for(const st of stops){const isSide=st.d.sideKind==='trip'||st.d.sideKind==='hotel';let no;if(isSide){side++;no=(si+1)+'.'+n+String.fromCharCode(96+side);}else{n++;side=0;no=(si+1)+'.'+n;}
+        let sc=st.d.code;if(!sc){seq++;sc=code+'-'+String(seq).padStart(3,'0');await st.ref.set({code:sc},{merge:true});}
+        await db.collection('socialCodes').doc(sc).set({trip:t.id,seg:sg.id,stop:st.id,name:st.d.name||''},{merge:true});
+        const dr=dates[st.id]||{};rows.push([sc,td.name||'',sd.customLabel||sd.name||('Segment '+(si+1)),no,st.d.name||'',st.d.state||'',(dr.arrivalDate?(dr.arrivalDate+(dr.departureDate&&dr.departureDate!==dr.arrivalDate?' → '+dr.departureDate:'')):''),st.d.category||'']);}}
+    if(seq!==(td.codeSeq||0))await t.ref.set({codeSeq:seq},{merge:true});}
+  await sheets.spreadsheets.values.clear({spreadsheetId:SOCIAL_SHEET,range:"'Stops'!A2:H"});
+  if(rows.length)await sheets.spreadsheets.values.update({spreadsheetId:SOCIAL_SHEET,range:"'Stops'!A2",valueInputOption:'RAW',requestBody:{values:rows}});
+  return rows.length;}
+async function socReadClips(sheets){const r=await sheets.spreadsheets.values.get({spreadsheetId:SOCIAL_SHEET,range:"'Clips'!A2:G"});
+  const out={};(r.data.values||[]).forEach(v=>{const id=String(v[0]||'').trim();if(!id)return;
+    out[id]={clip:id,project:String(v[1]||'').trim(),codes:String(v[2]||'').trim().split(/[\s,;]+/).filter(Boolean),title:String(v[3]||'').trim(),orig:String(v[4]||'').trim(),at:String(v[5]||'').trim()};});
+  return out;}  /* a later row for the same clip (re-scheduled) wins */
+async function socOpusPosts(project){const r=await fetch('https://api.opus.pro/api/post-tasks?q=findByProjectId&projectId='+encodeURIComponent(project),
+    {headers:{Authorization:'Bearer '+process.env.OPUS_KEY,accept:'application/json'}});
+  if(!r.ok)throw new Error('OpusClip '+r.status+': '+(await r.text()).slice(0,200));const j=await r.json();const a=(j&&j.data&&j.data.data)||(j&&j.data)||[];return Array.isArray(a)?a:[];}
+/* add one clip's live links to one stop (auto posts), mark visited if needed, patch the public snapshot */
+async function socAddToStop(ref,clip,links){const db=admin.firestore();
+  const tr=db.collection('trips').doc(ref.trip),sr=tr.collection('segments').doc(ref.seg).collection('stops').doc(ref.stop);
+  const sd=(await sr.get()).data();if(!sd)return {ok:false,why:'stop gone'};
+  let auto=[];try{auto=JSON.parse(sd.autoPostsJson||'[]');}catch(e){}let man=[];try{man=JSON.parse(sd.postsJson||'[]');}catch(e){}
+  const have={};auto.concat(man).forEach(p=>{if(p&&p.u)have[p.u]=1;});
+  const day=(clip.orig&&/^\d{4}-\d\d-\d\d$/.test(clip.orig))?clip.orig:'';
+  const add=links.filter(l=>!have[l.u]).map(l=>({u:l.u,l:clip.title||'',d:(l.at||'').slice(0,10),g:clip.clip,t:l.t}));
+  const upd={};if(add.length)upd.autoPostsJson=JSON.stringify(auto.concat(add));
+  let vd=sd.visitedDate||'';if(!vd){const sg=(await tr.collection('segments').doc(ref.seg).get()).data()||{};const dr=(sg.stopDates||{})[ref.stop]||{};
+    vd=day||socDmyToIso(dr.departureDate)||socDmyToIso(dr.arrivalDate)||(add[0]&&add[0].d)||new Date().toISOString().slice(0,10);upd.visitedDate=vd;}
+  if(Object.keys(upd).length)await sr.set(upd,{merge:true});
+  /* follower map: add straight into the published snapshot when the stop is already on it; otherwise the planner republishes */
+  let pub=false;try{const t=(await tr.get()).data()||{};if(t.publicOn&&t.publicSlug&&add.length){const pr=db.collection('public').doc(t.publicSlug),pd=(await pr.get()).data();
+      if(pd&&pd.json){const snap=JSON.parse(pd.json),hit=(snap.visited||[]).find(v=>v.n===(sd.name||'')&&Math.abs((v.a||0)-(sd.lat||0))<0.002&&Math.abs((v.o||0)-(sd.lng||0))<0.002);
+        if(hit){hit.p=(hit.p||[]).concat(add.filter(a=>!(hit.p||[]).some(x=>x.u===a.u)).map(a=>({u:a.u,l:a.l,d:a.d,t:a.t,g:a.g})));snap.updated=new Date().toISOString();
+          await pr.set({json:JSON.stringify(snap),updated:snap.updated},{merge:true});pub=true;}}
+      if(!pub)await tr.set({pubDirty:true},{merge:true});}}catch(e){console.warn('pub patch',e.message);}
+  return {ok:true,added:add.length,pub:pub};}
+/* check one clip now: returns new state */
+async function socCheckClip(clip,st){const db=admin.firestore(),now=Date.now();
+  const refs=[];for(const c of clip.codes){const d=(await db.collection('socialCodes').doc(c).get()).data();if(d)refs.push(d);}
+  if(!clip.codes.length||refs.length<clip.codes.length){st.state='unplaced';st.why=clip.codes.length?'unknown code '+clip.codes.join(' '):'no stop code';return st;}
+  if(!clip.project){st.state='error';st.why='no project_id in the sheet';return st;}
+  const posts=(await socOpusPosts(clip.project)).filter(p=>p.clipId===clip.clip);
+  const links=posts.filter(p=>p.status==='posted'&&p.extVideoLink).map(p=>({u:p.extVideoLink,t:SOC_PLAT[p.platform]||'web',at:p.publishAt||''}));
+  const pending=posts.some(p=>p.status==='posted'&&!p.extVideoLink),failed=posts.filter(p=>p.status==='failed').length;
+  st.tries=(st.tries||0)+1;st.last=new Date().toISOString();
+  if(links.length){let n=0;for(const r of refs){const res=await socAddToStop(r,clip,links);n+=res.added||0;}st.links=(st.links||0)+n;}
+  if(links.length&&!pending){st.state='done';st.next=0;}
+  else if(pending){st.state='pending';st.next=now+3600e3;}
+  else{st.state=failed?'failed':'notposted';st.next=st.tries>=3?0:now+24*3600e3;}
+  return st;}
+async function socRun(opts){opts=opts||{};const sheets=getSheets();await socEnsureTabs(sheets);
+  const sref=socState(),S=(await sref.get()).data()||{};const clips=S.clips||{},now=Date.now(),res={checked:0,added:0,stops:null};
+  if(opts.stops||!S.stopsAt||now-S.stopsAt>6*3600e3){res.stops=await socSyncStops(sheets);S.stopsAt=now;}
+  const rows=await socReadClips(sheets);
+  for(const id of Object.keys(rows)){const c=rows[id],st=clips[id]||{state:'new'};
+    if(st.at!==c.at||st.codes!==c.codes.join(' ')){if(st.state!=='done'||st.codes!==c.codes.join(' ')){st.state='new';st.tries=0;st.next=0;}st.at=c.at;st.codes=c.codes.join(' ');}
+    st.title=c.title;
+    if(st.state==='done'&&!opts.all){clips[id]=st;continue;}
+    const due=(Date.parse(c.at)||0)+5*60e3;
+    const go=opts.all||opts.clip===id||(st.state==='new'&&now>=due)||((st.state==='pending'||st.state==='notposted'||st.state==='failed')&&st.next&&now>=st.next);
+    if(go){try{const before=st.links||0;clips[id]=await socCheckClip(c,st);res.checked++;res.added+=(clips[id].links||0)-before;}catch(e){st.state='error';st.why=String(e.message||e).slice(0,200);clips[id]=st;}}
+    else clips[id]=st;}
+  S.clips=clips;S.ranAt=now;await sref.set(S);
+  res.clips=Object.keys(clips).map(k=>Object.assign({clip:k},clips[k]));return res;}
+exports.socialClipsWatch=functions.region(REGION).runWith({secrets:['OPUS_KEY'],timeoutSeconds:300})
+  .pubsub.schedule('every 10 minutes').onRun(async()=>{try{await socRun({});}catch(e){console.error('socialClipsWatch',e);}return null;});
+exports.socialRun=functions.region(REGION).runWith({secrets:['OPUS_KEY'],timeoutSeconds:300}).https.onCall(async(data,context)=>{checkAuth(context);
+  try{const r=await socRun({stops:!!(data&&data.stops),all:!!(data&&data.all)});return Object.assign({success:true},r);}catch(e){console.error(e);return {success:false,message:String(e.message||e)};}});
+/* put a clip on a stop chosen in the app (clip without / with an unknown code) */
+exports.socialPlace=functions.region(REGION).runWith({secrets:['OPUS_KEY'],timeoutSeconds:120}).https.onCall(async(data,context)=>{checkAuth(context);
+  try{const d=data||{};if(!d.clip||!d.trip||!d.seg||!d.stop)return {success:false,message:'Missing clip or stop'};
+    const sheets=getSheets(),rows=await socReadClips(sheets),c=rows[d.clip];if(!c)return {success:false,message:'Clip not in the sheet'};
+    const posts=(await socOpusPosts(c.project)).filter(p=>p.clipId===c.clip);
+    const links=posts.filter(p=>p.status==='posted'&&p.extVideoLink).map(p=>({u:p.extVideoLink,t:SOC_PLAT[p.platform]||'web',at:p.publishAt||''}));
+    if(!links.length)return {success:false,message:'Not published yet'};
+    const r=await socAddToStop({trip:d.trip,seg:d.seg,stop:d.stop},c,links);
+    const sref=socState(),S=(await sref.get()).data()||{};S.clips=S.clips||{};S.clips[d.clip]=Object.assign(S.clips[d.clip]||{},{state:'done',placed:d.stop,links:r.added||0,last:new Date().toISOString()});await sref.set(S);
+    return {success:true,added:r.added||0};}catch(e){console.error(e);return {success:false,message:String(e.message||e)};}});
