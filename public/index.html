@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v271  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v272  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -1995,12 +1995,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v271</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v272</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v271</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v272</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2463,7 +2463,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v271</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v272</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -3092,7 +3092,7 @@ function plotLocations(locs){
       m.bindPopup(mkCrossStatePopup(loc,cspIdx),{maxWidth:280});
       m.on('click',(function(capLoc){return function(){t69HlLoc(capLoc);t69HlRoute(capLoc);};})(loc));
     } else {
-      m.bindPopup((function(L0,i0){return function(){return mkPopup(L0,i0);};})(loc,i),{maxWidth:280}); /* v271: popup text is made when it opens, not for all 2,500 pins up front */
+      m.bindPopup((function(L0,i0){return function(){return mkPopup(L0,i0);};})(loc,i),{maxWidth:280}); /* v272: popup text is made when it opens, not for all 2,500 pins up front */
       m.on('click',function(){t69HlLoc(loc);t69HlRoute(loc);});
     }
     try{m._pr=(isPinned?1000:0)+(loc.status==="Don't Skip"?500:0)+((getAvg(loc)||0)*20)+((+loc.googleRating||0)*3);}catch(e){}
@@ -3108,7 +3108,7 @@ function plotLocations(locs){
   }
 }
 
-/* v271: only the pins in (and just around) the visible map are really on the map — zooming and panning with thousands of pins stays quick */
+/* v272: only the pins in (and just around) the visible map are really on the map — zooming and panning with thousands of pins stays quick */
 function t69MkOk(m){try{if(m.isPopupOpen&&m.isPopupOpen())return true;return map.getBounds().pad(0.35).contains(m.getLatLng());}catch(e){return true;}}
 window.t69MkSync=function(){try{if(!map||!markers)return;var hide=window._t69HideKeys||null,want=[];markers.forEach(function(m){var ok=t69MkOk(m);if(ok&&hide){var ll=m.getLatLng();if(hide[ll.lat.toFixed(4)+','+ll.lng.toFixed(4)])ok=false;}m._ok=ok;if(ok)want.push(m);});
     /* zoomed far out with very many pins: show the best ones (pinned, Don't Skip, best rated); zoom in = all of them */
@@ -4502,7 +4502,7 @@ function t69OvBook(sg,i,st,kids){try{var h=(kids||[]).filter(function(k){return 
 /* dated side trips of a stay, clipped to a week: [{k:stop, c0, c1}] */
 function t69OvSides(x,m){if(window._t69OvNoSides)return [];var out=[],end=t69AddDays(m,6),sg=x.seg,j=x.i+1,open=!!window._t69OvAllU||!!(window._t69OvOpen||{})[x.seg.id+'|'+x.st.id];
   for(;j<sg.stops.length&&t69IsSideAt(sg,j);j++){var k=sg.stops[j];if(k.sideKind!=='trip')continue;var r=t69StopDR(sg,k),a=r&&t69PD(r.arrivalDate),b=r&&(t69PD(r.departureDate)||a),inh=false;
-    if(!a){if(!open)continue;a=x.a;b=x.a;inh=true;} /* v271: no day chosen = shown on the first day of its stay */ /* no date of its own: takes the days of the stay, shown when the stay is opened with ▸ */
+    if(!a){if(!open)continue;a=x.a;b=x.a;inh=true;} /* v272: no day chosen = shown on the first day of its stay */ /* no date of its own: takes the days of the stay, shown when the stay is opened with ▸ */
     if(b<m||a>end)continue;out.push({k:k,c0:Math.max(0,t69DDiff(m,a)),c1:Math.min(6,t69DDiff(m,b)),vis:!!k.visitedDate,inh:inh});}return out;}
 function t69OvSideCount(x){var n=0,u=0,sg=x.seg;if(window._t69OvNoSides)return {n:0,u:0};for(var j=x.i+1;j<sg.stops.length&&t69IsSideAt(sg,j);j++){var k=sg.stops[j];if(k.sideKind!=='trip')continue;n++;var r=t69StopDR(sg,k);if(!(r&&r.arrivalDate))u++;}return {n:n,u:u};}
 function t69OvLabel(x){var ab=T69_ABBR[x.st.state||'']||'';var nm=String(x.st.name||'');return (x.fly?'✈ ':'')+nm+(ab&&nm.indexOf(', '+ab)<0?', '+ab:'');}
@@ -4530,7 +4530,7 @@ function t69OvWeeks(){var stays=t69OvStays();if(!stays.length)return {weeks:[],s
   for(var m=w0;m<=mx;m=t69AddDays(m,7)){var wk={mon:m,items:[],segStarts:[],cost:0},end=t69AddDays(m,6);
     stays.forEach(function(x){if(x.b<m||x.a>end)return;var c0=Math.max(0,t69DDiff(m,x.a)),c1=Math.min(6,t69DDiff(m,x.b));wk.items.push({x:x,c0:c0,c1:c1,cutL:x.a<m,cutR:x.b>end});
       t69OvSides(x,m).forEach(function(sd){wk.items.push({x:x,side:sd.k,svis:sd.vis,inh:sd.inh,c0:sd.c0,c1:sd.c1,cutL:false,cutR:false});});
-      t69OvExtras(x,m).forEach(function(e){wk.items.push({x:x,side:e.k,ex:1,c0:e.c0,c1:e.c1,cutL:false,cutR:false});});
+      t69OvExtras(x,m).forEach(function(e){wk.items.push({x:x,side:e.k,ex:1,rest:e.rest,c0:e.c0,c1:e.c1,cutL:false,cutR:false});});
       if(x.a>=m&&x.a<=end&&(x.i===0||(x.seg.stops[0]===x.st)))wk.segStarts.push(x.seg);});
     for(var d=0;d<7;d++){var day=t69AddDays(m,d);if(day<t69Day0(mn)||day>t69Day0(mx))continue;var k=day.toDateString();wk.cost+=(costByDay[k]||0)+(_cz[k]?0:food);if(day<t69Day0(mx)&&!cov[k])wk.cost+=avg;}
     /* lanes */
@@ -4555,7 +4555,7 @@ function t69OvHtml(print,opt){opt=opt||{};var W=t69OvWeeks(),weeks=W.weeks,showC
       +'<div class="t69ovH" style="grid-row:1/span '+wk.lanes+'"><b>'+t69OvWeekLabel(wk.mon)+'</b>'+wk.segStarts.map(function(sg){return '<span class="t69ovS">Segment '+(routeSegments.indexOf(sg)+1)+(sg.customLabel?' \u00b7 '+t69Esc(sg.customLabel):'')+'</span>';}).join('')+'</div>';
     for(var d=0;d<7;d++)hh+='<div class="t69ovD" style="grid-column:'+(d+2)+';grid-row:1/span '+wk.lanes+'"></div>';
     wk.items.forEach(function(it){var x=it.x,col=t69OvCol(x.st);
-      if(it.side){var kd=t69SideDays(x.seg,it.side);hh+='<div class="t69ovB t69ovSd'+(it.ex?' t69ovEx':'')+(it.svis?' vis':'')+(it.inh?' inh':'')+'" title="'+t69Esc('↳ '+(it.side.name||'')+' · side trip from '+(x.st.name||'')+(it.inh?' · no day chosen yet':(kd>1?' · '+kd+' days':'')))+'" data-s="'+x.seg.id+'|'+it.side.id+'" style="grid-column:'+(it.c0+2)+'/'+(it.c1+3)+';grid-row:'+(it.lane+1)+';--sc:'+t69OvSideCol(it.side)+'">'+(it.ex?'':t69OvNo(x,it.side))+(it.svis?'✓ ':'')+t69Esc(it.side.name||'')+(it.inh?' <span class="k">(no day yet)</span>':'')+'</div>';return;}
+      if(it.side){var kd=t69SideDays(x.seg,it.side);hh+='<div class="t69ovB t69ovSd'+(it.ex?' t69ovEx':'')+(it.rest?' t69ovRest':'')+(it.svis?' vis':'')+(it.inh?' inh':'')+'" title="'+t69Esc('↳ '+(it.side.name||'')+' · side trip from '+(x.st.name||'')+(it.inh?' · no day chosen yet':(kd>1?' · '+kd+' days':'')))+'" data-s="'+x.seg.id+'|'+it.side.id+'" style="grid-column:'+(it.c0+2)+'/'+(it.c1+3)+';grid-row:'+(it.lane+1)+';--sc:'+t69OvSideCol(it.side)+'">'+(it.ex?'':t69OvNo(x,it.side))+(it.svis?'✓ ':'')+t69Esc(it.side.name||'')+(it.inh?' <span class="k">(no day yet)</span>':'')+'</div>';return;}
       var cls='t69ovB'+(x.vis?' vis':'')+(x.est?' est':'')+(it.cutL?' cl':'')+(it.cutR?' cr':'');
       var tip=t69OvLabel(x)+' · '+(x.est?'≈ ':'')+x.a.getDate()+' '+T69_MON[x.a.getMonth()]+(t69DDiff(x.a,x.b)?(' → '+x.b.getDate()+' '+T69_MON[x.b.getMonth()]):'')+(x.kids.length?(' · + '+x.kids.map(function(k){return k.name;}).join(', ')):'');
       var sc=t69OvSideCount(x),tg='',pt='';if(sc.u&&!it.cutL&&!window._t69OvAllU){if(opt.paper)pt=' <span class="k">· +'+sc.u+' side trip'+(sc.u>1?'s':'')+' without a day</span>';else{var op=!!(window._t69OvOpen||{})[x.seg.id+'|'+x.st.id];
@@ -4610,7 +4610,7 @@ var T69_OV_CSS='.t69ovHead,.t69ovW{display:grid;grid-template-columns:170px repe
 /* v250: which category has which colour (only categories of dated stops) */
 function t69OvCatLegend(){var seen={},out=[];try{(routeSegments||[]).forEach(function(sg){(sg.stops||[]).forEach(function(st){var r=t69StopDR(sg,st);if(!r||!r.arrivalDate)return;var c=(t69StopLoc(st)||{}).category||st.category||'';if(!c||seen[c])return;seen[c]=1;out.push(c);});});}catch(e){}
   return out.slice(0,18).map(function(c){return '<span><i style="display:inline-block;width:12px;height:10px;border-radius:2px;vertical-align:-1px;background:'+catColor(c)+';-webkit-print-color-adjust:exact;print-color-adjust:exact"></i> '+t69Esc(c)+'</span>';}).join('');}
-function t69OvLegend(mode){mode=mode||'';if(window._t69OvCatCol)return '<div class="t69ovLeg">'+t69OvCatLegend()+'<span>bar colour = category (like the pins)</span><span>solid = a stop, from arrival to departure</span><span>dashed = side trip on its day</span>'+(/print/.test(mode)?'':'<span><b style="background:#F59E0B;color:#1a1200;border-radius:8px;padding:0 6px">\u25b8 3</b> side trips without a day \u2014 tap to show them</span>')+'<span>\u2713 visited</span><span>\u2705 booked</span><span>\u23F3 hotel not booked yet</span><span>1.2 / 1.2a = stop number</span><span style="color:#10B981">\uD83C\uDF9F green = extra (lesson, ticket\u2026)</span></div>';return '<div class="t69ovLeg"><span><i style="background:color-mix(in srgb,'+T69_ROUTECOL+' 30%,transparent);border:1px solid '+T69_ROUTECOL+';border-left:4px solid '+T69_ROUTECOL+'"></i>a stop, from arrival to departure</span>'
+function t69OvLegend(mode){mode=mode||'';if(window._t69OvCatCol)return '<div class="t69ovLeg">'+t69OvCatLegend()+'<span>bar colour = category (like the pins)</span><span>solid = a stop, from arrival to departure</span><span>dashed = side trip on its day</span>'+(/print/.test(mode)?'':'<span><b style="background:#F59E0B;color:#1a1200;border-radius:8px;padding:0 6px">\u25b8 3</b> side trips without a day \u2014 tap to show them</span>')+'<span>\u2713 visited</span><span>\u2705 booked</span><span>\u23F3 hotel not booked yet</span><span>1.2 / 1.2a = stop number</span><span style="color:#10B981">\uD83C\uDF9F green = extra (lesson, ticket\u2026); grey = rest / work / buffer day</span></div>';return '<div class="t69ovLeg"><span><i style="background:color-mix(in srgb,'+T69_ROUTECOL+' 30%,transparent);border:1px solid '+T69_ROUTECOL+';border-left:4px solid '+T69_ROUTECOL+'"></i>a stop, from arrival to departure</span>'
   +'<span><i style="border:1.5px dashed #F59E0B;border-left:3px solid #F59E0B"></i>side trip on its day</span>'
   +(/print/.test(mode)?'':'<span><b style="background:#F59E0B;color:#1a1200;border-radius:8px;padding:0 6px">\u25b8 3</b> side trips without a day \u2014 tap to show them</span>')
   +'<span>\u2713 green edge = visited</span><span>\u2705 booked</span><span>\u23F3 hotel not booked yet</span><span>1.2 / 1.2a = stop number</span><span style="color:#10B981">\uD83C\uDF9F green = extra (lesson, ticket\u2026)</span>'+(/month/.test(mode)?'':'<span>$ = planned cost of that week</span>')+'</div>';}
@@ -4649,11 +4649,11 @@ function t69OvMonthHtml(y,mo,opt){opt=opt||{};var stays=t69OvStays(),first=new D
   for(var m=t69Monday(first);m<=last;m=t69AddDays(m,7)){var end=t69AddDays(m,6),items=[];
     stays.forEach(function(x){if(x.b<m||x.a>end)return;items.push({x:x,c0:Math.max(0,t69DDiff(m,x.a)),c1:Math.min(6,t69DDiff(m,x.b)),cutL:x.a<m,cutR:x.b>end});
       t69OvSides(x,m).forEach(function(sd){items.push({x:x,side:sd.k,svis:sd.vis,inh:sd.inh,c0:sd.c0,c1:sd.c1});});
-      t69OvExtras(x,m).forEach(function(e){items.push({x:x,side:e.k,ex:1,c0:e.c0,c1:e.c1});});});
+      t69OvExtras(x,m).forEach(function(e){items.push({x:x,side:e.k,ex:1,rest:e.rest,c0:e.c0,c1:e.c1});});});
     var nl=Math.max(t69OvLanes(items),opt.print?2:3),hh='<div class="t69moW" data-w="'+t69OvIso(m)+'" style="grid-template-rows:'+(opt.print?16:20)+'px repeat('+nl+','+LH+'px) minmax(0,1fr)">';
     for(var d=0;d<7;d++){var day=t69AddDays(m,d),out=day.getMonth()!==mo;hh+='<div class="t69moD'+(out?' out':'')+(+day===+today?' td':'')+'" style="grid-column:'+(d+1)+';grid-row:1/-1"><span class="n">'+day.getDate()+(day.getDate()===1&&out?' '+T69_MON[day.getMonth()]:'')+'</span></div>';}
     items.forEach(function(it){var x=it.x;
-      if(it.side){hh+='<div'+((!it.ex&&!opt.print)?' draggable="true"':'')+' class="t69ovB t69ovSd'+(it.ex?' t69ovEx':'')+(it.svis?' vis':'')+(it.inh?' inh':'')+'" title="'+t69Esc('\u21b3 '+(it.side.name||'')+' \u00b7 side trip from '+(x.st.name||'')+(it.inh?' \u00b7 no day chosen yet':''))+'" data-s="'+x.seg.id+'|'+it.side.id+'" style="grid-column:'+(it.c0+1)+'/'+(it.c1+2)+';grid-row:'+(it.lane+2)+';--sc:'+t69OvSideCol(it.side)+'">'+(it.ex?'':t69OvNo(x,it.side))+(it.svis?'\u2713 ':'')+t69Esc(it.side.name||'')+'</div>';return;}
+      if(it.side){hh+='<div'+((!it.ex&&!opt.print)?' draggable="true"':'')+' class="t69ovB t69ovSd'+(it.ex?' t69ovEx':'')+(it.rest?' t69ovRest':'')+(it.svis?' vis':'')+(it.inh?' inh':'')+'" title="'+t69Esc('\u21b3 '+(it.side.name||'')+' \u00b7 side trip from '+(x.st.name||'')+(it.inh?' \u00b7 no day chosen yet':''))+'" data-s="'+x.seg.id+'|'+it.side.id+'" style="grid-column:'+(it.c0+1)+'/'+(it.c1+2)+';grid-row:'+(it.lane+2)+';--sc:'+t69OvSideCol(it.side)+'">'+(it.ex?'':t69OvNo(x,it.side))+(it.svis?'\u2713 ':'')+t69Esc(it.side.name||'')+'</div>';return;}
       var sc=t69OvSideCount(x),tg='',pt='';if(sc.u&&!it.cutL&&!window._t69OvAllU){if(opt.print)pt=' <span class="k">\u00b7 +'+sc.u+' side trip'+(sc.u>1?'s':'')+'</span>';else{var op=!!(window._t69OvOpen||{})[x.seg.id+'|'+x.st.id];
         tg='<button class="t69ovT in" data-t="'+x.seg.id+'|'+x.st.id+'" title="Side trips without a day: show them under this stay">'+(op?'\u25be':'\u25b8')+sc.u+'</button>';}}
       hh+='<div class="t69ovB'+(x.vis?' vis':'')+(it.cutL?' cl':'')+(it.cutR?' cr':'')+'" title="'+t69Esc(t69OvLabel(x))+'" data-s="'+x.seg.id+'|'+x.st.id+'" style="grid-column:'+(it.c0+1)+'/'+(it.c1+2)+';grid-row:'+(it.lane+2)+';--c:'+t69OvCol(x.st)+'">'
@@ -4691,7 +4691,7 @@ window.t69OverviewDlg=function(){var D=t69CapBox(1180),box=D.box;box.style.width
     var cc=box.querySelector('#t69OvCcC');cc.onchange=function(){window._t69OvCatCol=cc.checked;t69OvLS('t69_ovcatcol',cc.checked?'1':'0');draw();};
     var sd=box.querySelector('#t69OvSdC');sd.onchange=function(){window._t69OvNoSides=!sd.checked;t69OvLS('t69_ovnosides',sd.checked?'0':'1');draw();};
     var au=box.querySelector('#t69OvAuC');if(au)au.onchange=function(){window._t69OvAllU=au.checked;t69OvLS('t69_ovallu',au.checked?'1':'0');draw();};
-    /* v271: drag a side trip to another day (month view): it gets that day, and its extras (lessons, tickets) move along */
+    /* v272: drag a side trip to another day (month view): it gets that day, and its extras (lessons, tickets) move along */
     
     box.querySelectorAll('.t69ovSd[draggable]').forEach(function(b){b.addEventListener('dragstart',function(e){window._t69OvDrag=b.getAttribute('data-s');try{e.dataTransfer.setData('text/plain',window._t69OvDrag);e.dataTransfer.effectAllowed='move';}catch(x){}b.style.opacity='.5';});b.addEventListener('dragend',function(){b.style.opacity='';box.querySelectorAll('.t69moD.dropH').forEach(function(c){c.classList.remove('dropH');});});});
     function dayAt(e){var wk=null,el=document.elementFromPoint(e.clientX,e.clientY);while(el&&el!==box){if(el.classList&&el.classList.contains('t69moW')){wk=el;break;}el=el.parentNode;}if(!wk)return null;var r=wk.getBoundingClientRect(),col=Math.max(0,Math.min(6,Math.floor((e.clientX-r.left)/(r.width/7)))),p=wk.getAttribute('data-w').split('-'),d=new Date(+p[0],+p[1]-1,+p[2]+col);return {d:d,cell:wk.querySelectorAll('.t69moD')[col]};}
@@ -4980,7 +4980,7 @@ function t69CutFly(pts,legs,max){if(!legs.length)return t69Thin(pts,max);var bad
    The road gets a glowing band (~30 km wide) coloured by the average max or min on the day we are there.
    No dates on a leg → date estimated between the dated stops before and after (lighter band). Free, offline, no API. */
 var T69T={meta:{latN:72,lonW:-170,step:1/3,rows:174,cols:360},data:null,loading:null,grp:null,legend:null};
-/* v271: steps of 5 °C between 10 and 30 (where it matters for us), one band 30–40, one above 40 */
+/* v272: steps of 5 °C between 10 and 30 (where it matters for us), one band 30–40, one above 40 */
 var T69T_BANDS=[[-99,-10,'#3730a3'],[-10,0,'#2563eb'],[0,10,'#38bdf8'],[10,15,'#2dd4bf'],[15,20,'#22c55e'],[20,25,'#a3e635'],[25,30,'#facc15'],[30,40,'#f97316'],[40,99,'#b91c1c']];
 function t69TMode(){try{return localStorage.getItem('t69_tmode')||'off';}catch(e){return 'off';}}
 function t69TUnit(){try{return localStorage.getItem('t69_tunit')||'CF';}catch(e){return 'CF';}}
@@ -5012,7 +5012,7 @@ window.t69TDraw=function(){var mode=t69TMode();t69TClear();if(mode==='off'||!map
   t69TLoad().then(function(){t69TBuild(mode);}).catch(function(e){toast('🌡 Temperature data could not be loaded ('+(e.message||e)+')');});};
 function t69TSegNow(sid){var r=null;(routeSegments||[]).forEach(function(s){if(s.id===sid)r=s;});return r;}
 function t69TPieces(mode){var v=mode==='min'?1:0,geo=window._t69Geo||{},SD=t69TStopDates(),pieces=[],noDate=0,nLeg=0;
-  Object.keys(geo).forEach(function(sid){var G=geo[sid],seg=t69TSegNow(sid);if(!seg)return; /* v271b: find the segment by id (the list may have been reloaded = new objects) */
+  Object.keys(geo).forEach(function(sid){var G=geo[sid],seg=t69TSegNow(sid);if(!seg)return; /* v272b: find the segment by id (the list may have been reloaded = new objects) */
     G.parts.forEach(function(p){if(p.type!=='road'||!p.pts||p.pts.length<2||p.idx.length<2)return;
       var stops=p.idx.map(function(ix){return ix<0?t69PrevRoute(seg,0):seg.stops[ix];}),cut=[0],from=0;
       for(var k=1;k<stops.length-1;k++){var s=stops[k],best=from,bd=1e9;if(!s||s.lat==null){cut.push(from);continue;}
@@ -5041,7 +5041,7 @@ function t69TLegendHtml(mode,paper){var u=t69TUnit(),rows=T69T_BANDS.map(functio
     +'<div style="margin-top:4px;opacity:.75">On the day we pass · average 2015–2024 · light band = date estimated</div>';}
 function t69TLegOpen(){try{var v=localStorage.getItem('t69_tleg');if(v==='1')return true;if(v==='0')return false;}catch(e){}return !(window.matchMedia&&matchMedia('(max-width:767px),(max-height:519px)').matches);}
 window.t69TLegToggle=function(){var o=!t69TLegOpen();try{localStorage.setItem('t69_tleg',o?'1':'0');}catch(e){}t69TLegend(t69TMode());};
-/* v271: the legend can be folded to a small chip (temperatures stay on); switching off = the 🌡 list at the top of the map */
+/* v272: the legend can be folded to a small chip (temperatures stay on); switching off = the 🌡 list at the top of the map */
 function t69TLegend(mode){if(T69T.legend){T69T.legend.remove();T69T.legend=null;}if(mode==='off')return;var Ctl=L.Control.extend({options:{position:'bottomleft'},onAdd:function(){var d=L.DomUtil.create('div','t69tLeg'),open=t69TLegOpen(),st=T69T.stat||{};
     d.style.cssText='background:rgba(13,27,46,.92);color:#E2E8F0;border:1px solid var(--border,#334);border-radius:10px;font:11px Outfit,sans-serif;max-width:230px;box-shadow:0 2px 10px rgba(0,0,0,.35);padding:'+(open?'7px 9px':'0');
     if(!open){d.innerHTML='<button onclick="t69TLegToggle()" title="Show what the colours mean" style="background:none;border:0;color:#E2E8F0;font:600 12px Outfit,sans-serif;padding:8px 11px;cursor:pointer">🌡 Colours ▸</button>';}
@@ -5052,7 +5052,7 @@ window.t69TSetMode=function(m){try{localStorage.setItem('t69_tmode',m);}catch(e)
   if(m!=='off'&&!Object.keys(window._t69Geo||{}).length){toast('🌡 Draw the route first (🔄 Renumber or open the route) — then the temperatures appear');}t69TDraw();};
 window.t69SetTUnit=function(u){try{localStorage.setItem('t69_tunit',u);}catch(e){}['C','F','CF'].forEach(function(k){var b=document.getElementById('t69TU'+k);if(b)b.classList.toggle('active',k===u);});
   toast('✅ Temperatures in '+(u==='CF'?'°C and °F':u==='C'?'°C':'°F'));if(t69TMode()!=='off')t69TDraw();};
-/* v271 print: own drawing (the old helper could not copy our map) — whole route on OpenStreetMap, band + route + month names, one landscape page */
+/* v272 print: own drawing (the old helper could not copy our map) — whole route on OpenStreetMap, band + route + month names, one landscape page */
 window.t69TPrint=function(){var mode=t69TMode();if(mode==='off')mode='max';
   if(!Object.keys(window._t69Geo||{}).length){toast('🌡 The route is not drawn yet — open the route list first, then print');return;}
   var w=window.open('','_blank');if(!w){toast('Allow pop-ups for this page to print');return;}
@@ -5403,7 +5403,7 @@ window.t69StopSheet=function(si,i){
   box.innerHTML='<div style="font-weight:700;font-size:15px;margin-bottom:2px">'+t69Esc(st.name||'')+'</div>'
     +'<div style="color:var(--muted);font-size:11px;margin-bottom:8px">'+t69Esc(st.state||'')+' · stop '+t69StopNo(sg,i)+'</div>'
     +(st.code?'<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;font-size:12px">Stop code for clips: <b style="font-family:monospace">'+t69Esc(st.code)+'</b><button class="t69t-btn" id="t69SsCode" style="padding:2px 8px;font-size:11px">\uD83D\uDCCB Copy</button><button class="t69t-btn" id="t69SsLink" style="padding:2px 8px;font-size:11px" title="The link that opens this stop on the follower map \u2014 for YouTube descriptions and Facebook posts">\uD83D\uDD17 Copy map link</button></div>':'')
-    +'<div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">'+(!t69IsSideAt(sg,i)?'<button class="t69t-btn" id="t69SsDay" title="Day trips from this stop: ski areas, outings, anything near">\uD83C\uDFD4 Plan day trips from '+t69Esc(st.name||'here')+'</button>':'')
+    +'<div style="margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">'+(!t69IsSideAt(sg,i)?'<button class="t69t-btn" id="t69SsPlus" title="One more night here: the departure moves one day later and the new day is marked as a rest day">\uD83C\uDF19 +1 night (rest day)</button>':'')+(!t69IsSideAt(sg,i)?'<button class="t69t-btn" id="t69SsDay" title="Day trips from this stop: ski areas, outings, anything near">\uD83C\uDFD4 Plan day trips from '+t69Esc(st.name||'here')+'</button>':'')
     +(st.sideKind==='hotel'&&t69IsSideAt(sg,i)?'<button class="t69t-btn" id="t69SsMkBase" style="border-color:#10B981" title="The hotel becomes the route stop; the town and the outings become side trips from the hotel">\uD83C\uDFE8 Make this hotel a normal route stop</button>':'')
     +(!t69IsSideAt(sg,i)?'<button class="t69t-btn" id="t69SsChain" title="Hilton · Marriott · Hyatt · IHG near this stop, with rates for its dates">\uD83C\uDFE8 Chain hotels near here</button>':'')
     +(st.sideKind!=='trip'?'<button class="t69t-btn" id="t69SsStay" title="Booking sites with the town and the dates of this stay filled in">\uD83D\uDECF Find a place to stay</button>':'')+'</div>'
@@ -5459,6 +5459,7 @@ window.t69StopSheet=function(si,i){
   try{t69PerNightHint(box);}catch(e){}
   (function(){var cb=box.querySelector('#t69SsVis'),dd=box.querySelector('#t69SsVisD'),di=box.querySelector('#t69SsDate');
     cb.onchange=function(){if(cb.checked){if(!di.value){var dv=t69DefaultVisit(si,i);if(!dv)dv=t69AskVisit(st.name||'this stop');if(!dv){cb.checked=false;return;}di.value=dv;}dd.style.display='inline-flex';}else dd.style.display='none';};})();
+  var _plB=box.querySelector('#t69SsPlus');if(_plB)_plB.onclick=function(){ov.remove();t69PlusNight(sg,st);};
   var _dayB=box.querySelector('#t69SsDay');if(_dayB)_dayB.onclick=function(){ov.remove();t69DayTripsDlg(sg.id,st.id);};
   t69XWire(box,sg,st,function(){ov.remove();t69StopSheetById(sg.id,st.id);});
   var _stayB=box.querySelector('#t69SsStay');if(_stayB)_stayB.onclick=function(){t69FindStayDlg(sg.id,st.id);};
@@ -5940,7 +5941,7 @@ window.t69DayTripsDlg=async function(segId,stopId,keepR){var P=t69PosById(segId,
     var n=t69AddDayTrips(sg,base,pick,[]);D0.ov.remove();
     toast('✅ '+n+' side trip'+(n===1?'':'s')+' added under '+(base.name||'')+' — give them a day with 📅');
     setTimeout(function(){try{t69RouteReveal(sg.id,base.id,{open:true});}catch(e){}},300);};};
-/* v271: re-attach a side trip to another stay (nothing is retyped: the same stop moves, with its dates, price, extras) */
+/* v272: re-attach a side trip to another stay (nothing is retyped: the same stop moves, with its dates, price, extras) */
 window.t69MoveSideDlg=function(sg,st,done){var D=t69CapBox(560),box=D.box,cur=null,rows=[],km=function(b){return t69Km(+st.lat,+st.lng,+b.lat,+b.lng);};
   (routeSegments||[]).forEach(function(g,si){(g.stops||[]).forEach(function(b,i){if(t69IsSideAt(g,i)||b.lat==null)return;var r=t69StopDR(g,b);rows.push({g:g,b:b,d:r&&r.arrivalDate||'',dd:r&&r.departureDate||'',km:km(b)});});});
   var bi=t69BaseIx(sg,sg.stops.indexOf(st));if(bi>=0)cur=sg.stops[bi];
@@ -6178,13 +6179,14 @@ var T69C_CSS='.t69coT{width:100%;border-collapse:collapse;font-size:12.5px;margi
  +'@media (max-width:700px){.t69coT{font-size:11px}.t69coT th,.t69coT td{padding:4px 3px}}';
 (function(){try{var s=document.createElement('style');s.textContent=T69C_CSS;document.head.appendChild(s);}catch(e){}})();
 /* ===== v252: 🎟 Extras on a stop or side trip — ski lesson, lift ticket, rental, tour, show… (not a place, no pin) ===== */
-var T69X_TYPES=[['cruise','\u26F4','Cruise fare'],['lesson','🎿','Ski lesson'],['ticket','🎟','Lift ticket / pass'],['rental','⛷','Rental'],['tour','🧭','Tour / activity'],['show','🎭','Show / tickets'],['resv','🍽','Reservation'],['other','➕','Other']];
+var T69X_TYPES=[['cruise','\u26F4','Cruise fare'],['lesson','🎿','Ski lesson'],['ticket','🎟','Lift ticket / pass'],['rental','⛷','Rental'],['tour','🧭','Tour / activity'],['show','🎭','Show / tickets'],['resv','🍽','Reservation'],['rest','😴','Rest day'],['work','💻','Work day'],['buffer','🛟','Buffer day'],['other','➕','Other']];
+function t69XIsRest(t){return t==='rest'||t==='work'||t==='buffer';}
 var T69X_WHO={both:'both of us',serge:'Serge',els:'Els'};
 function t69XType(t){return T69X_TYPES.filter(function(x){return x[0]===t;})[0]||T69X_TYPES[T69X_TYPES.length-1];}
 function t69Extras(st){try{var a=JSON.parse((st&&st.extrasJson)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
 function t69ExtrasSet(st,arr){st.extrasJson=arr.length?JSON.stringify(arr):'';}
 function t69ExtrasSum(st){return t69Extras(st).reduce(function(s,x){return s+(parseFloat(x.p)||0);},0);}
-function t69XLabel(x){var T=t69XType(x.t);return T[1]+' '+(x.n||T[2])+(x.who&&x.who!=='both'?' ('+T69X_WHO[x.who]+')':'');}
+function t69XLabel(x){var T=t69XType(x.t);return T[1]+' '+(x.n||T[2])+(t69XIsRest(x.t)&&x.h?' \u00bd '+(x.h==='am'?'AM':'PM'):'')+(x.who&&x.who!=='both'?' ('+T69X_WHO[x.who]+')':'');}
 function t69XWhen(x){var a=t69PD(x.a),b=t69PD(x.b);if(!a)return 'no date yet';return a.getDate()+' '+T69_MON[a.getMonth()]+(b&&+b!==+a?' → '+b.getDate()+' '+T69_MON[b.getMonth()]:'')+(x.tm?' '+x.tm:'');}
 /* the list inside the stop window */
 function t69XHtml(sg,st){var X=t69Extras(st);
@@ -6207,30 +6209,54 @@ function t69XEdit(sg,st,k,redraw){var X=t69Extras(st),x=k>=0?Object.assign({},X[
   box.innerHTML='<div style="font-weight:700;font-size:15px">🎟 '+(k>=0?'Change':'Add')+' an extra · '+t69Esc(st.name||'')+'</div>'
     +'<div class="t69xF"><label>Type</label><select id="t69XT" style="'+inp+'">'+T69X_TYPES.map(function(T){return '<option value="'+T[0]+'"'+(T[0]===x.t?' selected':'')+'>'+T[1]+' '+T[2]+'</option>';}).join('')+'</select>'
     +'<label>Name</label><input id="t69XN" style="'+inp+'" value="'+t69Esc(x.n||'')+'" placeholder="e.g. Private lesson 1 day, Alta 3-day ticket">'
-    +'<label>For</label><select id="t69XWho" style="'+inp+'">'+Object.keys(T69X_WHO).map(function(w){return '<option value="'+w+'"'+(w===x.who?' selected':'')+'>'+T69X_WHO[w]+'</option>';}).join('')+'</select>'
+    +'<label class="t69xNR">For</label><select class="t69xNR" id="t69XWho" style="'+inp+'">'+Object.keys(T69X_WHO).map(function(w){return '<option value="'+w+'"'+(w===x.who?' selected':'')+'>'+T69X_WHO[w]+'</option>';}).join('')+'</select>'
     +'<label>Date</label><span><input type="date" id="t69XA" style="'+inp+'" value="'+t69XIso(x.a)+'"> → <input type="date" id="t69XB" style="'+inp+'" value="'+t69XIso(x.b)+'"></span>'
+    +'<label class="t69xR">Part of day</label><select class="t69xR" id="t69XH" style="'+inp+'"><option value="">Whole day</option><option value="am"'+(x.h==='am'?' selected':'')+'>\u00bd day \u2014 morning</option><option value="pm"'+(x.h==='pm'?' selected':'')+'>\u00bd day \u2014 afternoon</option></select>'
     +'<label>Time</label><input id="t69XTm" style="'+inp+';width:90px" value="'+t69Esc(x.tm||'')+'" placeholder="10:00">'
-    +'<label>Price</label><span>$ <input type="number" min="0" step="1" id="t69XP" style="'+inp+';width:110px" value="'+(x.p!==''&&x.p!=null?x.p:'')+'"> <span style="color:var(--muted);font-size:11px">total for this extra</span></span>'
-    +'<label>Booked</label><label style="justify-self:start;cursor:pointer"><input type="checkbox" id="t69XBk"'+(x.bk?' checked':'')+'> ✅ booked / paid</label>'
+    +'<label class="t69xNR">Price</label><span class="t69xNR">$ <input type="number" min="0" step="1" id="t69XP" style="'+inp+';width:110px" value="'+(x.p!==''&&x.p!=null?x.p:'')+'"> <span style="color:var(--muted);font-size:11px">total for this extra</span></span>'
+    +'<label class="t69xNR">Booked</label><label class="t69xNR" style="justify-self:start;cursor:pointer"><input type="checkbox" id="t69XBk"'+(x.bk?' checked':'')+'> ✅ booked / paid</label>'
     +'<label>Note</label><input id="t69XNote" style="'+inp+'" value="'+t69Esc(x.note||'')+'" placeholder="meeting point, link, confirmation number…"></div>'
     +'<div id="t69XWarn" style="color:#F59E0B;font-size:12px;min-height:16px"></div>'
     +'<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px"><button class="t69t-btn" id="t69XNo">Cancel</button><button class="t69t-btn" id="t69XOk" style="background:var(--accent);color:#06121f;font-weight:700">Save</button></div>';
-  t69AddX(box,function(){D.ov.remove();});var A=box.querySelector('#t69XA'),B=box.querySelector('#t69XB');t69PairDates(A,B,0);if(!B.value&&A.value)B.value=A.value;
+  t69AddX(box,function(){D.ov.remove();});var _tsel=box.querySelector('#t69XT'),_tog=function(){var rs=t69XIsRest(_tsel.value);box.querySelectorAll('.t69xNR').forEach(function(e){e.style.display=rs?'none':'';});box.querySelectorAll('.t69xR').forEach(function(e){e.style.display=rs?'':'none';});};_tsel.addEventListener('change',_tog);_tog();
+  var A=box.querySelector('#t69XA'),B=box.querySelector('#t69XB');t69PairDates(A,B,0);if(!B.value&&A.value)B.value=A.value;
   var warn=function(){var w='';if(r&&r.arrivalDate&&A.value){var a0=t69XIso(r.arrivalDate),b0=t69XIso(r.departureDate||r.arrivalDate);if(A.value<a0||(B.value||A.value)>b0)w='⚠ Outside the dates of '+(st.name||'this stop')+' ('+r.arrivalDate+(r.departureDate&&r.departureDate!==r.arrivalDate?' → '+r.departureDate:'')+')';}box.querySelector('#t69XWarn').textContent=w;};
   A.addEventListener('change',warn);B.addEventListener('change',warn);warn();
   box.querySelector('#t69XNo').onclick=function(){D.ov.remove();};
   box.querySelector('#t69XOk').onclick=function(){var T=t69XType(box.querySelector('#t69XT').value);
     x.t=T[0];x.n=box.querySelector('#t69XN').value.trim();x.who=box.querySelector('#t69XWho').value;x.a=t69XDmy(A.value);x.b=t69XDmy(B.value||A.value);x.tm=box.querySelector('#t69XTm').value.trim();
-    var pv=box.querySelector('#t69XP').value;x.p=pv===''?'':Math.round(parseFloat(pv)*100)/100;x.bk=box.querySelector('#t69XBk').checked;x.note=box.querySelector('#t69XNote').value.trim();
+    var pv=box.querySelector('#t69XP').value;x.p=pv===''?'':Math.round(parseFloat(pv)*100)/100;x.bk=box.querySelector('#t69XBk').checked;x.h=t69XIsRest(x.t)?box.querySelector('#t69XH').value:'';if(t69XIsRest(x.t)){x.p='';x.bk=false;x.who='both';}x.note=box.querySelector('#t69XNote').value.trim();
     var X2=t69Extras(st);if(k>=0)X2[k]=x;else X2.push(x);X2.sort(function(p,q){return (t69XIso(p.a)||'9')<(t69XIso(q.a)||'9')?-1:1;});t69ExtrasSet(st,X2);t69XSave(sg,st);D.ov.remove();if(redraw)redraw();toast('🎟 Saved');};}
+/* v272: +1 night — the departure moves one day later and the new day is a rest day (bookings are only warned about, never changed) */
+window.t69PlusNight=function(sg,st){try{
+  var DD=window._t69dates=window._t69dates||{},k=window.sk(st),home=sg.id;Object.keys(DD).forEach(function(x){if(DD[x]&&DD[x][k])home=x;});
+  var rec=(DD[home]||{})[k];if(!rec||!rec.arrivalDate||!rec.departureDate){toast('Give this stay an arrival and a departure date first');return;}
+  var dep=t69PD(rec.departureDate);if(!dep){toast('Departure date not readable');return;}
+  var nd=t69AddDays(dep,1),f2=function(d){return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();};
+  var i=sg.stops.indexOf(st),h=null;try{h=t69HotelOf(sg,i);}catch(e){}var booked=!!st.booked||!!(h&&h.booked),msg='Add 1 night to \u201C'+(st.name||'this stay')+'\u201D?\n\nDeparture '+rec.departureDate+' \u2192 '+f2(nd)+'\nThe extra day ('+rec.departureDate+') is marked as a rest day.';
+  var nx=null;for(var j=i+1;j<sg.stops.length;j++){if(!t69IsSideAt(sg,j)){nx=sg.stops[j];break;}}
+  if(nx){var nr=null;try{nr=t69StopDR(sg,nx);}catch(e){}var na=nr&&t69PD(nr.arrivalDate);if(na&&na<nd)msg+='\n\n\u26A0 The next stop \u201C'+(nx.name||'')+'\u201D arrives '+nr.arrivalDate+' \u2014 it will overlap. Ask Claude to move the stops after this one.';}
+  if(booked)msg+='\n\n\u26A0 This stay is BOOKED \u2014 change the reservation with the hotel too.';
+  if(!confirm(msg))return;
+  t69Backup('before +1 night on '+(st.name||'a stay'));
+  var X=t69Extras(st),oldDep=rec.departureDate;X.push({id:'x'+Date.now().toString(36),t:'rest',n:'',who:'both',p:'',bk:false,note:'',h:'',a:oldDep,b:oldDep});t69ExtrasSet(st,X);
+  rec.departureDate=f2(nd);DD[home][k]=rec;
+  callFn('saveStopDates',{tripId:(typeof tid==='function'?tid():window.TRIP_ID),segId:home,stopDates:DD[home]}).catch(function(e){toast('\u274C Date not saved: '+(e.message||e));});
+  saveSegmentToFirestore(sg);
+  try{if(rec.syncCalendar&&rec.calendarEventId)syncStopToCalendarSafe(home,k,rec);}catch(e){}
+  try{if(window.t69DatePaint)window.t69DatePaint();}catch(e){}try{t69PubSoon();}catch(e){}try{window._t69TCache=null;}catch(e){}try{renderRoutePanel();}catch(e){}
+  if(window._t69OvRedraw)window._t69OvRedraw();
+  toast('\uD83C\uDF19 +1 night \u2014 departure '+f2(nd)+(booked?' \u00b7 \u26A0 booked: change the reservation':''));
+ }catch(e){toast('\u274C '+(e.message||e));}};
 /* overview chips: the extras of a stay and of its side trips, on their days */
 function t69OvExtras(x,m){var out=[],end=t69AddDays(m,6),sg=x.seg,list=[x.st];for(var j=x.i+1;j<sg.stops.length&&t69IsSideAt(sg,j);j++)list.push(sg.stops[j]);
-  list.forEach(function(st){t69Extras(st).forEach(function(e){var a=t69PD(e.a),b=t69PD(e.b)||a;if(!a||b<m||a>end)return;out.push({k:{id:st.id,name:t69XLabel(e)},c0:Math.max(0,t69DDiff(m,a)),c1:Math.min(6,t69DDiff(m,b))});});});return out;}
+  list.forEach(function(st){t69Extras(st).forEach(function(e){var a=t69PD(e.a),b=t69PD(e.b)||a;if(!a||b<m||a>end)return;out.push({rest:t69XIsRest(e.t),k:{id:st.id,name:t69XLabel(e)},c0:Math.max(0,t69DDiff(m,a)),c1:Math.min(6,t69DDiff(m,b))});});});return out;}
 /* planned cost per day (week/month totals) */
 function t69XDayCosts(add){try{(routeSegments||[]).forEach(function(sg){(sg.stops||[]).forEach(function(st){t69Extras(st).forEach(function(e){var a=t69PD(e.a);if(a&&e.p)add(t69Day0(a).toDateString(),+e.p);});});});}catch(e){}}
 var T69X_CSS='.t69xBox{border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin:0 0 12px}.t69xRow{display:grid;grid-template-columns:1fr auto auto auto auto;gap:6px;align-items:center;border-top:1px solid var(--border);padding:5px 0;margin-top:4px;font-size:12.5px}'
  +'.t69xRow .t69t-btn{font-size:11px;padding:2px 7px}.t69xW{color:var(--muted);font-size:11.5px}.t69xP{font-weight:600}.t69xN{grid-column:1/-1;color:var(--muted);font-size:11px}'
  +'.t69xF{display:grid;grid-template-columns:70px 1fr;gap:8px 10px;align-items:center;margin:12px 0 6px;font-size:13px}.t69xF>label{color:var(--muted);font-size:12px}'
+ +'.t69ovB.t69ovSd.t69ovEx.t69ovRest{border:1.5px dotted #94a3b8;border-left:3px solid #94a3b8;background:color-mix(in srgb,#94a3b8 18%,transparent);color:var(--muted)}.ovpage .t69ovB.t69ovSd.t69ovEx.t69ovRest{background:#eceff3;border-style:solid}'
  +'.t69ovB.t69ovSd.t69ovEx{border:1.5px dotted #10B981;border-left:3px solid #10B981;background:color-mix(in srgb,#10B981 14%,transparent)}.ovpage .t69ovB.t69ovSd.t69ovEx{background:#e3f7ef;border-style:solid}';
 (function(){try{var s=document.createElement('style');s.textContent=T69X_CSS;document.head.appendChild(s);}catch(e){}})();
 /* ===== v248: 🏨 Chain hotels — Hilton · Marriott · Hyatt · IHG (US + Canada), one offline file /data/chain_hotels_v2.json ===== */
@@ -7397,7 +7423,7 @@ window.t69Renumber=function(){
   /* posts/visited of a shared stop that disappears go to the main stop */
   function absorb(main,tw){try{var ps=t69Posts(main),seen={};ps.forEach(function(p){seen[p.u]=1;});t69Posts(tw).forEach(function(p){if(p&&p.u&&!seen[p.u]){ps.push(p);seen[p.u]=1;}});main.postsJson=ps.length?JSON.stringify(ps):(main.postsJson||'');}catch(e){}
     if(tw.visitedDate&&(!main.visitedDate||tw.visitedDate<main.visitedDate))main.visitedDate=tw.visitedDate;if(tw.hidePublic)main.hidePublic=true;if(tw.showPublic&&!main.hidePublic)main.showPublic=true;}
-  /* v271: the same place stored twice (end of one segment = start of the next): what was filled in on only one of the two
+  /* v272: the same place stored twice (end of one segment = start of the next): what was filled in on only one of the two
      must not get lost — above all HOW we arrive (cruise / ferry / flight), else a cruise leg turns into a road */
   function fill(main,tw,all){['arriveBy'].concat(all?['cost','actual','pass','freeStay','mealsIn','cruiseFrom','cruiseOff','cruiseUntil','booked','extrasJson','code','srcEventId','autoPostsJson','plannedDate','category']:[]).forEach(function(k){
     if((main[k]==null||main[k]===''||main[k]===false||main[k]===0)&&tw[k]!=null&&tw[k]!==''&&tw[k]!==false&&tw[k]!==0){main[k]=tw[k];if(k==='autoPostsJson')main._autoDirty=true;if(k==='code'||k==='srcEventId')main._carry=1;}});}
@@ -9998,7 +10024,7 @@ function buildCalendarEventPayload(stop,dates){
   var mapsUrl='https://www.google.com/maps?q='+(stop.lat||0)+','+(stop.lng||0);
   var times='';
   if(dates.arrivalTime)times='Arrival '+dates.arrivalTime+(dates.departureTime?(' \u2192 Departure '+dates.departureTime):'');
-  var _xs=t69Extras(stop).map(function(x){return '\uD83C\uDF9F '+t69XLabel(x)+' \u00b7 '+t69XWhen(x)+(x.p?' \u00b7 $'+x.p:'')+(x.bk?' \u00b7 booked':'')+(x.note?' \u00b7 '+x.note:'');});
+  var _xs=t69Extras(stop).map(function(x){return (t69XIsRest(x.t)?'':'\uD83C\uDF9F ')+t69XLabel(x)+' \u00b7 '+t69XWhen(x)+(x.p?' \u00b7 $'+x.p:'')+(x.bk?' \u00b7 booked':'')+(x.note?' \u00b7 '+x.note:'');});
   var desc=[stop.name||'',stop.state||'',stop.category||'',times,_xs.length?('Extras:\n'+_xs.join('\n')):'',mapsUrl].filter(Boolean).join('\n');
   var payload={summary:stop.name||'Stop',description:desc,reminders:{useDefault:false,overrides:[]}};
   if(dates.__tag)payload.extendedProperties={private:{t69:dates.__tag}};
@@ -10338,7 +10364,7 @@ function autoDate(inp){
     if(p.length===3&&p[2].length>0&&p[2].length<=2){var y=+p[2];p[2]=(y<50?'20':'19')+String(y).padStart(2,'0');inp.value=p.join('/');}
   });
 }
-/* v271: next to a typed date: the weekday (Mon, Tue…) and a 📅 button that opens a calendar */
+/* v272: next to a typed date: the weekday (Mon, Tue…) and a 📅 button that opens a calendar */
 function t69DateAid(inp){try{var wd=document.createElement('b');wd.style.cssText='min-width:34px;text-align:center;color:var(--accent);font-size:12px';
   var bt=document.createElement('button');bt.type='button';bt.textContent='\uD83D\uDCC5';bt.title='Pick from a calendar';bt.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 7px;cursor:pointer;font-size:13px';
   var pk=document.createElement('input');pk.type='date';pk.style.cssText='position:absolute;opacity:0;width:1px;height:1px;pointer-events:none';
@@ -10492,7 +10518,7 @@ function watchRoute(){
   if(!list){setTimeout(watchRoute,600);return;}
   window.t69DatePaint=paint; /* v263: the route list paints the dates right away (no jump 0.4 s later) */
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v271: ready');
+  console.log('T1969 v272: ready');
 }
 function t69EvToDates(ev){var tz=(ev.start&&ev.start.timeZone)||undefined;
   function dmy(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
