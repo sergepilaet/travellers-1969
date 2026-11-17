@@ -1020,3 +1020,5 @@ exports.socialPlace=functions.region(REGION).runWith({secrets:['OPUS_KEY'],timeo
     const r=await socAddToStop({trip:d.trip,seg:d.seg,stop:d.stop},c,links);
     const sref=socState(),S=(await sref.get()).data()||{};S.clips=S.clips||{};S.clips[d.clip]=Object.assign(S.clips[d.clip]||{},{state:'done',placed:d.stop,links:r.added||0,last:new Date().toISOString()});await sref.set(S);
     return {success:true,added:r.added||0};}catch(e){console.error(e);return {success:false,message:String(e.message||e)};}});
+
+exports.claudeAccess=require('./claude_access.js').claudeAccess;

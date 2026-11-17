@@ -59,14 +59,27 @@ a{color:var(--sky)}
 .sub form{display:flex;flex-wrap:wrap;gap:8px}
 .sub input[type=email],.sub input[type=text]{flex:1 1 180px;min-width:0;background:var(--ink);border:1px solid var(--line);border-radius:10px;color:var(--text);font:inherit;font-size:15px;padding:10px 12px}
 .sub button{background:var(--sky);color:var(--ink);border:0;border-radius:10px;font:inherit;font-weight:700;font-size:15px;padding:10px 16px;cursor:pointer}
+@media(max-width:480px){.sub button{flex:1 1 100%}}
+.follow{margin:16px 0 4px;text-align:center}.follow h4{margin:0 0 10px;font-size:15px;color:var(--text)}
+.follow .row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.follow a{display:inline-flex;align-items:center;gap:8px;padding:9px 14px 9px 10px;border-radius:999px;color:#fff;text-decoration:none;font-weight:700;font-size:14px;border:1px solid rgba(255,255,255,.12)}
+.follow a svg{width:20px;height:20px;fill:#fff;flex:none}
+.follow a:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.follow a.ig{background:linear-gradient(45deg,#f09433,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888)}
+.follow a.tt{background:#000;box-shadow:inset 2px 0 0 #25f4ee,inset -2px 0 0 #fe2c55}
+.follow a.yt{background:#ff0000}.follow a.fb{background:#1877f2}
 .sub .hp{position:absolute;left:-5000px;width:1px;height:1px;overflow:hidden}
 .sub .msg{flex-basis:100%;font-size:13px;color:var(--muted);min-height:1em}
 #panel .sub{margin-top:18px}
+.fcard{background:linear-gradient(135deg,rgba(91,200,245,.14),rgba(216,176,122,.10));border:1px solid var(--sky);border-radius:16px;padding:14px 14px 4px;margin:0 0 14px}
+.fcard>small{display:block;color:var(--sky);font-size:12px;font-weight:700;letter-spacing:.02em;margin-bottom:2px}.fcard>b{display:block;font-size:19px;line-height:1.25}.fcard>.s{color:var(--muted);font-size:13px;margin-top:3px;line-height:1.45}
+#panel .fcard .sub{margin:12px 0 10px;background:rgba(8,18,34,.55)}.sub.ring{border-color:var(--sky);box-shadow:0 0 0 3px rgba(91,200,245,.25)}
 /* home */
 #home{display:none;padding:calc(env(safe-area-inset-top) + 76px) 16px 40px;max-width:980px;margin:0 auto}
 .hero{display:flex;align-items:center;gap:22px;margin:10px 0 26px}
 .hero img{width:118px;height:118px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 4px rgba(216,176,122,.35)}
 .hero h1{margin:0;font-family:'Dancing Script',cursive;font-size:46px;line-height:1.05;font-weight:700}
+.seeTrips{display:inline-block;margin:12px 0 0;padding:10px 18px;border-radius:999px;background:var(--sky);color:#0D1B2E;font-weight:800;font-size:15px;text-decoration:none;box-shadow:0 4px 14px rgba(91,200,245,.3)}
 .hero p{margin:6px 0 0;color:var(--muted);font-size:16px;line-height:1.5;max-width:46ch}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
 .trip{display:block;text-decoration:none;color:var(--text);background:var(--deep);border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:border-color .15s}
@@ -128,6 +141,8 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 .pulse::before{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(91,200,245,.45);animation:pl 2s ease-out infinite}
 @keyframes pl{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.5);opacity:0}}
 @media (prefers-reduced-motion:reduce){.pulse::before{animation:none}}
+.ndot.vd{background:var(--sand);border-color:#fff;color:#0D1B2E}.ndot.vd.sd{background:#F59E0B;border-color:#fff;color:#1a1200}
+.st .vn{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--sky);color:#0D1B2E;font-size:11px;font-weight:700;align-items:center;justify-content:center;margin-right:6px;vertical-align:1px}.st .vn.sd{background:#F59E0B;color:#1a1200}
 .vdot{width:14px;height:14px;border-radius:50%;background:var(--sky);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 .plane{width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center}.plane svg{width:17px;height:17px}
 .ndot.sd,.num.sd{border-color:#F59E0B;color:#F59E0B}.sdl{font-size:12px;color:#F59E0B}
@@ -151,6 +166,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
   .hero{flex-direction:column;text-align:center}
   .hero h1{font-size:38px}
 }
+.nc{font-size:11px;color:var(--muted);margin-top:3px}.nx{font-size:12px;line-height:1.4;margin-top:4px}.nl{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:12px}.nl a{color:var(--sky);text-decoration:none;font-weight:600}.nl a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -164,10 +180,11 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
   <section class="hero">
     <img src="/pin-travellers.png" alt="Serge and Els">
     <div><h1>Follow our trips</h1>
-    <p>A Belgian-American couple, both born in 1969, on the road and travelling the world. Pick a trip to see where we've been, where we're heading next, and the posts from every stop.</p></div>
+    <p>A Belgian-American couple, both born in 1969, on the road and travelling the world. Pick a trip to see where we've been, where we're heading next, and the posts from every stop.</p><a href="#trips" class="seeTrips" onclick="event.preventDefault();var t=document.getElementById('trips');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});">🗺 See our trips ↓</a></div>
   </section>
   <div id="notice" class="notice" style="display:none"></div>
   <div class="subwrap" id="subHome"></div>
+  <div class="follow" id="followRow"></div>
   <div class="grid" id="trips" style="margin-top:22px"><div class="empty">Loading…</div></div>
 </main>
 
@@ -190,7 +207,11 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 <script>
 function setHdr(){var h=document.querySelector('.top');if(h)document.documentElement.style.setProperty('--hdr',h.offsetHeight+'px');}
 setHdr();window.addEventListener('resize',function(){setHdr();if(window.map&&map.invalidateSize)map.invalidateSize();});
-var SITE_V='v18';
+var SITE_V='v25';
+/* v22: link to one stop (/s/<stop code>) and ?join=1 (or …/join) = follow form first */
+var FOCUS='',CUR='',MISS='',JOIN=false,NOROW=false;
+function hasCd(o,code){return !!(o&&o.cd)&&(' '+String(o.cd).toUpperCase()+' ').indexOf(' '+code+' ')>=0;}
+function focusForm(root){var i=root&&root.querySelector('input[type=email]');if(i){try{i.focus({preventScroll:true});}catch(e){}}}
 var BASE='https://firestore.googleapis.com/v1/projects/travellers-1969-b3a8e/databases/(default)/documents/public/';
 var KEY='AIzaSyAxPJoDENiNy3wA2rFs-MFcJkUwBN1YwK8';
 var SOC=[['ig','Instagram','https://www.instagram.com/travellers_1969/'],['tt','TikTok','https://www.tiktok.com/@travellers_1969'],
@@ -218,7 +239,8 @@ $('soc').innerHTML=SOC.map(function(s){return '<a href="'+s[2]+'" target="_blank
 var SH={cur:0,list:[],lib:null};
 function shLib(){if(window.qrcode)return Promise.resolve();if(SH.lib)return SH.lib;
   SH.lib=new Promise(function(ok,no){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';s.onload=ok;s.onerror=no;document.head.appendChild(s);});return SH.lib;}
-function shTargets(){var slug=String(location.pathname||'').replace(/^\/+|\/+$/g,'').split('/')[0],o=[];
+function shTargets(){var slug=CUR||String(location.pathname||'').replace(/^\/+|\/+$/g,'').split('/')[0],o=[];
+  if(FOCUS&&CUR){var fb=document.querySelector('#focus b');o.push({k:'stop',l:'This stop',t:(fb&&fb.textContent)||'This stop',u:'https://travellers1969.web.app/s/'+FOCUS,i:''});}
   if(/^[a-z0-9-]{1,40}$/.test(slug)){var nm=(document.querySelector('#panel h2')||{}).textContent||'This trip';o.push({k:'trip',l:'This trip',t:nm,u:'https://travellers1969.web.app/'+slug,i:''});}
   o.push({k:'site',l:'All our trips',t:'Travellers 1969',u:'https://travellers1969.web.app',i:''});
   SOC.forEach(function(s){o.push({k:s[0],l:s[1],t:'Travellers 1969 on '+s[1],u:s[2],i:ICON[s[0]]});});return o;}
@@ -249,9 +271,9 @@ function dateRange(t){if(t.status==='soon')return 'Starting soon';if(t.status===
 
 
 /* ---------- message on the home page (set in the planner) + email subscribe ---------- */
-function subHtml(src){return '<div class="sub"><h4>📬 Get our updates by email</h4><p>A short email when we start a new trip or reach a new chapter. No spam — unsubscribe anytime.</p>'
+function subHtml(src,short){return '<div class="sub"><h4>📬 '+(short?'Follow us by email':'Get our updates by email')+'</h4>'
   +'<form novalidate data-src="'+esc(src)+'"><input type="text" name="name" placeholder="First name (optional)" autocomplete="given-name" maxlength="60">'
-  +'<input type="email" name="email" placeholder="Your email address" autocomplete="email" required maxlength="120">'
+  +'<input type="email" name="email" placeholder="Your email address" autocomplete="email" inputmode="email" required maxlength="120">'
   +'<span class="hp" aria-hidden="true"><input type="text" name="website" tabindex="-1" autocomplete="off"></span>'
   +'<button type="submit">Subscribe</button><div class="msg" role="status"></div></form></div>';}
 function subBind(root){root.querySelectorAll('.sub form').forEach(function(f){if(f._b)return;f._b=1;f.addEventListener('submit',function(e){e.preventDefault();
@@ -266,7 +288,7 @@ function subBind(root){root.querySelectorAll('.sub form').forEach(function(f){if
   .then(function(r){if(r.ok||r.status===409||r.status===403){msg.textContent=r.ok?'✅ Thanks'+(nm?(', '+nm):'')+'! You’re on the list.':'✅ You’re already on the list — thanks!';f.email.value='';f.name.value='';}
     else msg.textContent='Something went wrong — please try again later.';})
   .catch(function(){msg.textContent='No connection — please try again.';}).then(function(){btn.disabled=false;});});});}
-function showNotice(){load('site').then(function(o){var n=$('notice');if(!n||!o||!o.notice)return;n.textContent=o.notice;n.style.display='block';}).catch(function(){});}
+function showNotice(){load('site').then(function(o){var n=$('notice');if(!n||!o||!o.notice||/[?&]subscribed/.test(location.search))return;n.textContent=o.notice;n.style.display='block';}).catch(function(){});}
 /* ---------- home: all published trips ---------- */
 function miniSvg(line){if(!line||line.length<2)return '<svg class="mini"></svg>';
   var a=90,b=180,c=-90,d=-180;line.forEach(function(p){a=Math.min(a,p[0]);c=Math.max(c,p[0]);b=Math.min(b,p[1]);d=Math.max(d,p[1]);});
@@ -278,7 +300,10 @@ function miniSvg(line){if(!line||line.length<2)return '<svg class="mini"></svg>'
    +'<polyline points="'+pts.join(' ')+'" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>'
    +'<polyline points="'+pts.join(' ')+'" fill="none" stroke="#5BC8F5" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'
    +'<circle cx="'+first[0]+'" cy="'+first[1]+'" r="4.5" fill="#D8B07A"/><circle cx="'+last[0]+'" cy="'+last[1]+'" r="4.5" fill="#fff" stroke="#5BC8F5" stroke-width="2"/></svg>';}
-function showHome(){$('home').style.display='block';showNotice();$('subHome').innerHTML=subHtml('home');subBind($('subHome'));
+function followRow(){var e=$('followRow');if(!e)return;e.innerHTML='<h4>Follow us</h4><div class="row">'+SOC.map(function(x){return '<a class="'+x[0]+'" href="'+x[2]+'" target="_blank" rel="noopener">'+ICON[x[0]]+x[1]+'</a>';}).join('')+'</div>';}
+function showHome(){$('home').style.display='block';followRow();showNotice();try{if(new URLSearchParams(location.search).has('subscribed')){var n=$('notice');n.textContent='✅ Confirmed — welcome aboard! You’ll hear from us when a new trip starts.';n.style.display='block';}}catch(e){}$('subHome').innerHTML=subHtml(JOIN?'join:home':'home');subBind($('subHome'));
+  if(MISS){var mn=document.createElement('div');mn.className='notice';mn.textContent='\uD83D\uDCCD That stop isn\u2019t on our map (yet). Here are our trips \u2014 or leave your email and we\u2019ll keep you posted.';$('subHome').parentNode.insertBefore(mn,$('subHome'));}
+  if(JOIN||MISS){var sb=$('subHome').querySelector('.sub');if(sb)sb.classList.add('ring');setTimeout(function(){try{$('subHome').scrollIntoView({block:'center'});}catch(e){}focusForm($('subHome'));},60);}
   load('index').then(function(list){list=(list||[]).filter(function(t){return t&&t.slug;});
     if(!list.length){$('trips').innerHTML='<div class="empty">No trips shared right now — subscribe above or follow us on the socials.</div>';return;}
     var rank={live:0,soon:1,done:2};
@@ -290,7 +315,7 @@ function showHome(){$('home').style.display='block';showNotice();$('subHome').in
     $('trips').querySelectorAll('a.trip').forEach(function(a){var sl=decodeURIComponent(a.getAttribute('href').slice(1));
       var pre=function(){loadC(sl).catch(function(){});};a.addEventListener('mouseenter',pre);a.addEventListener('touchstart',pre,{passive:true});
       a.addEventListener('click',function(e){if(e.metaKey||e.ctrlKey||e.shiftKey||e.button)return;e.preventDefault();
-        history.pushState({trip:sl},'','/'+encodeURIComponent(sl));$('home').style.display='none';window.scrollTo(0,0);showTrip(sl);});});
+        history.pushState({trip:sl},'','/'+encodeURIComponent(sl));$('home').style.display='none';window.scrollTo(0,0);CUR=sl;JOIN=false;showTrip(sl);});});
     /* most visitors open the newest trip: fetch it in the background */
     setTimeout(function(){if(list[0])loadC(list[0].slug).catch(function(){});},400);
   }).catch(function(){$('trips').innerHTML='<div class="empty">Could not load the trips. Please try again in a moment.</div>';});}
@@ -311,11 +336,22 @@ function postsHtml(p){if(!p||!p.length)return '';var G={},order=[];
   var h='<div class="posts">'+groups.slice(0,3).map(row).join('');
   if(groups.length>3)h+='<div class="more" style="display:none">'+groups.slice(3).map(row).join('')+'</div><button type="button" class="moreb" onclick="var m=this.previousElementSibling;m.style.display=\'flex\';this.remove();">+'+(groups.length-3)+' more video'+(groups.length-3===1?'':'s')+'</button>';
   return h+'</div>';}
+/* v19: the planner opens the preview with ?wait=<time>; show "updating" and check every 2 s until the new version is there (max 3 min) */
+function waitFresh(slug){var w=+(new URLSearchParams(location.search).get('wait')||0);if(!w||!/^pv-/.test(slug))return loadC(slug);
+  var t0=Date.now();
+  return new Promise(function(ok,no){(function poll(){load(slug).then(function(t){
+      if(t&&Date.parse(t.updated||0)>=w-60000){try{history.replaceState(null,'',location.pathname);}catch(e){}ok(t);return;}
+      if(Date.now()-t0>180000){t?ok(t):no(new Error('timeout'));return;}
+      $('panel').innerHTML='<div class="empty" style="padding:40px 10px">\u23F3 Updating the preview with your latest plan\u2026<br><small>This takes a few seconds.</small></div>';setTimeout(poll,2000);
+    }).catch(function(){setTimeout(poll,3000);});})();});}
+function nInfo(n){var h='';if(n.c)h+='<div class="nc">'+esc(n.c)+'</div>';if(n.x)h+='<div class="nx">'+esc(n.x)+'</div>';
+  var l=[];if(n.m)l.push('<a href="'+esc(safeUrl(n.m))+'" target="_blank" rel="noopener">\uD83D\uDCCD Google Maps</a>');if(n.w)l.push('<a href="'+esc(safeUrl(n.w))+'" target="_blank" rel="noopener">\uD83C\uDF10 Website</a>');
+  if(l.length)h+='<div class="nl">'+l.join('')+'</div>';return h;}
 function showTrip(slug){$('trip').style.display='block';
   map=L.map('map',{zoomControl:true,attributionControl:true,worldCopyJump:true}).setView([44,-100],4);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
-  loadC(slug).then(function(t){
+  waitFresh(slug).then(function(t){
     if(!t){$('panel').innerHTML='<a class="back" href="/">← All trips</a><div class="empty">This trip isn’t shared (any more).<br><a href="/">See our other trips</a></div>';return;}
     document.title=t.name+' · Travellers 1969';
     var s=t.stats||{},c=CHIP[t.status]||CHIP.soon;
@@ -331,28 +367,32 @@ function showTrip(slug){$('trip').style.display='block';
     if(t.done){L.polyline(t.done,{color:'#ffffff',weight:9,opacity:.95}).addTo(map);
       L.polyline(t.done,{color:'#10B981',weight:6,opacity:1}).addTo(map);}
     /* flights: curved slate line with a plane, dash-dot until flown, solid green once flown */
-    (t.fly||[]).forEach(function(q){var g=q.g||[];if(g.length<2)return;var col=q.v?'#10B981':'#334155';
+    (t.fly||[]).forEach(function(q){var g=q.g||[];if(g.length<2)return;var col=q.v?'#10B981':(q.c?'#0284C7':'#334155');
       L.polyline(g,{color:'#ffffff',weight:6,opacity:.9,interactive:false}).addTo(map);
-      L.polyline(g,{color:col,weight:3,opacity:1,dashArray:q.v?null:'12 6 2 6',lineCap:'round',interactive:false}).addTo(map);
+      L.polyline(g,{color:col,weight:3,opacity:1,dashArray:q.v?null:(q.c?'2 7':'12 6 2 6'),lineCap:'round',interactive:false}).addTo(map);
+      /* v20: a cruise leg — blue dotted line with a ship */
+      if(q.c){L.marker(g[Math.floor(g.length/2)],{icon:divIcon('<div class="plane" style="font-size:15px;display:flex;align-items:center;justify-content:center">\u26F4\uFE0F</div>',26),keyboard:false})
+        .bindPopup('<div class="pp"><div class="n">\u26F4 Cruise</div><div class="s">'+esc(q.a||'')+' \u2192 '+esc(q.b||'')+'</div></div>').addTo(map);return;}
       var a=g[0],b=g[g.length-1],k=Math.cos((a[0]+b[0])/2*Math.PI/180),ang=Math.atan2((b[1]-a[1])*k,b[0]-a[0])*180/Math.PI;
       L.marker(g[Math.floor(g.length/2)],{icon:divIcon('<div class="plane"><svg viewBox="0 0 24 24" style="transform:rotate('+Math.round(ang)+'deg)"><path fill="'+col+'" d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></div>',26),keyboard:false})
         .bindPopup('<div class="pp"><div class="n">✈ Flight</div><div class="s">'+esc(q.a||'')+' → '+esc(q.b||'')+'</div></div>').addTo(map);});
     var byKey={};
     (t.visited||[]).forEach(function(v,k){
-      var m=L.marker([v.a,v.o],{icon:divIcon('<div class="vdot"></div>',14),keyboard:false}).addTo(map)
-        .bindPopup('<div class="pp"><div class="n">'+esc(v.n)+'</div><div class="s">'+esc(v.s)+(v.d?(' · '+esc(fmtD(v.d))):'')+'</div>'+(v.p&&v.p.length?postsHtml(v.p):'<div class="s">Posts coming soon</div>')+'</div>',{maxWidth:280});
+      var m=L.marker([v.a,v.o],{icon:divIcon('<div class="ndot vd'+(v.sd?' sd':'')+'">'+(k+1)+'</div>',24),keyboard:false}).addTo(map)
+        .bindPopup('<div class="pp"><div class="n">'+(k+1)+'. '+esc(v.n)+'</div><div class="s">'+esc(v.s)+(v.d?(' · '+esc(fmtD(v.d))):'')+(v.sd&&v.b?(' · side trip from '+esc(v.b)):'')+'</div>'+(v.p&&v.p.length?postsHtml(v.p):'<div class="s">Posts coming soon</div>')+'</div>',{maxWidth:280});
       byKey['v'+k]=m;});
+    var NV=(t.visited||[]).length;
     (t.next||[]).forEach(function(n,k){
-      var m=L.marker([n.a,n.o],{icon:divIcon('<div class="ndot'+(n.sd?' sd':'')+'">'+(k+1)+'</div>',24)}).addTo(map)
-        .bindPopup('<div class="pp"><div class="n">'+esc(n.n)+'</div><div class="s">'+esc(n.s)+' · '+(n.dt?esc(n.dt):'coming up')+(n.sd?(' · '+(n.sd===2?'where we stay in ':'side trip from ')+esc(n.b||'')):'')+'</div></div>');
+      var m=L.marker([n.a,n.o],{icon:divIcon('<div class="ndot'+(n.sd?' sd':'')+'">'+(NV+k+1)+'</div>',24)}).addTo(map)
+        .bindPopup('<div class="pp"><div class="n">'+esc(n.n)+'</div><div class="s">'+esc(n.s)+' · '+(n.dt?esc(n.dt):'coming up')+(n.sd&&n.b?(' · '+(n.sd===2?'where we stay in ':'side trip from ')+esc(n.b)):'')+'</div>'+nInfo(n)+'</div>',{maxWidth:280});
       byKey['n'+k]=m;});
     if(t.here){byKey.here=L.marker([t.here.a,t.here.o],{icon:divIcon('<div class="pulse"><img src="/pin-travellers.png" alt=""></div>',58),zIndexOffset:1000}).addTo(map)
       .bindPopup('<div class="pp"><div class="n">'+(t.status==='done'?'Last stop':'We’re here')+'</div><div class="s">'+esc(t.here.n)+', '+esc(t.here.s)+'</div></div>');}
-    if(t.bbox)map.fitBounds([[t.bbox[0],t.bbox[1]],[t.bbox[2],t.bbox[3]]],{padding:[30,30]});
+    if(t.bbox)map.fitBounds([[t.bbox[0],t.bbox[1]],[t.bbox[2],t.bbox[3]]],{padding:[30,30],animate:!FOCUS});
     var mi=Math.round((s.km||0)/1.609344);
     if(t.preview){var mr=document.createElement('meta');mr.name='robots';mr.content='noindex,nofollow';document.head.appendChild(mr);document.title='Preview · '+document.title;}
-    var h=(t.preview?'<div class="pvbar">👁 <b>Preview</b> — only people with this link can see it. Followers don’t see this page; it’s updated when you press Preview in the planner.</div>':'')
-      +'<a class="back" href="/">← All trips</a><h2>'+esc(t.name)+'</h2>'
+    var h=(t.preview?'<div class="pvbar">👁 <b>Preview</b> — only people with this link can see it. </div>':'')
+      +'<div id="focus"></div><a class="back" href="/">← All trips</a><h2>'+esc(t.name)+'</h2>'
       +'<span class="chip '+c[0]+'">'+c[1]+'</span><div class="dates">'+esc(dateRange(t))+'</div>'
       +(function(){var done=t.status==='done',left=s.kmLeft||0,posts=0;(t.visited||[]).forEach(function(v){posts+=vidN(v.p);});
         function tile(big,small){return '<div class="stat"><b>'+big+'</b><span>'+small+'</span></div>';}
@@ -363,7 +403,7 @@ function showTrip(slug){$('trip').style.display='block';
           +(done?tile(num(posts)+' '+(posts===1?'video':'videos'),'on our socials'):tile(num(s.visited)+'/'+num(s.total)+' stops',num(Math.max(0,s.total-s.visited))+' to go'))
           +'</div>';})();
     if(t.here&&t.status!=='done')h+='<div class="here" data-k="here"><img src="/pin-travellers.png" alt=""><div><small>'+(t.status==='done'?'Last stop':'We’re here')+'</small><b>'+esc(t.here.n)+'</b><small>'+esc(t.here.s)+'</small></div></div>';
-    if(t.next&&t.next.length)h+='<h4>'+(t.preview?('The whole plan \u00b7 '+t.next.length+' stops'):'Coming up')+'</h4>'+t.next.map(function(n,k){return '<div class="next" data-k="n'+k+'"><span class="num'+(n.sd?' sd':'')+'">'+(k+1)+'</span><span>'+(n.fl?'✈ ':'')+esc(n.n)+' <span style="color:var(--muted);font-size:12px">'+esc(n.s)+'</span>'+(n.dt?'<br><span style="color:var(--sky);font-size:12px">\uD83D\uDCC5 '+esc(n.dt)+'</span>':'')+(n.sd?('<br><span class="sdl">'+(n.sd===2?'🏨 where we stay in ':'↳ side trip from ')+esc(n.b||'')+'</span>'):'')+'</span></div>';}).join('');
+    if(t.next&&t.next.length)h+='<h4>'+(t.preview?('The whole plan \u00b7 '+t.next.length+' stops'):'Coming up')+'</h4>'+t.next.map(function(n,k){return '<div class="next" data-k="n'+k+'"><span class="num'+(n.sd?' sd':'')+'">'+((t.visited||[]).length+k+1)+'</span><span>'+(n.cr?'⛴ ':(n.fl?'✈ ':''))+esc(n.n)+' <span style="color:var(--muted);font-size:12px">'+esc(n.s)+'</span>'+(n.dt?'<br><span style="color:var(--sky);font-size:12px">\uD83D\uDCC5 '+esc(n.dt)+'</span>':'')+(n.sd?('<br><span class="sdl">'+(n.b?((n.sd===2?'🏨 where we stay in ':'↳ side trip from ')+esc(n.b)):'↳ side trip')+'</span>'):'')+(t.preview?nInfo(n):'')+'</span></div>';}).join('');
     var vis=(t.visited||[]).map(function(v,k){return {v:v,k:k};});
     if(vis.length){h+='<h4>Where we\u2019ve been</h4>';
       if(vis.length>6){
@@ -375,7 +415,7 @@ function showTrip(slug){$('trip').style.display='block';
       +SOC.map(function(x){return '<a href="'+x[2]+'" target="_blank" rel="noopener">'+x[1]+'</a>';}).join(' · ')+'</div>';
     h+=subHtml('trip:'+(t.slug||''));
     $('panel').innerHTML='<div id="grab"><i></i><small id="grabT">Swipe up for the list</small></div>'+h;subBind($('panel'));
-    function stHtml(o){var v=o.v;return '<div class="st" data-k="v'+o.k+'"><div class="n">'+(v.fl?'✈ ':'')+esc(v.n)+'</div><div class="s">'+esc(v.s)+(v.d?(' \u00b7 '+esc(fmtD(v.d))):'')
+    function stHtml(o){var v=o.v;return '<div class="st" data-k="v'+o.k+'"><div class="n"><span class="vn'+(v.sd?' sd':'')+'">'+(o.k+1)+'</span>'+(v.cr?'⛴ ':(v.fl?'✈ ':''))+esc(v.n)+'</div><div class="s">'+esc(v.s)+(v.d?(' \u00b7 '+esc(fmtD(v.d))):'')
       +(v.p&&v.p.length?(' \u00b7 '+vidN(v.p)+' video'+(vidN(v.p)===1?'':'s')):'')+'</div>'+postsHtml(v.p)+'</div>';}
     function drawTL(){var tl=$('tl');if(!tl)return;var q=($('q')&&$('q').value||'').trim().toLowerCase(),fs=$('fs')?$('fs').value:'',
         wp=$('wp')&&$('wp').checked;
@@ -395,10 +435,31 @@ function showTrip(slug){$('trip').style.display='block';
     Object.keys(byKey).forEach(function(k){byKey[k].on('popupopen',function(){
       document.querySelectorAll('.st.hl').forEach(function(x){x.classList.remove('hl');});
       var el=document.querySelector('.st[data-k="'+k+'"]')||document.querySelector('[data-k="'+k+'"]');if(!el)return;if(el.classList.contains('st'))el.classList.add('hl');
-      if(!isPhone())el.scrollIntoView({behavior:'smooth',block:'center'});});});
-    initSheet();
+      if(!isPhone()&&!NOROW)el.scrollIntoView({behavior:'smooth',block:'center'});});});
+    initSheet();focusCard(t,byKey,slug);
   }).catch(function(){$('panel').innerHTML='<a class="back" href="/">← All trips</a><div class="empty">Could not load this trip. Please try again in a moment.</div>';});}
 
+/* v22: the stop from a stop link (or the follow form for ?join=1) as the first card of the panel; the map zooms to the stop */
+function focusCard(t,byKey,slug){var f=$('focus');if(!f)return;
+  if(FOCUS){var hit=null,key='';
+    (t.visited||[]).forEach(function(v,k){if(!hit&&hasCd(v,FOCUS)){hit=v;key='v'+k;}});
+    (t.next||[]).forEach(function(n,k){if(!hit&&hasCd(n,FOCUS)){hit=n;key='n'+k;}});
+    if(hit){document.title=hit.n+' \u00b7 '+t.name+' \u00b7 Travellers 1969';var was=key.charAt(0)==='v';
+      f.innerHTML='<div class="fcard"><small>\uD83D\uDCCD '+(was?'We were here':'Coming up on this trip')+'</small><b>'+esc(hit.n)+'</b><div class="s">'+esc(hit.s||'')+(hit.d?(' \u00b7 '+esc(fmtD(hit.d))):(hit.dt?(' \u00b7 '+esc(hit.dt)):''))+'</div>'
+        +(hit.p&&hit.p.length?postsHtml(hit.p):(was?'<div class="s">Videos coming soon</div>':''))+subHtml('stop:'+FOCUS,1)+'</div>';
+      var m=byKey[key];if(m){var ll=m.getLatLng();map.setView(ll,Math.max(map.getZoom(),11),{animate:false});
+        if(isPhone())map.panBy([0,Math.round(sheetPx('half')/2)],{animate:false});NOROW=true;setTimeout(function(){try{m.openPopup();}catch(e){}setTimeout(function(){NOROW=false;},600);},350);}}
+    else f.innerHTML='<div class="fcard"><small>\uD83D\uDCCD Stop '+esc(FOCUS)+'</small><b>This stop isn\u2019t on the map yet</b><div class="s">It appears here once we get there. Leave your email and we\u2019ll tell you when there\u2019s news.</div>'+subHtml('stop:'+FOCUS,1)+'</div>';
+    subBind(f);if(JOIN)focusForm(f);}
+  else if(JOIN){f.innerHTML='<div class="fcard"><small>\uD83D\uDCEC Follow this trip</small>'+subHtml('join:'+slug,1)+'</div>';subBind(f);focusForm(f);}
+  if(f.innerHTML&&isPhone())setSheet('half');}
+/* /s/<code>: the code starts with the trip's code (VNC26-003 → VNC26); older index entries have no code → look inside the shared trips */
+function stopLink(code){code=String(code||'').toUpperCase().replace(/[^A-Z0-9-]/g,'').slice(0,40);FOCUS=code;var pre=code.replace(/-\d+$/,'');
+  load('index').then(function(list){list=(list||[]).filter(function(t){return t&&t.slug;});
+    var hit=list.filter(function(t){return String(t.cd||'').toUpperCase()===pre;})[0];if(hit)return hit.slug;
+    return list.reduce(function(p,t){return p.then(function(found){if(found)return found;
+      return loadC(t.slug).then(function(tr){return tr&&((tr.visited||[]).concat(tr.next||[]).some(function(x){return hasCd(x,code);}))?t.slug:'';}).catch(function(){return '';});});},Promise.resolve(''));
+  }).then(function(sl){if(sl){CUR=sl;showTrip(sl);}else{MISS=code;FOCUS='';showHome();}}).catch(function(){MISS=code;FOCUS='';showHome();});}
 function isPhone(){return window.innerWidth<=820;}
 var SHEET={peek:118,half:0.46},sheetState='half';
 function sheetPx(st){var vh=window.innerHeight,top=(document.querySelector('.top')||{}).offsetHeight||56;
@@ -416,9 +477,11 @@ function initSheet(){var p=$('panel'),g=$('grab');if(!p||!g)return;if(isPhone())
   if(window.map&&map.on)map.on('dragstart',function(){if(isPhone()&&sheetState!=='peek')setSheet('peek');});
   window.addEventListener('resize',function(){if(isPhone())setSheet(sheetState);else p.style.removeProperty('--sheet');});}
 var parts=location.pathname.replace(/\/+$/,'').split('/').filter(Boolean);
+JOIN=new URLSearchParams(location.search).has('join')||parts[parts.length-1]==='join';if(parts[parts.length-1]==='join')parts.pop();
 var slug=(parts[0]==='follow'?parts[1]:parts[0])||new URLSearchParams(location.search).get('trip')||'';
 try{slug=decodeURIComponent(slug);}catch(e){slug='';}
-if(slug&&/^[a-z0-9-]{1,40}$/.test(slug))showTrip(slug);else showHome();
+if(parts[0]==='s'&&parts[1]){var _c='';try{_c=decodeURIComponent(parts[1]);}catch(e){}stopLink(_c);}
+else if(slug&&slug!=='s'&&/^[a-z0-9-]{1,40}$/.test(slug)){CUR=slug;showTrip(slug);}else showHome();
 window.addEventListener('popstate',function(){location.reload();});
 </script>
 </body>
