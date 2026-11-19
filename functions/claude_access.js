@@ -1,13 +1,12 @@
 'use strict';
-/* Travellers 1969 — private access for Claude (v3, 16 Nov 2026)
+/* Travellers 1969 — private access for Claude (v4, 19 Nov 2026)
    One HTTPS function, protected by a long secret key (functions/.env → CLAUDE_KEY=…, never in GitHub).
    Read: only trips, locations, the public follower pages, stop codes, hotel notes and its own log
    (not the followers' email addresses, not the settings/keys in config).
    Write: only inside trips (trip / segment / stop documents and stop dates). Never deletes a document.
    v2: a place in the places list can be moved to the bin (collection locationsTrash) and put back again
    — the full place is kept there, nothing is lost.
-   v3: Brevo through the secret BREVO_KEY (the key never leaves the server): read the Followers list (#3), read the
-   senders, create an e-mail template, create a campaign DRAFT. Nothing can be sent, scheduled or deleted from here.
+   v4: one person's score can be removed from places of one region (op clearScore, only that score, other scores stay, old scores written to claudeLog) and put back (op setScores).
    Before the first change (and then at most every 30 minutes) a backup of the whole trip is saved in
    trips/<trip>/backups — the planner shows it under ⋯ More → Backups. Every change is written to claudeLog. */
 const functions = require('firebase-functions/v1');
@@ -79,29 +78,10 @@ async function log(db, entry) {
   try { await db.collection('claudeLog').add(Object.assign({ at: new Date().toISOString() }, entry)); } catch (e) { console.error('claudeLog', e); }
 }
 
-/* ---------- Brevo (v3): only these four calls exist — no send, no schedule, no delete ---------- */
-const BREVO_LIST = 3;
-async function brevo(method, path, body) {
-  const key = process.env.BREVO_KEY;
-  if (!key) throw new Error('BREVO_KEY secret not available to this function');
-  const r = await fetch('https://api.brevo.com/v3' + path, { method,
-    headers: { 'api-key': key, accept: 'application/json', 'content-type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined });
-  const t = await r.text(); let j; try { j = t ? JSON.parse(t) : {}; } catch (e) { j = { raw: t.slice(0, 500) }; }
-  if (!r.ok) throw new Error('Brevo ' + r.status + ': ' + String(j.message || t).slice(0, 300));
-  return j;
-}
-function senderOf(s) {
-  s = s || {};
-  if (s.id) return { id: parseInt(s.id, 10) };
-  if (s.email) return { email: String(s.email), name: String(s.name || '') };
-  throw new Error('sender needed: {id} (from brevoListSenders) or {email,name}');
-}
-
 async function handle(db, b) {
   const op = String(b.op || '');
   switch (op) {
-    case 'ping': return { ok: true, time: new Date().toISOString(), v: 3 };
+    case 'ping': return { ok: true, time: new Date().toISOString(), v: 4 };
     case 'trips': {
       const docs = (await db.collection('trips').get()).docs;
       return { trips: docs.map(d => { const x = d.data() || {}; return { id: d.id, name: x.name || '', code: x.code || '', archived: !!x.archived, publicOn: !!x.publicOn, publicSlug: x.publicSlug || '' }; }) };
@@ -194,42 +174,38 @@ async function handle(db, b) {
       await log(db, { op, restored: done.join(' ').slice(0, 6000), n: done.length });
       return { ok: true, restored: done.length };
     }
-    case 'brevoListContacts': {   /* read only: list 3 */
-      const limit = Math.min(Math.max(parseInt(b.limit, 10) || 50, 1), 500), offset = Math.max(parseInt(b.offset, 10) || 0, 0);
-      const j = await brevo('GET', '/contacts/lists/' + BREVO_LIST + '/contacts?limit=' + limit + '&offset=' + offset + '&sort=desc');
-      return { count: j.count, contacts: (j.contacts || []).map(c => ({ email: c.email, id: c.id, createdAt: c.createdAt, emailBlacklisted: c.emailBlacklisted, listIds: c.listIds, attributes: c.attributes })) };
+    case 'clearScore': {   /* remove ONE person's score from the places of one region; the other scores stay; old scores go to claudeLog */
+      const r = String(b.region || ''), who = String(b.who || ''); if (!r || /[\/.]/.test(r) || !who || /[.\/]/.test(who)) throw new Error('region and who needed');
+      const reason = String(b.reason || '').slice(0, 200), dry = !!b.dry, snap = await db.collection('locations/' + r + '/items').get();
+      const hit = [];
+      snap.docs.forEach(d => { const x = d.data() || {}; if (x.ratings && typeof x.ratings === 'object' && x.ratings[who] != null) hit.push({ id: d.id, name: x.name || '', score: x.ratings[who] }); });
+      if (dry) return { ok: true, dry: true, region: r, who, total: snap.size, withScore: hit.length, sample: hit.slice(0, 5) };
+      for (let i = 0; i < hit.length; i += 400) {
+        const batch = db.batch(); hit.slice(i, i + 400).forEach(h => batch.update(db.doc('locations/' + r + '/items/' + h.id), { ['ratings.' + who]: admin.firestore.FieldValue.delete() }));
+        await batch.commit();
+      }
+      for (let i = 0; i < hit.length; i += 40) await log(db, { op, region: r, who, reason, old: JSON.stringify(hit.slice(i, i + 40)).slice(0, 8000), n: hit.length });
+      if (!hit.length) await log(db, { op, region: r, who, reason, n: 0 });
+      return { ok: true, region: r, who, total: snap.size, cleared: hit.length };
     }
-    case 'brevoListSenders': {   /* read only */
-      const j = await brevo('GET', '/senders');
-      return { senders: (j.senders || []).map(x => ({ id: x.id, name: x.name, email: x.email, active: x.active })) };
-    }
-    case 'brevoCreateTemplate': {   /* create only. For double opt-in the html must contain {{ params.DOUBLEOPTIN }} (the confirm link) */
-      const name = String(b.name || '').slice(0, 120), subject = String(b.subject || '').slice(0, 200), html = String(b.html || '');
-      if (!name || !subject || !html) throw new Error('name, subject, html needed');
-      if (html.length > 400000) throw new Error('html too big');
-      const j = await brevo('POST', '/smtp/templates', { templateName: name, subject, htmlContent: html, sender: senderOf(b.sender), isActive: true });
-      await log(db, { op, name, subject, templateId: j.id, bytes: html.length });
-      return { ok: true, templateId: j.id };
-    }
-    case 'brevoCreateCampaignDraft': {   /* a DRAFT only: no schedule, never sent; always for list 3 */
-      const name = String(b.name || '').slice(0, 120), subject = String(b.subject || '').slice(0, 200), html = String(b.html || '');
-      if (!name || !subject || !html) throw new Error('name, subject, html needed');
-      if (html.length > 400000) throw new Error('html too big');
-      const j = await brevo('POST', '/emailCampaigns', { name, subject, htmlContent: html, sender: senderOf(b.sender), recipients: { listIds: [BREVO_LIST] } });
-      await log(db, { op, name, subject, campaignId: j.id, bytes: html.length });
-      return { ok: true, campaignId: j.id, status: 'draft — open it in Brevo → Campaigns to check and send yourself' };
+    case 'setScores': {   /* put scores back (from the claudeLog 'old' lists) */
+      const r = String(b.region || ''), who = String(b.who || ''), sc = Array.isArray(b.scores) ? b.scores : [];
+      if (!r || /[\/.]/.test(r) || !who || /[.\/]/.test(who) || !sc.length || sc.length > 400) throw new Error('region, who and 1-400 scores needed');
+      const batch = db.batch(); sc.forEach(h => { const v = Number(h.score); if (!h.id || /\//.test(String(h.id)) || !(v >= 0.5 && v <= 5)) throw new Error('bad score item'); batch.update(db.doc('locations/' + r + '/items/' + h.id), { ['ratings.' + who]: v }); });
+      await batch.commit(); await log(db, { op, region: r, who, n: sc.length });
+      return { ok: true, restored: sc.length };
     }
     case 'log': {
       const lim = Math.min(Math.max(parseInt(b.limit, 10) || 30, 1), 200);
       const q = await db.collection('claudeLog').orderBy('at', 'desc').limit(lim).get();
       return { log: q.docs.map(d => plain(d.data())) };
     }
-    default: throw new Error('unknown op: ' + op + ' (ping, trips, dump, get, list, backup, patch, setDates, trashLocs, restoreLocs, brevoListContacts, brevoListSenders, brevoCreateTemplate, brevoCreateCampaignDraft, log)');
+    default: throw new Error('unknown op: ' + op + ' (ping, trips, dump, get, list, backup, patch, setDates, trashLocs, restoreLocs, clearScore, setScores, log)');
   }
 }
 
 exports._handle = handle;
-exports.claudeAccess = functions.region('europe-west1').runWith({ timeoutSeconds: 120, memory: '512MB', secrets: ['BREVO_KEY'] }).https.onRequest(async (req, res) => {
+exports.claudeAccess = functions.region('europe-west1').runWith({ timeoutSeconds: 120, memory: '512MB' }).https.onRequest(async (req, res) => {
   res.set('Cache-Control', 'no-store');
   const body = (req.body && typeof req.body === 'object') ? req.body : {};
   const key = req.get('x-claude-key') || body.key;   /* never in the address: addresses end up in logs */

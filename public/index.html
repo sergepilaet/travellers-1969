@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v277  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v278  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -1153,10 +1153,21 @@ function t69BulkBar(){var bar=document.getElementById('t69BulkBar');if(!t69BulkO
       bar.appendChild(ss);}})();
   bar.appendChild(mkSel('Set category','categories'));bar.appendChild(mkSel('Set status','statusValues'));bar.appendChild(mkSel('Set season','seasonValues'));
  var rsel=document.createElement('select');rsel.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:4px 6px';rsel.innerHTML='<option value="">Set reservation...</option><option>Yes</option><option>No</option>';rsel.addEventListener('change',function(){if(rsel.value)t69BulkApply('reservation',rsel.value);});bar.appendChild(rsel);
+ var csel=document.createElement('select');csel.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:4px 6px';csel.title='Removes one person\u2019s score from the selected rows (the other scores stay)';
+ csel.innerHTML='<option value="">Clear score of...</option>'+(T69_TRAVELLERS||[]).map(function(n){return '<option>'+t69Esc(n)+'</option>';}).join('');csel.addEventListener('change',function(){if(csel.value){var w=csel.value;csel.value='';t69BulkClearScore(w);}});bar.appendChild(csel);
  var pinB=document.createElement('button');pinB.className='t69t-btn';pinB.textContent='\uD83D\uDCCC Pin';pinB.addEventListener('click',function(){t69BulkApply('pinned',true);});bar.appendChild(pinB);
  var unB=document.createElement('button');unB.className='t69t-btn';unB.textContent='Unpin';unB.addEventListener('click',function(){t69BulkApply('pinned',false);});bar.appendChild(unB);
  var del=document.createElement('button');del.className='t69t-btn';del.textContent='\uD83D\uDDD1 Delete selected';del.addEventListener('click',t69BulkDelete);bar.appendChild(del);
  var x=document.createElement('button');x.className='t69t-btn';x.textContent='\u2715';x.addEventListener('click',t69BulkToggle);bar.appendChild(x);}
+function t69BulkClearScore(who){var ids=Object.keys(t69BulkSel);if(!ids.length){toast('Select rows first');return;}
+ var rows=ids.map(function(id){return t69Loc(id);}).filter(function(l){return l&&locRatings(l)[who]!=null;});
+ if(!rows.length){toast(who+' has no score on the selected rows');return;}
+ if(!confirm('Remove '+who+'’s score from '+rows.length+' of the '+ids.length+' selected rows?\n(the other scores stay; the old scores are kept on this device so they can be put back)'))return;
+ try{var u=JSON.parse(localStorage.getItem('t69_ratundo')||'[]');rows.forEach(function(l){u.push({who:who,state:t69RS(l),id:l.rowIndex,name:l.name,score:locRatings(l)[who],at:Date.now()});});localStorage.setItem('t69_ratundo',JSON.stringify(u.slice(-3000)));}catch(e){}
+ var q=rows.slice(),tot=q.length,done=0,bad=0;t69Prog('🧹 Clearing '+who,0,tot);
+ (function nx(){if(!q.length){t69ProgHide();toast('✅ '+who+'’s score removed from '+done+' rows'+(bad?(' · '+bad+' failed'):''));try{applyFilters();t69RenderTable();t69BulkBar();}catch(e){}return;}
+  var l=q.shift(),r=Object.assign({},locRatings(l));delete r[who];
+  callFn('fsSaveLocation',{state:t69RS(l),id:l.rowIndex,patch:{ratings:r}}).then(function(res){if(!res||!res.success)throw new Error('x');l.ratings=r;done++;}).catch(function(){bad++;}).then(function(){t69Prog('🧹 Clearing '+who,done+bad,tot);setTimeout(nx,80);});})();}
 function t69BulkApply(field,value){var ids=Object.keys(t69BulkSel);if(!ids.length){toast('Select rows first');return;}
  var totB=ids.length;t69Prog('\u270F Updating',0,totB);var done=0;
  (function nx(){if(!ids.length){t69ProgHide();toast('\u2705 '+done+' updated');t69ReloadView();setTimeout(function(){t69RenderTable();t69BulkBar();},700);return;}var id=ids.shift();
@@ -1998,12 +2009,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v277</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v278</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v277</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v278</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2199,7 +2210,7 @@ function signIn(){
         <button class="mt-btn t69ms" data-ms="liberty" onclick="t69SetMapStyle('liberty')" title="Full colour, most detail — slowest">◈ Liberty</button>
       </span>
       <div class="mt-div"></div>
-      <label class="mt-btn" style="display:none" title="Switched off in v277 (ratings replace pins)">
+      <label class="mt-btn" style="display:none" title="Switched off in v278 (ratings replace pins)">
         <input type="checkbox" id="alwaysShowPinned" onchange="applyFilters()"> 📌 Always
       </label>
       <button class="mt-btn" id="btnChains" onclick="t69HToggle()" title="Hilton · Marriott · Hyatt · IHG hotels on the map">🏨<span class="mt-t"> Chains</span></button>
@@ -2469,7 +2480,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v277</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v278</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2865,14 +2876,14 @@ function loadAllCountry(country){
   document.getElementById('currentStateName').textContent=label;
   document.getElementById('routeStrip').classList.add('hidden');
   closeDetail();
-  /* v277: states come in one after another (3 at a time) and the map/list is refreshed now and then — nothing blocks while the rest loads */
+  /* v278: states come in one after another (4 at a time) in memory; the map/list is drawn ONCE at the end — nothing blocks while the rest loads */
   var tok={};window._t69AllTok=tok;window._t69Soft=null;
   var alive=function(){return window._t69AllTok===tok&&currentState===label;};
   allLocations=[];var seen=new Set(),queue=states.slice(),done=0,failed=[],lastDur=300,timer=null,first=true;
   var startView=null;try{startView=map.getCenter().lat.toFixed(3)+','+map.getCenter().lng.toFixed(3)+','+map.getZoom();}catch(e){}
   var bar=document.getElementById('t69AllProg');if(!bar){bar=document.createElement('div');bar.id='t69AllProg';
     bar.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:3000;background:rgba(13,27,46,.94);color:#e8eef5;border:1px solid rgba(91,200,245,.5);border-radius:18px;padding:7px 14px;font-size:12px;font-family:Outfit,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.4);max-width:92vw;text-align:center';document.body.appendChild(bar);}
-  var say=function(){bar.style.display='block';bar.textContent='⏳ Loading states '+done+'/'+states.length+' · '+allLocations.length+' places so far — the map stays usable';};
+  var say=function(){bar.style.display='block';bar.textContent='⏳ Loading all states in the background '+done+'/'+states.length+' — everything appears on the map when it is done';};
   say();
   var refresh=function(final){timer=null;if(!alive())return;var t0=performance.now();
     if(first){first=false;var nc0=allLocations.map(function(l){return normalizeCat(l.category);});activeCats=new Set(sf?nc0.filter(function(c){return sf.cats.has(c)||!sf.allCats.has(c);}):nc0);nc0.forEach(function(c){seen.add(c);});}
@@ -2896,9 +2907,9 @@ function loadAllCountry(country){
       allLocations=allLocations.concat(ls);
     }).catch(function(){failed.push(nm);}).then(function(){done++;if(!alive())return;
       if(done===1)showLoading(false);
-      if(done<states.length){say();sched();}
+      if(done<states.length){say();}
       return new Promise(function(r){setTimeout(r,30);}).then(worker);});};
-  Promise.all([worker(),worker(),worker()]).then(finish);
+  Promise.all([worker(),worker(),worker(),worker()]).then(finish);
 }
 
 /* v227: reload what's on screen without resetting filters, closing the detail or moving the map */
@@ -3118,11 +3129,11 @@ function plotLocations(locs){
       m.bindPopup(mkCrossStatePopup(loc,cspIdx),{maxWidth:280});
       m.on('click',(function(capLoc){return function(){t69HlLoc(capLoc);t69HlRoute(capLoc);};})(loc));
     } else {
-      m.bindPopup((function(L0,i0){return function(){return mkPopup(L0,i0);};})(loc,i),{maxWidth:280}); /* v277: popup text is made when it opens, not for all 2,500 pins up front */
+      m.bindPopup((function(L0,i0){return function(){return mkPopup(L0,i0);};})(loc,i),{maxWidth:280}); /* v278: popup text is made when it opens, not for all 2,500 pins up front */
       m.on('click',function(){t69HlLoc(loc);t69HlRoute(loc);});
     }
     try{m._pr=(isPinned?1000:0)+(loc.status==="Don't Skip"?500:0)+((getAvg(loc)||0)*20)+((+loc.googleRating||0)*3);}catch(e){}
-    loc._mk=m;markers.push(m);if(t69MkOk(m))m.addTo(map);
+    loc._mk=m;markers.push(m);if(allToPlot.length<=600&&t69MkOk(m))m.addTo(map);
     if(window.T69_PINVIEW&&window.T69_PINVIEW!=='all')setTimeout(t69AfterMarkers,0);
     ll.push([loc.lat,loc.lng]);
   });
@@ -3134,7 +3145,7 @@ function plotLocations(locs){
   }
 }
 
-/* v277: only the pins in (and just around) the visible map are really on the map — zooming and panning with thousands of pins stays quick */
+/* v278: only the pins in (and just around) the visible map are really on the map — zooming and panning with thousands of pins stays quick */
 function t69MkOk(m){try{if(m.isPopupOpen&&m.isPopupOpen())return true;return map.getBounds().pad(0.35).contains(m.getLatLng());}catch(e){return true;}}
 window.t69MkSync=function(){try{if(!map||!markers)return;var hide=window._t69HideKeys||null,want=[];markers.forEach(function(m){var ok=t69MkOk(m);if(ok&&hide){var ll=m.getLatLng();if(hide[ll.lat.toFixed(4)+','+ll.lng.toFixed(4)])ok=false;}m._ok=ok;if(ok)want.push(m);});
     /* zoomed far out with very many pins: show the best ones (pinned, Don't Skip, best rated); zoom in = all of them */
@@ -3187,8 +3198,9 @@ function unpinCrossState(cspIdx,btn){
   if(map)map.closePopup();
 }
 
+var T69_GMICON="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 132' width='11' height='16' style='vertical-align:-3px;margin-right:4px'><path fill='#34A853' d='M46 132S14 98 8 72L30 58z'/><path fill='#FBBC04' d='M46 132s32-34 38-60L62 58z'/><path fill='#4285F4' d='M8 72A46 46 0 0 1 20 22l22 20z'/><path fill='#EA4335' d='M20 22A46 46 0 0 1 72 22L46 56z'/><path fill='#EA4335' d='M72 22A46 46 0 0 1 84 72L62 58z'/><circle cx='46' cy='46' r='17' fill='#fff'/></svg>";
 function t69GMapsUrl(l){l=l||{};if(/^https?:\/\//i.test(l.mapsUrl||''))return l.mapsUrl;if(l.lat!=null&&l.lng!=null&&l.lat!==''&&!isNaN(+l.lat))return 'https://www.google.com/maps?q='+l.lat+','+l.lng;return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((l.name||'')+' '+(l.address||l.state||''));}
-function t69GMapsBtn(l,cls,sty){return '<a class="'+cls+'" href="'+t69GMapsUrl(l).replace(/"/g,'%22')+'" target="_blank" rel="noopener"'+(sty?' style="'+sty+'"':'')+'>🗺 Google Maps</a>';}
+function t69GMapsBtn(l,cls,sty){return '<a class="'+cls+'" href="'+t69GMapsUrl(l).replace(/"/g,'%22')+'" target="_blank" rel="noopener"'+(sty?' style="'+sty+'"':'')+'>'+T69_GMICON+(cls.indexOf('pu-btn')>=0?'Maps':'Google Maps')+'</a>';}
 function mkPopup(loc,idx){_puLoc=loc;var c=catColor(loc.category),avg=getAvg(loc),avgStr=avg?avg.toFixed(1):null;var notes=(loc.notes||'').replace(/\\n/g,'\n').split('\n').slice(0,3).join('<br>');var pinKey=(loc.lat||'')+','+(loc.lng||'');var isPinned=!!individualPins[pinKey];
 var h='<div class="pu"><div class="pu-cat" style="color:'+c+'">'+loc.category+'</div><div class="pu-name">'+loc.name+'</div>'
 +'<div class="pu-row"><strong>Budget:</strong> '+(loc.budget===0?'<span style="color:#10B981">FREE</span>':'$'+loc.budget+t69PriceUnit(loc))+'</div>'
@@ -4530,7 +4542,7 @@ function t69OvBook(sg,i,st,kids){try{var h=(kids||[]).filter(function(k){return 
 /* dated side trips of a stay, clipped to a week: [{k:stop, c0, c1}] */
 function t69OvSides(x,m){if(window._t69OvNoSides)return [];var out=[],end=t69AddDays(m,6),sg=x.seg,j=x.i+1,open=!!window._t69OvAllU||!!(window._t69OvOpen||{})[x.seg.id+'|'+x.st.id];
   for(;j<sg.stops.length&&t69IsSideAt(sg,j);j++){var k=sg.stops[j];if(k.sideKind!=='trip')continue;var r=t69StopDR(sg,k),a=r&&t69PD(r.arrivalDate),b=r&&(t69PD(r.departureDate)||a),inh=false;
-    if(!a){if(!open)continue;a=x.a;b=x.a;inh=true;} /* v277: no day chosen = shown on the first day of its stay */ /* no date of its own: takes the days of the stay, shown when the stay is opened with ▸ */
+    if(!a){if(!open)continue;a=x.a;b=x.a;inh=true;} /* v278: no day chosen = shown on the first day of its stay */ /* no date of its own: takes the days of the stay, shown when the stay is opened with ▸ */
     if(b<m||a>end)continue;out.push({k:k,c0:Math.max(0,t69DDiff(m,a)),c1:Math.min(6,t69DDiff(m,b)),vis:!!k.visitedDate,inh:inh});}return out;}
 function t69OvSideCount(x){var n=0,u=0,sg=x.seg;if(window._t69OvNoSides)return {n:0,u:0};for(var j=x.i+1;j<sg.stops.length&&t69IsSideAt(sg,j);j++){var k=sg.stops[j];if(k.sideKind!=='trip')continue;n++;var r=t69StopDR(sg,k);if(!(r&&r.arrivalDate))u++;}return {n:n,u:u};}
 function t69OvLabel(x){var ab=T69_ABBR[x.st.state||'']||'';var nm=String(x.st.name||'');return (x.fly?'✈ ':'')+nm+(ab&&nm.indexOf(', '+ab)<0?', '+ab:'');}
@@ -4719,7 +4731,7 @@ window.t69OverviewDlg=function(){var D=t69CapBox(1180),box=D.box;box.style.width
     var cc=box.querySelector('#t69OvCcC');cc.onchange=function(){window._t69OvCatCol=cc.checked;t69OvLS('t69_ovcatcol',cc.checked?'1':'0');draw();};
     var sd=box.querySelector('#t69OvSdC');sd.onchange=function(){window._t69OvNoSides=!sd.checked;t69OvLS('t69_ovnosides',sd.checked?'0':'1');draw();};
     var au=box.querySelector('#t69OvAuC');if(au)au.onchange=function(){window._t69OvAllU=au.checked;t69OvLS('t69_ovallu',au.checked?'1':'0');draw();};
-    /* v277: drag a side trip to another day (month view): it gets that day, and its extras (lessons, tickets) move along */
+    /* v278: drag a side trip to another day (month view): it gets that day, and its extras (lessons, tickets) move along */
     
     box.querySelectorAll('.t69ovSd[draggable]').forEach(function(b){b.addEventListener('dragstart',function(e){window._t69OvDrag=b.getAttribute('data-s');try{e.dataTransfer.setData('text/plain',window._t69OvDrag);e.dataTransfer.effectAllowed='move';}catch(x){}b.style.opacity='.5';});b.addEventListener('dragend',function(){b.style.opacity='';box.querySelectorAll('.t69moD.dropH').forEach(function(c){c.classList.remove('dropH');});});});
     function dayAt(e){var wk=null,el=document.elementFromPoint(e.clientX,e.clientY);while(el&&el!==box){if(el.classList&&el.classList.contains('t69moW')){wk=el;break;}el=el.parentNode;}if(!wk)return null;var r=wk.getBoundingClientRect(),col=Math.max(0,Math.min(6,Math.floor((e.clientX-r.left)/(r.width/7)))),p=wk.getAttribute('data-w').split('-'),d=new Date(+p[0],+p[1]-1,+p[2]+col);return {d:d,cell:wk.querySelectorAll('.t69moD')[col]};}
@@ -5008,7 +5020,7 @@ function t69CutFly(pts,legs,max){if(!legs.length)return t69Thin(pts,max);var bad
    The road gets a glowing band (~30 km wide) coloured by the average max or min on the day we are there.
    No dates on a leg → date estimated between the dated stops before and after (lighter band). Free, offline, no API. */
 var T69T={meta:{latN:72,lonW:-170,step:1/3,rows:174,cols:360},data:null,loading:null,grp:null,legend:null};
-/* v277: steps of 5 °C between 10 and 30 (where it matters for us), one band 30–40, one above 40 */
+/* v278: steps of 5 °C between 10 and 30 (where it matters for us), one band 30–40, one above 40 */
 var T69T_BANDS=[[-99,-10,'#3730a3'],[-10,0,'#2563eb'],[0,10,'#38bdf8'],[10,15,'#2dd4bf'],[15,20,'#22c55e'],[20,25,'#a3e635'],[25,30,'#facc15'],[30,40,'#f97316'],[40,99,'#b91c1c']];
 function t69TMode(){try{return localStorage.getItem('t69_tmode')||'off';}catch(e){return 'off';}}
 function t69TUnit(){try{return localStorage.getItem('t69_tunit')||'CF';}catch(e){return 'CF';}}
@@ -5040,7 +5052,7 @@ window.t69TDraw=function(){try{t69MDraw();}catch(e){console.warn('months',e);}va
   t69TLoad().then(function(){t69TBuild(mode);}).catch(function(e){toast('🌡 Temperature data could not be loaded ('+(e.message||e)+')');});};
 function t69TSegNow(sid){var r=null;(routeSegments||[]).forEach(function(s){if(s.id===sid)r=s;});return r;}
 function t69TPieces(mode,noTemp){var v=mode==='min'?1:0,geo=window._t69Geo||{},SD=t69TStopDates(),pieces=[],noDate=0,nLeg=0;
-  Object.keys(geo).forEach(function(sid){var G=geo[sid],seg=t69TSegNow(sid);if(!seg)return; /* v277b: find the segment by id (the list may have been reloaded = new objects) */
+  Object.keys(geo).forEach(function(sid){var G=geo[sid],seg=t69TSegNow(sid);if(!seg)return; /* v278b: find the segment by id (the list may have been reloaded = new objects) */
     G.parts.forEach(function(p){if(p.type!=='road'||!p.pts||p.pts.length<2||p.idx.length<2)return;
       var stops=p.idx.map(function(ix){return ix<0?t69PrevRoute(seg,0):seg.stops[ix];}),cut=[0],from=0;
       for(var k=1;k<stops.length-1;k++){var s=stops[k],best=from,bd=1e9;if(!s||s.lat==null){cut.push(from);continue;}
@@ -5069,7 +5081,7 @@ function t69TLegendHtml(mode,paper){var u=t69TUnit(),rows=T69T_BANDS.map(functio
     +'<div style="margin-top:4px;opacity:.75">On the day we pass · average 2015–2024 · light band = date estimated</div>';}
 function t69TLegOpen(){try{var v=localStorage.getItem('t69_tleg');if(v==='1')return true;if(v==='0')return false;}catch(e){}return !(window.matchMedia&&matchMedia('(max-width:767px),(max-height:519px)').matches);}
 window.t69TLegToggle=function(){var o=!t69TLegOpen();try{localStorage.setItem('t69_tleg',o?'1':'0');}catch(e){}t69TLegend(t69TMode());};
-/* v277: the legend can be folded to a small chip (temperatures stay on); switching off = the 🌡 list at the top of the map */
+/* v278: the legend can be folded to a small chip (temperatures stay on); switching off = the 🌡 list at the top of the map */
 function t69TLegend(mode){if(T69T.legend){T69T.legend.remove();T69T.legend=null;}if(mode==='off')return;var Ctl=L.Control.extend({options:{position:'bottomleft'},onAdd:function(){var d=L.DomUtil.create('div','t69tLeg'),open=t69TLegOpen(),st=T69T.stat||{};
     d.style.cssText='background:rgba(13,27,46,.92);color:#E2E8F0;border:1px solid var(--border,#334);border-radius:10px;font:11px Outfit,sans-serif;max-width:230px;box-shadow:0 2px 10px rgba(0,0,0,.35);padding:'+(open?'7px 9px':'0');
     if(!open){d.innerHTML='<button onclick="t69TLegToggle()" title="Show what the colours mean" style="background:none;border:0;color:#E2E8F0;font:600 12px Outfit,sans-serif;padding:8px 11px;cursor:pointer">🌡 Colours ▸</button>';}
@@ -5080,9 +5092,9 @@ window.t69TSetMode=function(m){if(m!=='off'&&t69MMode()!=='off')t69MSetMode('off
   if(m!=='off'&&!Object.keys(window._t69Geo||{}).length){toast('🌡 Draw the route first (🔄 Renumber or open the route) — then the temperatures appear');}t69TDraw();};
 window.t69SetTUnit=function(u){try{localStorage.setItem('t69_tunit',u);}catch(e){}['C','F','CF'].forEach(function(k){var b=document.getElementById('t69TU'+k);if(b)b.classList.toggle('active',k===u);});
   toast('✅ Temperatures in '+(u==='CF'?'°C and °F':u==='C'?'°C':'°F'));if(t69TMode()!=='off')t69TDraw();};
-/* v277 print: own drawing (the old helper could not copy our map) — whole route on OpenStreetMap, band + route + month names, one landscape page */
+/* v278 print: own drawing (the old helper could not copy our map) — whole route on OpenStreetMap, band + route + month names, one landscape page */
 
-/* ===== v277: route per month (same idea as the temperature layer: the road pieces coloured by the month we drive them) ===== */
+/* ===== v278: route per month (same idea as the temperature layer: the road pieces coloured by the month we drive them) ===== */
 var T69M_COL=['#2563eb','#7c3aed','#c026d3','#e11d48','#f97316','#eab308','#84cc16','#16a34a','#0d9488','#0891b2','#64748b','#1e40af'];
 var T69M={grp:null,legend:null,lab:null};
 function t69MMode(){try{return localStorage.getItem('t69_mmode')||'off';}catch(e){return 'off';}}
@@ -5131,7 +5143,7 @@ function t69MLegend(D,sl){var Ctl=L.Control.extend({options:{position:'bottomlef
     L.DomEvent.disableClickPropagation(d);return d;}});T69M.legend=new Ctl().addTo(map);}
 window.addEventListener('load',function(){setTimeout(function(){try{if(t69MMode()!=='off'&&map)t69MDraw();}catch(e){}},4000);});
 
-/* ===== v277: car wash chains on the map (static list public/data/carwash_v2.json; more brands can be added to the file) ===== */
+/* ===== v278: car wash chains on the map (static list public/data/carwash_v2.json; more brands can be added to the file) ===== */
 var T69C={data:null,loading:null,grp:null,on:false};
 function t69CLoad(){if(T69C.data)return Promise.resolve(T69C.data);if(!T69C.loading)T69C.loading=fetch('/data/carwash_v2.json').then(function(r){if(!r.ok)throw new Error('carwash_v2.json not found ('+r.status+') \u2014 is it in public/data?');return r.json();}).then(function(d){T69C.data=d;return d;}).catch(function(e){T69C.loading=null;throw e;});return T69C.loading;}
 function t69CPop(d,r){var b=d.brands[r[0]]||{},col=b.c||'#0d9488',addr=[r[4],[r[5],r[6]].filter(Boolean).join(', '),r[7]].filter(Boolean).join(' · ');
@@ -6056,7 +6068,7 @@ window.t69DayTripsDlg=async function(segId,stopId,keepR){var P=t69PosById(segId,
     var n=t69AddDayTrips(sg,base,pick,[]);D0.ov.remove();
     toast('✅ '+n+' side trip'+(n===1?'':'s')+' added under '+(base.name||'')+' — give them a day with 📅');
     setTimeout(function(){try{t69RouteReveal(sg.id,base.id,{open:true});}catch(e){}},300);};};
-/* v277: re-attach a side trip to another stay (nothing is retyped: the same stop moves, with its dates, price, extras) */
+/* v278: re-attach a side trip to another stay (nothing is retyped: the same stop moves, with its dates, price, extras) */
 window.t69MoveSideDlg=function(sg,st,done){var D=t69CapBox(560),box=D.box,cur=null,rows=[],km=function(b){return t69Km(+st.lat,+st.lng,+b.lat,+b.lng);};
   (routeSegments||[]).forEach(function(g,si){(g.stops||[]).forEach(function(b,i){if(t69IsSideAt(g,i)||b.lat==null)return;var r=t69StopDR(g,b);rows.push({g:g,b:b,d:r&&r.arrivalDate||'',dd:r&&r.departureDate||'',km:km(b)});});});
   var bi=t69BaseIx(sg,sg.stops.indexOf(st));if(bi>=0)cur=sg.stops[bi];
@@ -6342,7 +6354,7 @@ function t69XEdit(sg,st,k,redraw){var X=t69Extras(st),x=k>=0?Object.assign({},X[
     x.t=T[0];x.n=box.querySelector('#t69XN').value.trim();x.who=box.querySelector('#t69XWho').value;x.a=t69XDmy(A.value);x.b=t69XDmy(B.value||A.value);x.tm=box.querySelector('#t69XTm').value.trim();
     var pv=box.querySelector('#t69XP').value;x.p=pv===''?'':Math.round(parseFloat(pv)*100)/100;x.bk=box.querySelector('#t69XBk').checked;x.h=t69XIsRest(x.t)?box.querySelector('#t69XH').value:'';if(t69XIsRest(x.t)){x.p='';x.bk=false;x.who='both';}x.note=box.querySelector('#t69XNote').value.trim();
     var X2=t69Extras(st);if(k>=0)X2[k]=x;else X2.push(x);X2.sort(function(p,q){return (t69XIso(p.a)||'9')<(t69XIso(q.a)||'9')?-1:1;});t69ExtrasSet(st,X2);t69XSave(sg,st);D.ov.remove();if(redraw)redraw();toast('🎟 Saved');};}
-/* v277: +1 night — the departure moves one day later and the new day is a rest day (bookings are only warned about, never changed) */
+/* v278: +1 night — the departure moves one day later and the new day is a rest day (bookings are only warned about, never changed) */
 window.t69PlusNight=function(sg,st){try{
   var DD=window._t69dates=window._t69dates||{},k=window.sk(st),home=sg.id;Object.keys(DD).forEach(function(x){if(DD[x]&&DD[x][k])home=x;});
   var rec=(DD[home]||{})[k];if(!rec||!rec.arrivalDate||!rec.departureDate){toast('Give this stay an arrival and a departure date first');return;}
@@ -7538,7 +7550,7 @@ window.t69Renumber=function(){
   /* posts/visited of a shared stop that disappears go to the main stop */
   function absorb(main,tw){try{var ps=t69Posts(main),seen={};ps.forEach(function(p){seen[p.u]=1;});t69Posts(tw).forEach(function(p){if(p&&p.u&&!seen[p.u]){ps.push(p);seen[p.u]=1;}});main.postsJson=ps.length?JSON.stringify(ps):(main.postsJson||'');}catch(e){}
     if(tw.visitedDate&&(!main.visitedDate||tw.visitedDate<main.visitedDate))main.visitedDate=tw.visitedDate;if(tw.hidePublic)main.hidePublic=true;if(tw.showPublic&&!main.hidePublic)main.showPublic=true;}
-  /* v277: the same place stored twice (end of one segment = start of the next): what was filled in on only one of the two
+  /* v278: the same place stored twice (end of one segment = start of the next): what was filled in on only one of the two
      must not get lost — above all HOW we arrive (cruise / ferry / flight), else a cruise leg turns into a road */
   function fill(main,tw,all){['arriveBy'].concat(all?['cost','actual','pass','freeStay','mealsIn','cruiseFrom','cruiseOff','cruiseUntil','booked','extrasJson','code','srcEventId','autoPostsJson','plannedDate','category']:[]).forEach(function(k){
     if((main[k]==null||main[k]===''||main[k]===false||main[k]===0)&&tw[k]!=null&&tw[k]!==''&&tw[k]!==false&&tw[k]!==0){main[k]=tw[k];if(k==='autoPostsJson')main._autoDirty=true;if(k==='code'||k==='srcEventId')main._carry=1;}});}
@@ -7908,7 +7920,7 @@ function t69StopPopup(seg,si,st,i){
 
     +'<button class="pu-btn" onclick="t69AddStopAgain('+si+','+i+')" title="Add this place to the route once more, e.g. Home again at the end of a round trip">\u2795 Add again</button>'
     +'<button class="pu-btn" onclick="t69StopDetails('+(st.lat||0)+','+(st.lng||0)+',\''+String(st.state||st.sourceSheet||'').replace(/'/g,"\\'")+'\')">\uD83D\uDCCB Details</button>'
-    +'<button class="pu-btn" onclick="window.open(\''+maps.replace(/'/g,'%27')+'\',\'_blank\')">\uD83D\uDDFA Google Maps</button>'
+    +'<button class="pu-btn" onclick="window.open(\''+maps.replace(/'/g,'%27')+'\',\'_blank\')">'+T69_GMICON+'Maps</button>'
     +'</div></div>';
   return h;}
 /* v245: route pins coloured by segment (as before) or by category (fill = category colour, ring = segment colour) */
@@ -10479,7 +10491,7 @@ function autoDate(inp){
     if(p.length===3&&p[2].length>0&&p[2].length<=2){var y=+p[2];p[2]=(y<50?'20':'19')+String(y).padStart(2,'0');inp.value=p.join('/');}
   });
 }
-/* v277: next to a typed date: the weekday (Mon, Tue…) and a 📅 button that opens a calendar */
+/* v278: next to a typed date: the weekday (Mon, Tue…) and a 📅 button that opens a calendar */
 function t69DateAid(inp){try{var wd=document.createElement('b');wd.style.cssText='min-width:34px;text-align:center;color:var(--accent);font-size:12px';
   var bt=document.createElement('button');bt.type='button';bt.textContent='\uD83D\uDCC5';bt.title='Pick from a calendar';bt.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 7px;cursor:pointer;font-size:13px';
   var pk=document.createElement('input');pk.type='date';pk.style.cssText='position:absolute;opacity:0;width:1px;height:1px;pointer-events:none';
@@ -10633,7 +10645,7 @@ function watchRoute(){
   if(!list){setTimeout(watchRoute,600);return;}
   window.t69DatePaint=paint; /* v263: the route list paints the dates right away (no jump 0.4 s later) */
   new MutationObserver(function(){clearTimeout(window._t69pt);window._t69pt=setTimeout(paint,400);}).observe(list,{childList:true,subtree:false});
-  console.log('T1969 v277: ready');
+  console.log('T1969 v278: ready');
 }
 function t69EvToDates(ev){var tz=(ev.start&&ev.start.timeZone)||undefined;
   function dmy(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
