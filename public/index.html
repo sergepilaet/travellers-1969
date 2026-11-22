@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v283  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v284  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -2015,12 +2015,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v283</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v284</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v283</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v284</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2286,6 +2286,7 @@ function signIn(){
         <div class="route-stat"><span class="route-stat-val" id="routeStopCount">0</span><span class="route-stat-lbl">Stops</span></div>
         <div class="route-stat"><span class="route-stat-val" id="routeSegCount">0</span><span class="route-stat-lbl">Segments</span></div>
         <div class="route-stat"><span class="route-stat-val" id="routeBudget">—</span><span class="route-stat-lbl">Budget</span></div>
+        <div class="route-stat"><span class="route-stat-val" id="routeTripDays">—</span><span class="route-stat-lbl">Trip days</span></div>
       </div>
       <div id="t69TripCount" style="display:none;padding:6px 12px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);line-height:1.6"></div>
       <div id="t69KmLine" style="display:none;padding:5px 12px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)"></div>
@@ -2486,7 +2487,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v283</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v284</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -4821,6 +4822,7 @@ function updateRouteSummary(){
   routeSegments.forEach(function(s){totalStops+=(s.stops||[]).length;});
   document.getElementById('routeStopCount').textContent=totalStops;
   document.getElementById('routeSegCount').textContent=routeSegments.length;
+  try{var _dEl=document.getElementById('routeTripDays'),_td=t69TripDays();if(_dEl)_dEl.textContent=_td>0?_td:'\u2014';}catch(e){}
   var bEl=document.getElementById('routeBudget');if(bEl){bEl.textContent=totalBudget?t69Money(totalBudget):'\u2014';var _bp=bEl.parentNode;if(_bp&&!_bp._t69c){_bp._t69c=1;_bp.style.cursor='pointer';_bp.title='Trip costs \u2014 tap for the breakdown and settings';_bp.onclick=function(){t69CostDlg();};}
     var _bl=_bp&&_bp.querySelector('.route-stat-lbl');if(_bl)_bl.innerHTML='Budget'+(_tc&&_tc.zero.length?' <span style="color:#F59E0B" title="'+_tc.zero.length+' stops at $0">\u26A0'+_tc.zero.length+'</span>':'');}
   (routeSegments||[]).forEach(function(seg){
@@ -4974,11 +4976,15 @@ window.t69DrawSides=async function(gen){
   window._t69SideM=tot;t69KmLine();};
 window.t69KmLine=function(){var el=document.getElementById('t69KmLine');if(!el)return;var dm=window._t69DriveM||0,sm=window._t69SideM||0,fm=window._t69FlyM||0;
   if(!dm&&!sm&&!fm){el.style.display='none';return;}
-  el.innerHTML=(dm?('🚗 Driving <b>'+fmtDist(dm)+'</b>'):'🚗 No driving')+(fm?(' · ✈ flights <b>'+fmtDist(fm)+'</b>'):'')+(sm?(' · ↔ side trips <b>'+fmtDist(sm)+'</b>'):'')+(sm?(' · by car <b>'+fmtDist(dm+sm)+'</b>'):'');
+  var _col=false;try{_col=localStorage.getItem('t69_kmcol')==='1';}catch(e){}
+  var l1=(dm?('🚗 Driving <b>'+fmtDist(dm)+'</b>'):'🚗 No driving')+(fm?(' · ✈ flights <b>'+fmtDist(fm)+'</b>'):'')+(sm?(' · ↔ side trips <b>'+fmtDist(sm)+'</b>'):'')+(sm?(' · by car <b>'+fmtDist(dm+sm)+'</b>'):''),l2='',short='';
   try{var ds=window._t69DriveS||0,td=t69TripDays();if(dm&&td>0&&ds){var pct=function(x){var p=x/(td*86400)*100;return p<10?p.toFixed(1):Math.round(p);};
-    var line2='\u23F1 Driving time <b>'+fmtTime(ds)+'</b> = <b>'+pct(ds)+'%</b> of the whole trip ('+td+' days) \u00b7 <b>'+Math.round(ds/(td*16*3600)*100)+'%</b> of waking hours <span style="opacity:.7">(route only)</span>';
-    if(sm){var ds2=ds*(dm+sm)/dm;line2+='<br>\u21D4 with side trips \u2248 <b>'+fmtTime(ds2)+'</b> = <b>'+pct(ds2)+'%</b> of the trip';}
-    el.innerHTML+='<div style="margin-top:2px;opacity:.9">'+line2+'</div>';}}catch(e){}
+    l2='⏱ Driving time <b>'+fmtTime(ds)+'</b> = <b>'+pct(ds)+'%</b> of the whole trip · <b>'+Math.round(ds/(td*16*3600)*100)+'%</b> of waking hours <span style="opacity:.7">(route only)</span>';
+    if(sm){var ds2=ds*(dm+sm)/dm;l2+='<br>⇔ with side trips ≈ <b>'+fmtTime(ds2)+'</b> = <b>'+pct(ds2)+'%</b> of the trip';}
+    short='🚗 <b>'+fmtDist(dm)+'</b> · ⏱ <b>'+fmtTime(ds)+'</b> = <b>'+pct(ds)+'%</b>'+(sm?' · by car <b>'+fmtDist(dm+sm)+'</b>':'');}}catch(e){}
+  var tg='<span style="float:right;margin-left:6px;opacity:.8">'+(_col?'▸':'▾')+'</span>';
+  el.style.cursor='pointer';el.title='Fold / unfold';el.onclick=function(){try{localStorage.setItem('t69_kmcol',_col?'0':'1');}catch(e){}t69KmLine();};
+  el.innerHTML=tg+(_col?(short||l1):(l1+(l2?'<div style="margin-top:2px;opacity:.9">'+l2+'</div>':'')));
   el.style.display='block';};
 /* ===== v226: flight legs — stop.arriveBy='fly' on a route stop = the leg from the previous route stop is a flight (no road routing, not in driving km) ===== */
 /* the route stop a leg into stop i starts from: the route stop above it, or for a segment's first stop the previous segment's last
@@ -5250,7 +5256,9 @@ window.t69TPrint=function(){var mode=t69TMode();if(mode==='off')mode='max';var M
   if(!Object.keys(window._t69Geo||{}).length){toast('🌡 The route is not drawn yet — open the route list first, then print');return;}
   var w=window.open('','_blank');if(!w){toast('Allow pop-ups for this page to print');return;}
   var name=(typeof t69TripName==='function'?t69TripName():'')||'Route';
-  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+t69Esc(name)+' — temperatures</title></head><body style="font:16px Arial,sans-serif;padding:30px;color:#0D1B2E"><div id="w">🖨 Drawing the map… a few seconds</div></body></html>');w.document.close();
+  var _nw=new Date(),_p2=function(n){return ('0'+n).slice(-2);},stamp=_nw.getFullYear()+'-'+_p2(_nw.getMonth()+1)+'-'+_p2(_nw.getDate())+' '+_p2(_nw.getHours())+_p2(_nw.getMinutes()),
+      kind=MM?'route per '+t69MUnit():('temperature '+(mode==='min'?'night min':'day max')),docTitle=t69Esc(name+' — '+kind+' — '+stamp);
+  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+docTitle+'</title></head><body style="font:16px Arial,sans-serif;padding:30px;color:#0D1B2E"><div id="w">🖨 Drawing the map… a few seconds</div></body></html>');w.document.close();
   var fail=function(m){try{w.document.getElementById('w').textContent='❌ '+m;}catch(e){}toast('❌ '+m);};
   (MM?Promise.resolve():t69TLoad()).then(function(){var R=t69TPieces(mode,MM),MD=MM?t69MData():null,geo=window._t69Geo||{},lines=[],mnLa=90,mxLa=-90,mnLo=180,mxLo=-180;
     Object.keys(geo).forEach(function(sid){var G=geo[sid];if(!t69TSegNow(sid))return;G.parts.forEach(function(p){if(!p.pts||p.pts.length<2)return;lines.push({pts:p.pts,road:p.type==='road',cruise:!!p.cruise});
@@ -5289,7 +5297,7 @@ window.t69TPrint=function(){var mode=t69TMode();if(mode==='off')mode='max';var M
         var tt=name+(MM?' \u2014 route per month':' \u2014 temperature along the route');c.font='bold '+Math.round(fs*1.25)+'px Arial,sans-serif';c.lineWidth=5;c.strokeStyle='rgba(255,255,255,.95)';c.strokeText(tt,16,Math.round(fs*1.8));c.fillStyle='#0D1B2E';c.fillText(tt,16,Math.round(fs*1.8));
         c.font=Math.round(fs*0.6)+'px Arial,sans-serif';c.fillStyle='rgba(30,41,59,.75)';c.textAlign='right';c.fillText('\u00a9 OpenStreetMap',W-6,Hh-6);c.textAlign='left';}catch(e){console.warn('legend',e);}
       var url;try{url=cv.toDataURL('image/jpeg',0.92);}catch(e){fail('The map picture could not be made ('+(e.message||e)+')');return;}
-      try{w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+t69Esc(name)+' — temperatures</title><style>@page{size:landscape;margin:6mm}html,body{margin:0;background:#fff}img{display:block;width:100%;height:auto}@media screen{img{max-width:1400px;margin:0 auto}}</style></head><body><img id="m" src="'+url+'"><script>var i=document.getElementById("m"),go=function(){setTimeout(function(){print();},300)};if(i.complete)go();else i.onload=go;<\/script></body></html>');w.document.close();}catch(e){fail('Print window was closed');}});
+      try{w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+docTitle+'</title><style>@page{size:landscape;margin:6mm}html,body{margin:0;background:#fff}img{display:block;width:100%;height:auto}@media screen{img{max-width:1400px;margin:0 auto}}</style></head><body><img id="m" src="'+url+'"><script>var i=document.getElementById("m"),go=function(){setTimeout(function(){print();},300)};if(i.complete)go();else i.onload=go;<\/script></body></html>');w.document.close();}catch(e){fail('Print window was closed');}});
   }).catch(function(e){fail('Temperature data could not be loaded ('+(e.message||e)+')');});};
 
 /* v268: wire the temperature layer once the map exists */
@@ -9122,7 +9130,7 @@ function createCountry(){
       +'<button class="t69-tbtn" title="Copy this trip into a new one" onclick="t69CopyTrip()">&#x29C9;</button>'
       +'<button class="t69-tbtn" title="Check route: fix segments that share more than one stop" onclick="t69CheckRoute()">&#x1F527;</button>'
       +'<button id="t69-del" class="t69-tbtn t69-xhov" title="Delete trip">&#x1F5D1;</button>'
-      +'<label style="font-size:10px;display:flex;align-items:center;gap:3px;cursor:pointer;white-space:nowrap;margin-left:auto" title="Show archived trips"><input type="checkbox" id="t69-showarch">\uD83D\uDCE6 archived</label>';
+      +'<label style="font-size:9px;display:flex;align-items:center;gap:2px;cursor:pointer;white-space:nowrap;margin-left:auto;color:var(--muted)" title="Show archived trips in the list"><input type="checkbox" id="t69-showarch" style="margin:0;width:12px;height:12px">archived</label>';
     panel.insertBefore(bar,panel.firstChild);
 
     document.getElementById('t69-dd').addEventListener('change',function(){switchTrip(this.value);});
