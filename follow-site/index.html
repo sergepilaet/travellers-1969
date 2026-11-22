@@ -213,7 +213,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 <script>
 function setHdr(){var h=document.querySelector('.top');if(h)document.documentElement.style.setProperty('--hdr',h.offsetHeight+'px');}
 setHdr();window.addEventListener('resize',function(){setHdr();if(window.map&&map.invalidateSize)map.invalidateSize();});
-var SITE_V='v28';
+var SITE_V='v29';
 /* v22: link to one stop (/s/<stop code>) and ?join=1 (or …/join) = follow form first */
 var FOCUS='',CUR='',MISS='',JOIN=false,NOROW=false;
 function hasCd(o,code){return !!(o&&o.cd)&&(' '+String(o.cd).toUpperCase()+' ').indexOf(' '+code+' ')>=0;}
@@ -398,28 +398,34 @@ function showTrip(slug){$('trip').style.display='block';
     /* v28: colours on the route — per month/week/day, or the average day/night temperature. Works from the stops we visited (dates) and the driven line;
        a private preview with a whole plan also uses the months the planner sends (t.mo). */
     (function(){
-      var vis=(t.visited||[]).filter(function(v){return /^\d{4}-\d\d-\d\d/.test(v.d||'');}),legs=[],pd=function(x){return new Date(+x.slice(0,4),+x.slice(5,7)-1,+x.slice(8,10));};
-      var runs=t.done?(Array.isArray(t.done[0][0])?t.done:[t.done]):[],all=[],brk={};
-      runs.forEach(function(r,ri){if(ri>0)brk[all.length]=1;r.forEach(function(p){all.push(p);});});
-      if(vis.length>=2&&all.length>1){var from=0,idx=vis.map(function(v){var best=from,bd=1e9,cl=Math.cos(v.a*Math.PI/180);for(var q=from;q<all.length;q++){var dx=all[q][0]-v.a,dy=(all[q][1]-v.o)*cl,dd=dx*dx+dy*dy;if(dd<bd){bd=dd;best=q;}}from=best;return best;});
-        for(var i=1;i<vis.length;i++){var a=idx[i-1],b=idx[i];if(b-a<1)continue;var cur=[all[a]];
-          for(var j=a+1;j<=b;j++){if(brk[j]){if(cur.length>1)legs.push({pts:cur,date:pd(vis[i].d)});cur=[all[j]];}else cur.push(all[j]);}
-          if(cur.length>1)legs.push({pts:cur,date:pd(vis[i].d)});}}
-      if(!legs.length){(t.mo||[]).forEach(function(m){if(m&&m[1]&&m[1].length>1&&/^\d{4}-\d\d$/.test(m[0]))legs.push({pts:m[1],date:new Date(+m[0].slice(0,4),+m[0].slice(5,7)-1,15),coarse:true});});}
-      if(!legs.length)return;
+      var vis=(t.visited||[]).filter(function(v){return /^\d{4}-\d\d-\d\d/.test(v.d||'');}),legs=[],dots=[];
+      /* a date is "2027-01-04" (we have been there) or "2027-08" (still to come: only the month is public → the 15th, coarse) */
+      var pdt=function(x){x=String(x||'');if(/^\d{4}-\d\d-\d\d/.test(x))return {d:new Date(+x.slice(0,4),+x.slice(5,7)-1,+x.slice(8,10)),c:false};if(/^\d{4}-\d\d$/.test(x))return {d:new Date(+x.slice(0,4),+x.slice(5,7)-1,15),c:true};return null;};
+      (t.mo||[]).forEach(function(m){var p=m&&pdt(m[0]);if(p&&m[1]&&m[1].length>1)legs.push({pts:m[1],date:p.d,coarse:p.c});});
+      if(!legs.length){var runs=t.done?(Array.isArray(t.done[0][0])?t.done:[t.done]):[],all=[],brk={};
+        runs.forEach(function(r,ri){if(ri>0)brk[all.length]=1;r.forEach(function(p){all.push(p);});});
+        if(vis.length>=2&&all.length>1){var from=0,idx=vis.map(function(v){var best=from,bd=1e9,cl=Math.cos(v.a*Math.PI/180);for(var q=from;q<all.length;q++){var dx=all[q][0]-v.a,dy=(all[q][1]-v.o)*cl,dd=dx*dx+dy*dy;if(dd<bd){bd=dd;best=q;}}from=best;return best;});
+          for(var i=1;i<vis.length;i++){var a=idx[i-1],b=idx[i];if(b-a<1)continue;var cur=[all[a]],pd=pdt(vis[i].d);
+            for(var j=a+1;j<=b;j++){if(brk[j]){if(cur.length>1)legs.push({pts:cur,date:pd.d,coarse:false});cur=[all[j]];}else cur.push(all[j]);}
+            if(cur.length>1)legs.push({pts:cur,date:pd.d,coarse:false});}}}
+      /* side trips and cruises have their own line + date; flights get a dot at both ends instead of a line */
+      (t.side||[]).forEach(function(q){var g=Array.isArray(q)?null:q.g,p=Array.isArray(q)?null:pdt(q.d);if(g&&g.length>1&&p)legs.push({pts:g,date:p.d,coarse:p.c,side:true});});
+      (t.fly||[]).forEach(function(q){var g=q.g||[],p=pdt(q.d);if(g.length<2||!p)return;
+        if(q.c)legs.push({pts:g,date:p.d,coarse:p.c,cruise:true});else dots.push({pt:g[0],date:p.d,coarse:p.c},{pt:g[g.length-1],date:p.d,coarse:p.c});});
+      if(!legs.length&&!dots.length)return;
       var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
           COL=['#7c3aed','#f97316','#16a34a','#ec4899','#facc15','#7f1d1d','#a3e635','#c026d3','#92400e','#fb7185','#1f2937','#dc2626','#65a30d','#0f766e'],
           BANDS=[[-99,-10,'#3730a3'],[-10,0,'#2563eb'],[0,10,'#38bdf8'],[10,15,'#2dd4bf'],[15,20,'#22c55e'],[20,25,'#a3e635'],[25,30,'#facc15'],[30,40,'#f97316'],[40,99,'#b91c1c']];
-      var mn=null,mx=null;legs.forEach(function(l){if(!mn||l.date<mn)mn=l.date;if(!mx||l.date>mx)mx=l.date;});
+      var mn=null,mx=null;legs.concat(dots).forEach(function(l){if(!mn||l.date<mn)mn=l.date;if(!mx||l.date>mx)mx=l.date;});
       var dno=function(d){return Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5);},span=dno(mx)-dno(mn),
-          gran=(legs[0].coarse||span>31)?'month':(span<7?'day':'week');
+          gran=(legs.some(function(l){return l.coarse;})||span>31)?'month':(span<7?'day':'week');
       var key=function(d){return gran==='day'?dno(d):gran==='week'?Math.floor((dno(d)+3)/7):d.getFullYear()*12+d.getMonth();},k0=key(mn),
           kcol=function(k){return COL[(((k-k0)%COL.length)+COL.length)%COL.length];},
           kdate=function(k){if(gran==='month')return new Date(Math.floor(k/12),k%12,1);var n=gran==='day'?k:k*7-3,u=new Date(n*864e5);return new Date(u.getUTCFullYear(),u.getUTCMonth(),u.getUTCDate());},
           klab=function(k){var d=kdate(k),dm=d.getDate()+' '+MN[d.getMonth()];if(gran==='month')return MN[d.getMonth()]+' '+d.getFullYear();if(gran==='day')return DN[d.getDay()]+' '+dm;
             var e=new Date(d.getFullYear(),d.getMonth(),d.getDate()+6);return 'Wk '+d.getDate()+(e.getMonth()!==d.getMonth()?' '+MN[d.getMonth()]:'')+'–'+e.getDate()+' '+MN[e.getMonth()];},
           unit={month:'month',week:'week',day:'day'}[gran];
-      var keys=[];legs.forEach(function(l){l.k=key(l.date);if(keys.indexOf(l.k)<0)keys.push(l.k);});keys.sort(function(a,b){return a-b;});
+      var keys=[];legs.concat(dots).forEach(function(l){l.k=key(l.date);if(keys.indexOf(l.k)<0)keys.push(l.k);});keys.sort(function(a,b){return a-b;});
       /* temperatures: same data as the planner (monthly averages 2015-2024), loaded only when asked */
       var CL={data:null,loading:null,M:{latN:72,lonW:-170,step:1/3,rows:174,cols:360}};
       function cell(v,m,la,lo){var M=CL.M,r=Math.floor((M.latN-la)/M.step),c=Math.floor((lo-M.lonW)/M.step);
@@ -434,18 +440,20 @@ function showTrip(slug){$('trip').style.display='block';
       var grp=L.layerGroup(),arr=null,mode='off',sel=null,open=false,msg='';try{mode=localStorage.getItem('t69f_layer')||'off';}catch(e){}
       var merc=function(la){return Math.log(Math.tan(Math.PI/4+la*Math.PI/360));},ang=function(a,b){return Math.atan2((b[1]-a[1])*Math.PI/180,merc(b[0])-merc(a[0]))*180/Math.PI;};
       function arrows(list){try{if(arr){map.removeLayer(arr);arr=null;}}catch(e){}if(mode==='off'||!list)return;
-        var c=map.getCenter(),sp=Math.max(8,130*156.543*Math.cos(c.lat*Math.PI/180)/Math.pow(2,map.getZoom())),acc=sp*.5,g=L.layerGroup();
+        list=list.filter(function(P){return !P.side&&!P.cruise;});var c=map.getCenter(),sp=Math.max(8,130*156.543*Math.cos(c.lat*Math.PI/180)/Math.pow(2,map.getZoom())),acc=sp*.5,g=L.layerGroup();
         list.forEach(function(P){var pts=P.pts,km=0;for(var q=1;q<pts.length;q++)km+=kmb(pts[q-1],pts[q]);acc+=km;if(acc<sp)return;var m=Math.floor(pts.length/2),a=pts[Math.max(0,m-1)],b=pts[Math.min(pts.length-1,m+1)];if(a[0]===b[0]&&a[1]===b[1])return;acc=0;
-          g.addLayer(L.marker(pts[m],{pane:'arPane',interactive:false,keyboard:false,icon:L.divIcon({className:'',iconSize:[18,18],iconAnchor:[9,9],html:'<svg width="18" height="18" viewBox="0 0 16 16" style="display:block;transform:rotate('+Math.round(ang(a,b))+'deg)"><path d="M8 1.2 L14 14 L8 10.6 L2 14 Z" fill="#fff" stroke="#0D1B2E" stroke-width="1.7" stroke-linejoin="round"/></svg>'})}));});
+          g.addLayer(L.marker(pts[m],{pane:'arPane',interactive:false,keyboard:false,icon:L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],html:'<svg width="26" height="26" viewBox="0 0 16 16" style="display:block;transform:rotate('+Math.round(ang(a,b))+'deg)"><path d="M8 1.2 L14 14 L8 10.6 L2 14 Z" fill="#fff" stroke="#0D1B2E" stroke-width="1.7" stroke-linejoin="round"/></svg>'})}));});
         arr=g.addTo(map);}
       var cur=null;
       function draw(){grp.clearLayers();cur=null;if(mode==='off'){try{map.removeLayer(grp);}catch(e){}arrows(null);return;}if(!map.hasLayer(grp))grp.addTo(map);
         if(mode==='mon'){cur=legs.filter(function(l){return sel===null||l.k===sel;});
-          legs.forEach(function(l){var dim=sel!==null&&l.k!==sel;L.polyline(l.pts,{pane:'moPane',color:'#fff',weight:10,opacity:dim?.15:.9,interactive:false}).addTo(grp);
-            L.polyline(l.pts,{pane:'moPane',color:dim?'#94a3b8':kcol(l.k),weight:6,opacity:dim?.35:1,lineCap:'round',lineJoin:'round'}).bindTooltip(klab(l.k),{sticky:true}).addTo(grp);});}
+          legs.forEach(function(l){var dim=sel!==null&&l.k!==sel,w=l.side?4:6,da=l.cruise?'2 9':(l.side?'1 8':null);L.polyline(l.pts,{pane:'moPane',color:'#fff',weight:w+4,opacity:dim?.15:.9,interactive:false}).addTo(grp);
+            L.polyline(l.pts,{pane:'moPane',color:dim?'#94a3b8':kcol(l.k),weight:w,opacity:dim?.35:1,lineCap:'round',lineJoin:'round',dashArray:da}).bindTooltip(klab(l.k)+(l.cruise?' · cruise':(l.side?' · side trip':'')),{sticky:true}).addTo(grp);});
+          dots.forEach(function(q){var dim=sel!==null&&q.k!==sel;L.circleMarker(q.pt,{pane:'moPane',radius:9,color:'#fff',weight:3,fillColor:dim?'#94a3b8':kcol(q.k),fillOpacity:dim?.4:1}).bindTooltip(klab(q.k)+' · flight',{sticky:true}).addTo(grp);});}
         else if(CL.data){var v=mode==='min'?1:0;cur=legs;legs.forEach(function(l){pieces(l,v).forEach(function(p){
-          L.polyline(p.pts,{pane:'moPane',color:'#fff',weight:10,opacity:.85,interactive:false}).addTo(grp);
-          L.polyline(p.pts,{pane:'moPane',color:tcol(p.t),weight:6,opacity:1,lineCap:'round',lineJoin:'round'}).bindTooltip((v?'Avg night ':'Avg day ')+Math.round(p.t)+'°C / '+Math.round(p.t*9/5+32)+'°F · '+(l.coarse?klab(l.k):(l.date.getDate()+' '+MN[l.date.getMonth()])),{sticky:true}).addTo(grp);});});}
+          var w=l.side?4:6,da=l.cruise?'2 9':(l.side?'1 8':null);L.polyline(p.pts,{pane:'moPane',color:'#fff',weight:w+4,opacity:.85,interactive:false}).addTo(grp);
+          L.polyline(p.pts,{pane:'moPane',color:tcol(p.t),weight:w,opacity:1,lineCap:'round',lineJoin:'round',dashArray:da}).bindTooltip((v?'Avg night ':'Avg day ')+Math.round(p.t)+'°C / '+Math.round(p.t*9/5+32)+'°F · '+(l.coarse?klab(l.k):(l.date.getDate()+' '+MN[l.date.getMonth()])),{sticky:true}).addTo(grp);});});
+          dots.forEach(function(q){var tt=tAt(q.pt[0],q.pt[1],q.date,v);if(tt==null)return;L.circleMarker(q.pt,{pane:'moPane',radius:9,color:'#fff',weight:3,fillColor:tcol(tt),fillOpacity:1}).bindTooltip((v?'Night ':'Day ')+Math.round(tt)+'°C / '+Math.round(tt*9/5+32)+'°F · flight',{sticky:true}).addTo(grp);});}
         arrows(cur);}
       function setMode(m){mode=m;sel=null;msg='';try{if(isPhone())open=false;}catch(e){}try{localStorage.setItem('t69f_layer',m);}catch(e){}
         if((m==='max'||m==='min')&&!CL.data){msg='Loading temperatures…';ui();load().then(function(){msg='';draw();ui();}).catch(function(){msg='Temperatures could not be loaded';ui();});return;}draw();ui();}

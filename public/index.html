@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v284  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v285  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -2015,12 +2015,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v284</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v285</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v284</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v285</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2487,7 +2487,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v284</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v285</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -2509,6 +2509,7 @@ function signIn(){
         <button class="settings-btn" style="margin-bottom:10px" onclick="t69DupNames()">🔍 Find duplicates — all regions</button>
         <button class="settings-btn" style="margin-bottom:10px" onclick="t69GoogleUsage()">📊 Google usage — today and this month</button>
         <button class="settings-btn" style="margin-bottom:10px" onclick="t69UnpinRouteStops()">📌 Unpin route stops — one-time cleanup</button>
+        <button class="settings-btn" style="margin-bottom:10px" title="Fixes segments that share more than one stop (Renumber normally keeps the route clean)" onclick="t69CheckRoute()">🔧 Check route — segments that share more than one stop</button>
         <div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:6px">CALENDAR</div>
         <button class="settings-btn" style="margin-bottom:10px" onclick="t69SetCalId()">📅 Which calendar to sync into…</button>
       </div>
@@ -5836,19 +5837,20 @@ window.t69TownOf=async function(st){if(!st||st.lat==null)return null;var key='t6
   if(!out){/* offline or not found: the state name, 0.05° (~5 km) from the exact spot */var n=st.state||'';if(!n)return null;out={n:n+' area',a:Math.round(st.lat*20)/20,o:Math.round(st.lng*20)/20};}
   else{try{localStorage.setItem(key,JSON.stringify(out));}catch(e){}}
   return out;};
-/* v282: the road pieces with the month we drive them, for the follower site's month colours. Public map: only what is already driven; private preview: the whole plan. */
-function t69PubMonths(flat,segPts,flyLegs,limitIx){
+/* v285: the date of a route stop for the public map: the exact day when we have been there, otherwise only the month ("2027-08") */
+function t69PubDay(f,SD){if(!f)return '';if(f.vd)return String(f.vd).slice(0,10);try{var kk=SD.get(f.tw[0]),d=kk&&(kk.a||kk.d);if(d)return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);}catch(e){}return '';}
+/* v285: the road pieces with the day (visited) or month (still to come) we drive them, for the follower site's colours. Whole route, flights cut out. */
+function t69PubMonths(flat,segPts,flyLegs){
   try{var all=[].concat.apply([],segPts);if(all.length<2)return [];var SD=t69TStopDates();
     var R=[];flat.forEach(function(f,k){var sg=routeSegments[f.pos[0][0]];if(!sg||t69IsSideAt(sg,f.pos[0][1])||f.st.lat==null)return;
-      var d=f.vd||'';if(!d){try{var kk=SD.get(f.tw[0]),dd0=kk&&(kk.a||kk.d);if(dd0)d=dd0.getFullYear()+'-'+('0'+(dd0.getMonth()+1)).slice(-2)+'-'+('0'+dd0.getDate()).slice(-2);}catch(e){}}
-      var mm=String(d).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(mm)d=mm[3]+'-'+('0'+mm[2]).slice(-2)+'-'+('0'+mm[1]).slice(-2);
-      R.push({k:k,lat:+f.st.lat,lng:+f.st.lng,d:String(d).slice(0,10)});});
+      R.push({lat:+f.st.lat,lng:+f.st.lng,d:t69PubDay(f,SD)});});
     var from=0,idx=R.map(function(x){var best=from,bd=1e9;for(var q=from;q<all.length;q++){var dx=all[q][0]-x.lat,dy=(all[q][1]-x.lng)*Math.cos(x.lat*Math.PI/180),dd=dx*dx+dy*dy;if(dd<bd){bd=dd;best=q;}}from=best;return best;});
-    var out=[];
-    for(var i=1;i<R.length;i++){if(limitIx!=null&&R[i].k>limitIx)break;var d=R[i].d||R[i-1].d;if(!/^\d{4}-\d\d-\d\d$/.test(d))continue;
-      var a=idx[i-1],b=idx[i];if(b-a<1)continue;var seq=all.slice(a,b+1),day=d,last=out[out.length-1];
-      if(last&&last.d===day.slice(0,7)&&last.e===a){last.p=last.p.concat(seq.slice(1));last.e=b;}else out.push({d:day.slice(0,7),p:seq,e:b});}
-    var res=[];out.forEach(function(o){var runs=flyLegs&&flyLegs.length?t69CutFly(o.p,flyLegs,500):[t69Thin(o.p,500)];runs.forEach(function(r){if(r&&r.length>1)res.push([o.d,r]);});});
+    var out=[],tot=0;
+    for(var i=1;i<R.length;i++){var d=R[i].d||R[i-1].d;if(!/^\d{4}-\d\d(-\d\d)?$/.test(d))continue;var a=idx[i-1],b=idx[i];if(b-a<1)continue;var seq=all.slice(a,b+1),last=out[out.length-1];
+      if(last&&last.d===d&&last.e===a){last.p=last.p.concat(seq.slice(1));last.e=b;}else out.push({d:d,p:seq,e:b});}
+    out.forEach(function(o){tot+=o.p.length;});var res=[];
+    out.forEach(function(o){var mx=Math.max(6,Math.round(2600*o.p.length/Math.max(1,tot))),runs=flyLegs&&flyLegs.length?t69CutFly(o.p,flyLegs,mx):[t69Thin(o.p,mx)];
+      runs.forEach(function(r){if(r&&r.length>1)res.push([o.d,r]);});});
     return res;}catch(e){return [];}}
 window.t69Publish=async function(silent,preview){
   var P=window._t69Pub;if(!P)return false;
@@ -5903,18 +5905,19 @@ window.t69Publish=async function(silent,preview){
       stats:{visited:visited.length,total:flat.filter(function(f){return f.pub;}).length,days:stats.days,states:stats.states,km:km,kmLeft:stats.all?0:Math.round(Math.max(0,t69KmOf(sp.ahead)-flyAhead)),flyKm:Math.round(flyAll)},
       from:dates[0]||'',to:stats.all?(dates[dates.length-1]||''):'',here:lastPub?pt(lastPub):null,
       done:done,ahead:ahead,visited:visited,next:next,bbox:allPts.length?bb.map(function(x){return Math.round(x*1e3)/1e3;}):null};
+    var _SD0=t69TStopDates();
     var side=[];(routeSegments||[]).forEach(function(sg){(sg.stops||[]).forEach(function(st,i){
       if(!t69IsSideAt(sg,i)||st.sideKind!=='trip'||st.lat==null)return;var f=flat.find(function(x){return x.tw.indexOf(st)>=0;});if(!f||!f.pub)return;
       var fr=sg.stops[t69BaseIx(sg,i)];if(!fr||fr.lat==null)return; /* public lines start at the base, never at the (private) hotel */
       var fb=flat.find(function(x){return x.tw.indexOf(fr)>=0;});if(fb&&fb.town)fr={lat:fb.town.a,lng:fb.town.o,name:fb.town.n};
-      side.push({fr:fr,st:st,v:f.vd?1:0});});});
+      side.push({fr:fr,st:st,v:f.vd?1:0,d:t69PubDay(f,_SD0)});});});
     if(flyLegs.length)snap.fly=flyLegs.map(function(l){var vis=l.fi>=0&&l.fi<=flyDoneIx&&!!flat[l.fi].vd;
-      return {g:l.g.map(function(p){return [Math.round(p[0]*1e4)/1e4,Math.round(p[1]*1e4)/1e4];}),v:vis?1:0,a:l.a.name||'',b:l.b.name||'',c:t69IsCruiseSt(l.b)?1:0};});
+      return {g:l.g.map(function(p){return [Math.round(p[0]*1e4)/1e4,Math.round(p[1]*1e4)/1e4];}),v:vis?1:0,a:l.a.name||'',b:l.b.name||'',c:t69IsCruiseSt(l.b)?1:0,d:(l.fi>=0?t69PubDay(flat[l.fi],_SD0):'')};});
     if(side.length){var sideOut=new Array(side.length),nx=0,done=0;/* v251: 4 at a time, with progress */
       var worker=async function(){while(nx<side.length){var q=nx++;var g=await t69SideGeom(side[q].fr,side[q].st);done++;if(preview)t69PubProg('Side trips '+done+'/'+side.length+'…');
-        sideOut[q]={g:g.map(function(p){return [Math.round(p[0]*1e5)/1e5,Math.round(p[1]*1e5)/1e5];}),v:side[q].v};}};
+        sideOut[q]={g:g.map(function(p){return [Math.round(p[0]*1e5)/1e5,Math.round(p[1]*1e5)/1e5];}),v:side[q].v,d:side[q].d};}};
       await Promise.all([worker(),worker(),worker(),worker()]);snap.side=sideOut;}
-    try{var _mo=t69PubMonths(flat,segPts,flyLegs,preview?null:(stats.all?null:lastPubIx));if(_mo.length)snap.mo=_mo;}catch(e){}
+    try{var _mo=t69PubMonths(flat,segPts,flyLegs);if(_mo.length)snap.mo=_mo;}catch(e){}
     if(preview){snap.preview=true;snap.slug=docId;}
     var json=JSON.stringify(snap);
     if(json.length>900000){snap.done=t69CutFly(sp.done,flyLegs,800);snap.ahead=t69CutFly(sp.ahead,flyLegs,800);if(snap.mo)snap.mo=snap.mo.map(function(m){return [m[0],t69Thin(m[1],150)];});json=JSON.stringify(snap);}
@@ -9128,7 +9131,6 @@ function createCountry(){
       +'<button id="t69-ren" class="t69-tbtn" title="Rename">&#9999;</button>'
       +'<button id="t69-arch" class="t69-tbtn" title="Archive / unarchive trip">&#x1F4E6;</button>'
       +'<button class="t69-tbtn" title="Copy this trip into a new one" onclick="t69CopyTrip()">&#x29C9;</button>'
-      +'<button class="t69-tbtn" title="Check route: fix segments that share more than one stop" onclick="t69CheckRoute()">&#x1F527;</button>'
       +'<button id="t69-del" class="t69-tbtn t69-xhov" title="Delete trip">&#x1F5D1;</button>'
       +'<label style="font-size:9px;display:flex;align-items:center;gap:2px;cursor:pointer;white-space:nowrap;margin-left:auto;color:var(--muted)" title="Show archived trips in the list"><input type="checkbox" id="t69-showarch" style="margin:0;width:12px;height:12px">archived</label>';
     panel.insertBefore(bar,panel.firstChild);
@@ -9589,13 +9591,13 @@ window.t69ExportNames=async function(){
     if(!items.length){box.innerHTML='';return;}
     box.innerHTML='<div class="t69-sgrp" style="border:1px solid #ffb74d;border-radius:8px;padding:8px;margin:6px 0">'
       +'<div class="t69-sgrp-t" style="color:#ffb74d">\u26A0 In use but not in your list</div>'
-      +'<div style="font-size:10px;color:var(--muted);margin-bottom:6px">Live count from the database. Keep adds it to your list; Merge moves those locations into another value.</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-bottom:6px">Live count from the database. \u201cAdd as new\u201d creates it as a new value in your list; Merge moves those locations into another value that already exists.</div>'
       +items.map(function(o,k){return '<div style="display:flex;align-items:center;gap:6px;font-size:12px;padding:2px 0">'
         +'<span style="flex:1"><span style="color:var(--muted);font-size:10px">'+labels[o.t]+'</span> '+t69Esc(o.v)+' <span style="color:var(--muted)">('+o.n+')</span></span>'
-        +'<button class="t69t-btn" data-keep="'+k+'">Keep</button><button class="t69t-btn" data-merge="'+k+'">Merge\u2026</button></div>';}).join('')+'</div>';
+        +'<button class="t69t-btn" data-keep="'+k+'" title="Creates this as a new '+labels[o.t].toLowerCase()+' in your list">\u2795 Add as new</button><button class="t69t-btn" data-merge="'+k+'">Merge\u2026</button></div>';}).join('')+'</div>';
     box.querySelectorAll('[data-keep]').forEach(function(b){b.onclick=function(){var o=items[+b.getAttribute('data-keep')];
       var nv=(settings[o.t]||[]).concat([o.v]);b.disabled=true;
-      callFn('saveSettings',{type:o.t,values:nv}).then(function(){settings[o.t]=nv;renderSettings();toast('\u2705 '+o.v+' kept');})
+      callFn('saveSettings',{type:o.t,values:nv}).then(function(){settings[o.t]=nv;renderSettings();toast('\u2705 '+o.v+' added as a new '+labels[o.t].toLowerCase());})
         .catch(function(e){b.disabled=false;toast('\u274C '+(e.message||e));});};});
     box.querySelectorAll('[data-merge]').forEach(function(b){b.onclick=function(){var o=items[+b.getAttribute('data-merge')];
       t69MergePicker(o.t,o.v,o.n,settings[o.t]||[],function(v){settings[o.t]=v;renderSettings();
