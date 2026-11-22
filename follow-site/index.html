@@ -153,6 +153,12 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 .leaflet-popup-content{margin:12px 14px;font-family:Outfit,sans-serif;min-width:200px}
 .leaflet-container a.leaflet-popup-close-button{color:var(--muted)}
 .pp .n{font-weight:700;font-size:15px}.pp .s{font-size:12px;color:var(--muted);margin-bottom:6px}
+.mobtn{background:rgba(13,27,46,.94);color:#E2E8F0;border:1px solid var(--line);border-radius:12px;font:600 13px Outfit,system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.4);padding:0;max-width:210px}
+.mobtn button.mb{background:none;border:0;color:inherit;font:inherit;padding:9px 12px;cursor:pointer;display:block;width:100%;text-align:left}
+.mobtn.on button.mb{background:rgba(91,200,245,.18);border-radius:12px 12px 0 0}
+.mobtn .ml{padding:4px 12px 10px;font-weight:500;font-size:12px}
+.mobtn .ml div{display:flex;align-items:center;gap:7px;margin:5px 0;cursor:pointer}
+.mobtn .ml i{display:inline-block;width:22px;height:10px;border-radius:5px;flex:none}
 .leaflet-control-attribution{background:rgba(13,27,46,.75)!important;color:var(--muted)!important}
 .leaflet-control-attribution a{color:var(--sky)!important}
 /* phone: map on top, panel below as a sheet */
@@ -207,7 +213,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 <script>
 function setHdr(){var h=document.querySelector('.top');if(h)document.documentElement.style.setProperty('--hdr',h.offsetHeight+'px');}
 setHdr();window.addEventListener('resize',function(){setHdr();if(window.map&&map.invalidateSize)map.invalidateSize();});
-var SITE_V='v25';
+var SITE_V='v27';
 /* v22: link to one stop (/s/<stop code>) and ?join=1 (or …/join) = follow form first */
 var FOCUS='',CUR='',MISS='',JOIN=false,NOROW=false;
 function hasCd(o,code){return !!(o&&o.cd)&&(' '+String(o.cd).toUpperCase()+' ').indexOf(' '+code+' ')>=0;}
@@ -389,6 +395,26 @@ function showTrip(slug){$('trip').style.display='block';
     if(t.here){byKey.here=L.marker([t.here.a,t.here.o],{icon:divIcon('<div class="pulse"><img src="/pin-travellers.png" alt=""></div>',58),zIndexOffset:1000}).addTo(map)
       .bindPopup('<div class="pp"><div class="n">'+(t.status==='done'?'Last stop':'We’re here')+'</div><div class="s">'+esc(t.here.n)+', '+esc(t.here.s)+'</div></div>');}
     if(t.bbox)map.fitBounds([[t.bbox[0],t.bbox[1]],[t.bbox[2],t.bbox[3]]],{padding:[30,30],animate:!FOCUS});
+    /* v26: the route coloured per month (same colours as the planner). Only if the trip data has months. */
+    (function(){var MO=(t.mo||[]).filter(function(m){return m&&m[1]&&m[1].length>1&&/^\d{4}-\d\d$/.test(m[0]);});if(!MO.length)return;
+      var COL=['#7c3aed','#f97316','#16a34a','#ec4899','#facc15','#7f1d1d','#a3e635','#c026d3','#92400e','#fb7185','#1f2937','#dc2626','#65a30d','#0f766e'],
+          MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+          nk=function(m){return (+m.slice(0,4))*12+(+m.slice(5,7))-1;},keys=[];
+      MO.forEach(function(m){if(keys.indexOf(m[0])<0)keys.push(m[0]);});keys.sort();
+      var k0=nk(keys[0]),col=function(m){return COL[(nk(m)-k0)%COL.length];},lab=function(m){return MN[+m.slice(5,7)-1]+' '+m.slice(0,4);};
+      if(!map.getPane('moPane')){map.createPane('moPane').style.zIndex=450;}
+      var grp=L.layerGroup(),sel=null,on=false;try{on=localStorage.getItem('t69f_mon')==='1';}catch(e){}
+      var ctl=L.control({position:'topright'}),box;
+      function draw(){grp.clearLayers();if(!on||!map)return;if(!map.hasLayer(grp))grp.addTo(map);
+        MO.forEach(function(m){var dim=sel&&sel!==m[0];
+          L.polyline(m[1],{pane:'moPane',color:'#fff',weight:10,opacity:dim?.15:.9,interactive:false}).addTo(grp);
+          L.polyline(m[1],{pane:'moPane',color:dim?'#94a3b8':col(m[0]),weight:6,opacity:dim?.35:1,lineCap:'round',lineJoin:'round'}).bindTooltip(lab(m[0]),{sticky:true}).addTo(grp);});}
+      function ui(){if(!box)return;box.className='leaflet-control mobtn'+(on?' on':'');
+        box.innerHTML='<button class="mb" type="button" aria-pressed="'+on+'">\uD83D\uDDD3 Route per month'+(on?' \u25BE':'')+'</button>'
+          +(on?'<div class="ml">'+keys.map(function(k){return '<div data-m="'+k+'" style="opacity:'+(sel&&sel!==k?.45:1)+'"><i style="background:'+col(k)+'"></i>'+lab(k)+'</div>';}).join('')+'<div style="opacity:.7;margin-top:6px;cursor:default;display:block">Tap a month to show only that one</div></div>':'');
+        box.querySelector('.mb').onclick=function(){on=!on;sel=null;try{localStorage.setItem('t69f_mon',on?'1':'0');}catch(e){}draw();ui();};
+        box.querySelectorAll('[data-m]').forEach(function(d){d.onclick=function(){var k=d.getAttribute('data-m');sel=(sel===k)?null:k;draw();ui();};});}
+      ctl.onAdd=function(){box=L.DomUtil.create('div','mobtn');L.DomEvent.disableClickPropagation(box);ui();return box;};ctl.addTo(map);draw();})();
     var mi=Math.round((s.km||0)/1.609344);
     if(t.preview){var mr=document.createElement('meta');mr.name='robots';mr.content='noindex,nofollow';document.head.appendChild(mr);document.title='Preview · '+document.title;}
     var h=(t.preview?'<div class="pvbar">👁 <b>Preview</b> — only people with this link can see it. </div>':'')
