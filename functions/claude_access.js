@@ -1,5 +1,5 @@
 'use strict';
-/* Travellers 1969 — private access for Claude (v4, 19 Nov 2026)
+/* Travellers 1969 — private access for Claude (v5, 23 Nov 2026)
    One HTTPS function, protected by a long secret key (functions/.env → CLAUDE_KEY=…, never in GitHub).
    Read: only trips, locations, the public follower pages, stop codes, hotel notes and its own log
    (not the followers' email addresses, not the settings/keys in config).
@@ -7,6 +7,7 @@
    v2: a place in the places list can be moved to the bin (collection locationsTrash) and put back again
    — the full place is kept there, nothing is lost.
    v4: one person's score can be removed from places of one region (op clearScore, only that score, other scores stay, old scores written to claudeLog) and put back (op setScores).
+   v5: op setEpisodes writes the list of long YouTube episodes of ONE trip into the public document public/episodes (the follower site shows them). Only that document, only https YouTube links.
    Before the first change (and then at most every 30 minutes) a backup of the whole trip is saved in
    trips/<trip>/backups — the planner shows it under ⋯ More → Backups. Every change is written to claudeLog. */
 const functions = require('firebase-functions/v1');
@@ -81,7 +82,7 @@ async function log(db, entry) {
 async function handle(db, b) {
   const op = String(b.op || '');
   switch (op) {
-    case 'ping': return { ok: true, time: new Date().toISOString(), v: 4 };
+    case 'ping': return { ok: true, time: new Date().toISOString(), v: 5 };
     case 'trips': {
       const docs = (await db.collection('trips').get()).docs;
       return { trips: docs.map(d => { const x = d.data() || {}; return { id: d.id, name: x.name || '', code: x.code || '', archived: !!x.archived, publicOn: !!x.publicOn, publicSlug: x.publicSlug || '' }; }) };
@@ -195,12 +196,34 @@ async function handle(db, b) {
       await batch.commit(); await log(db, { op, region: r, who, n: sc.length });
       return { ok: true, restored: sc.length };
     }
+    case 'setEpisodes': {   /* {slug, episodes:[{t,u,a?,b?,n?}]} — replaces the list of that one trip; other trips stay; old list goes to claudeLog */
+      const slug = String(b.slug || '');
+      if (!/^[a-z0-9-]{1,40}$/.test(slug)) throw new Error('slug: lowercase letters, digits and - only (the public trip name, e.g. yellowstone)');
+      if (!Array.isArray(b.episodes) || b.episodes.length > 80) throw new Error('episodes: a list of at most 80');
+      const YT = /^https:\/\/(www\.)?(youtube\.com\/(watch\?v=|live\/|playlist\?list=)|youtu\.be\/)[A-Za-z0-9_&=?%.-]{3,120}$/;
+      const eps = b.episodes.map((e, i) => {
+        const t = String(e.t || '').trim().slice(0, 90), u = String(e.u || '').trim();
+        if (!t) throw new Error('episode ' + (i + 1) + ': title missing');
+        if (!YT.test(u)) throw new Error('episode ' + (i + 1) + ': link must be an https YouTube link');
+        const o = { t, u }, iso = /^\d{4}-\d{2}-\d{2}$/;
+        ['a', 'b'].forEach(k => { if (e[k]) { if (!iso.test(String(e[k]))) throw new Error('episode ' + (i + 1) + ': ' + k + ' must be YYYY-MM-DD'); o[k] = String(e[k]); } });
+        if (e.n) o.n = String(e.n).trim().slice(0, 160);
+        return o;
+      });
+      const ref = db.doc('public/episodes'), cur = await ref.get();
+      let all = {}; try { all = cur.exists ? JSON.parse((cur.data() || {}).json || '{}') : {}; } catch (e) { all = {}; }
+      const before = all[slug] || [];
+      if (eps.length) all[slug] = eps; else delete all[slug];
+      await ref.set({ json: JSON.stringify(all), updated: new Date().toISOString() });
+      await log(db, { op, slug, before: JSON.stringify(before).slice(0, 4000), after: JSON.stringify(eps).slice(0, 4000) });
+      return { ok: true, slug, episodes: eps.length };
+    }
     case 'log': {
       const lim = Math.min(Math.max(parseInt(b.limit, 10) || 30, 1), 200);
       const q = await db.collection('claudeLog').orderBy('at', 'desc').limit(lim).get();
       return { log: q.docs.map(d => plain(d.data())) };
     }
-    default: throw new Error('unknown op: ' + op + ' (ping, trips, dump, get, list, backup, patch, setDates, trashLocs, restoreLocs, clearScore, setScores, log)');
+    default: throw new Error('unknown op: ' + op + ' (ping, trips, dump, get, list, backup, patch, setDates, trashLocs, restoreLocs, clearScore, setScores, setEpisodes, log)');
   }
 }
 
