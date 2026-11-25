@@ -214,7 +214,7 @@ h4{margin:18px 0 8px;font-size:13px;color:var(--sand);font-weight:600}
 <script>
 function setHdr(){var h=document.querySelector('.top');if(h)document.documentElement.style.setProperty('--hdr',h.offsetHeight+'px');}
 setHdr();window.addEventListener('resize',function(){setHdr();if(window.map&&map.invalidateSize)map.invalidateSize();});
-var SITE_V='v31';
+var SITE_V='v32';
 /* v22: link to one stop (/s/<stop code>) and ?join=1 (or …/join) = follow form first */
 var FOCUS='',CUR='',MISS='',JOIN=false,NOROW=false;
 function hasCd(o,code){return !!(o&&o.cd)&&(' '+String(o.cd).toUpperCase()+' ').indexOf(' '+code+' ')>=0;}
@@ -400,7 +400,7 @@ function showTrip(slug){$('trip').style.display='block';
       byKey['n'+k]=m;});
     if(t.here){byKey.here=L.marker([t.here.a,t.here.o],{icon:divIcon('<div class="pulse"><img src="/pin-travellers.png" alt=""></div>',58),zIndexOffset:1000}).addTo(map)
       .bindPopup('<div class="pp"><div class="n">'+(t.status==='done'?'Last stop':'We’re here')+'</div><div class="s">'+esc(t.here.n)+', '+esc(t.here.s)+'</div></div>');}
-    if(t.bbox)map.fitBounds([[t.bbox[0],t.bbox[1]],[t.bbox[2],t.bbox[3]]],{padding:[30,30],animate:!FOCUS});
+    if(t.bbox)map.fitBounds([[t.bbox[0],t.bbox[1]],[t.bbox[2],t.bbox[3]]],{padding:[30,30],animate:false});
     /* v28: colours on the route — per month/week/day, or the average day/night temperature. Works from the stops we visited (dates) and the driven line;
        a private preview with a whole plan also uses the months the planner sends (t.mo). */
     (function(){
@@ -511,7 +511,7 @@ function showTrip(slug){$('trip').style.display='block';
           var per=e.a?(e.b&&e.b!==e.a?fmtShort(e.a)+' – '+fmtShort(e.b):fmtShort(e.a)):'';
           return '<a class="ep" href="'+esc(safeUrl(e.u))+'" target="_blank" rel="noopener"><span class="pl">▶</span><span class="tx"><b>'+esc(e.t)+'</b>'
             +(per||e.n?'<small>'+esc(per)+(per&&e.n?' · ':'')+esc(e.n||'')+'</small>':'')+'</span></a>';}).join('');
-        el.innerHTML='<h4>Episodes</h4><div class="eps">'+rows+'</div>';}).catch(function(){});})();
+        el.innerHTML='<h4>Full episodes</h4><div class="eps">'+rows+'</div>';}).catch(function(){});})();
     function stHtml(o){var v=o.v;return '<div class="st" data-k="v'+o.k+'"><div class="n"><span class="vn'+(v.sd?' sd':'')+'">'+(o.k+1)+'</span>'+(v.cr?'⛴ ':(v.fl?'✈ ':''))+esc(v.n)+'</div><div class="s">'+esc(v.s)+(v.d?(' \u00b7 '+esc(fmtD(v.d))):'')
       +(v.p&&v.p.length?(' \u00b7 '+vidN(v.p)+' video'+(vidN(v.p)===1?'':'s')):'')+'</div>'+postsHtml(v.p)+'</div>';}
     function drawTL(){var tl=$('tl');if(!tl)return;var q=($('q')&&$('q').value||'').trim().toLowerCase(),fs=$('fs')?$('fs').value:'',
