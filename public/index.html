@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v286  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v287  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -2015,12 +2015,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v286</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v287</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v286</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v287</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2487,7 +2487,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v286</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v287</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -3176,7 +3176,7 @@ function mkCrossStatePopup(loc,cspIdx){_puLoc=loc;
   var key=loc.lat+','+loc.lng;
   var h='<div class="pu"><div class="pu-cat" style="color:'+c+'">'+loc.category+'</div><div class="pu-name">'+loc.name+'</div>'
   +'<div class="pu-row" style="color:#aaa;font-size:10px">📌 '+loc.state+'</div>'
-  +'<div class="pu-row"><strong>Budget:</strong> '+(loc.budget===0?'<span style="color:#10B981">FREE</span>':'$'+loc.budget+t69PriceUnit(loc))+'</div>'
+  +'<div class="pu-row"><strong>Budget:</strong> '+t69BudgetFor(loc)+'</div>'
   +(avgStr?'<div class="pu-row"><strong>Rating:</strong> ★ '+avgStr+' <span style="color:#aaa;font-size:11px">('+ratingsInline(loc)+')</span></div>':'')
   +(t69GStr(loc)?'<div class="pu-row"><strong>Google:</strong> ★ '+t69GStr(loc)+'</div>':'')
   +(loc.reservation==='Yes'?'<div class="pu-row" style="color:#E67E22">⚠️ Reservation required</div>':'')
@@ -3218,7 +3218,7 @@ window.t69DetailOfLoc=function(idx){var loc=T69_PL[idx];if(!loc)return;
 window.t69RouteOfLoc=function(idx){var loc=T69_PL[idx];if(loc)openSegPicker(loc);};
 function mkPopup(loc,idx){_puLoc=loc;T69_PL[idx]=loc;var c=catColor(loc.category),avg=getAvg(loc),avgStr=avg?avg.toFixed(1):null;var notes=(loc.notes||'').replace(/\\n/g,'\n').split('\n').slice(0,3).join('<br>');var pinKey=(loc.lat||'')+','+(loc.lng||'');var isPinned=!!individualPins[pinKey];
 var h='<div class="pu"><div class="pu-cat" style="color:'+c+'">'+loc.category+'</div><div class="pu-name">'+loc.name+'</div>'
-+'<div class="pu-row"><strong>Budget:</strong> '+(loc.budget===0?'<span style="color:#10B981">FREE</span>':'$'+loc.budget+t69PriceUnit(loc))+'</div>'
++'<div class="pu-row"><strong>Budget:</strong> '+t69BudgetFor(loc)+'</div>'
 +(avgStr?'<div class="pu-row"><strong>Rating:</strong> ★ '+avgStr+' <span style="color:#aaa;font-size:10px">('+ratingsInline(loc)+')</span></div>':'')
 +(t69GStr(loc)?'<div class="pu-row"><strong>Google:</strong> ★ '+t69GStr(loc)+'</div>':'')
 +(loc.reservation==='Yes'?'<div class="pu-row" style="color:#E67E22">⚠️ Reservation required</div>':'')
@@ -3402,7 +3402,7 @@ function openDetail(idx){
   document.getElementById('dcCat').textContent=loc.category;document.getElementById('dcCat').style.color=c;
   document.getElementById('dcName').textContent=loc.name;
   var html='<div id="dcPhotoWrap" style="display:none"><img id="dcPhoto" class="dc-photo" src="" onerror="document.getElementById(\'dcPhotoWrap\').style.display=\'none\'"></div>';
-  html+='<div class="d-row"><strong>Budget</strong><span class="d-val">'+(loc.budget===0?'FREE':'$'+loc.budget+t69PriceUnit(loc))+'</span></div>';
+  html+='<div class="d-row"><strong>Budget</strong><span class="d-val">'+t69BudgetFor(loc,true)+'</span></div>';
   html+='<div class="d-row"><strong>Season</strong><span class="d-val">'+(loc.season||'—')+'</span></div>';
   if(avgStr){html+='<div class="d-row"><strong>Rating</strong><div><span style="color:var(--accent);letter-spacing:-1px;font-size:13px">'+stars+'</span> <span style="color:var(--accent);font-weight:700;font-size:11px">'+avgStr+'</span>';if(ratingsInline(loc))html+='<br><span style="font-size:10px;color:var(--muted)">'+ratingsInline(loc)+'</span>';html+='</div></div>';}
   if(t69GStr(loc))html+='<div class="d-row"><strong>Google</strong><span class="d-val">★ '+t69GStr(loc)+'</span></div>';
@@ -3457,7 +3457,7 @@ function openCrossStateDetail(loc){
   document.getElementById('dcCat').textContent=loc.category+' · 📌 '+loc.state;
   document.getElementById('dcCat').style.color=c;
   document.getElementById('dcName').textContent=loc.name;
-  var html='<div class="d-row"><strong>Budget</strong><span class="d-val">'+(loc.budget===0?'FREE':'$'+loc.budget+t69PriceUnit(loc))+'</span></div>';
+  var html='<div class="d-row"><strong>Budget</strong><span class="d-val">'+t69BudgetFor(loc,true)+'</span></div>';
   html+='<div class="d-row"><strong>Season</strong><span class="d-val">'+(loc.season||'—')+'</span></div>';
   if(avgStr){html+='<div class="d-row"><strong>Rating</strong><div><span style="color:var(--accent);letter-spacing:-1px;font-size:13px">'+stars+'</span> <span style="color:var(--accent);font-weight:700;font-size:11px">'+avgStr+'</span>';if(ratingsInline(loc))html+='<br><span style="font-size:10px;color:var(--muted)">'+ratingsInline(loc)+'</span>';html+='</div></div>';}
   html+=t69RateRowHtml(loc,'x');
@@ -5589,9 +5589,22 @@ window.t69StopSheetById=function(segId,stopId){var si=-1,i=-1;(routeSegments||[]
   if(si<0){toast('Stop not found \u2014 open the right trip first');return;}try{map.closePopup();}catch(e){}t69StopSheet(si,i);};
 window.t69StopOf=function(loc){if(!loc||loc.lat==null||loc.lng==null)return null;var hit=null;
   (routeSegments||[]).forEach(function(sg,si){(sg.stops||[]).forEach(function(st,i){if(!hit&&st.lat!=null&&Math.abs(st.lat-loc.lat)<1e-4&&Math.abs(st.lng-loc.lng)<1e-4)hit={si:si,i:i,st:st,seg:sg};});});return hit;};
+window.t69StopBudgetHtml=function(seg,si,i,st){var c;try{c=t69StopCost(seg,st,null);}catch(e){return null;}if(!c)return null;
+  var btn=' <a href="#" onclick="t69StopSheet('+si+','+i+');return false" style="color:#5BC8F5;text-decoration:none;font-size:11px" title="Edit the price of this stop">✏️ edit</a>';
+  var amt=Math.round(c.actual||c.planned||0),pl=Math.round(c.planned||0),paid=t69Num(st.actual)!==null;
+  if(st.freeStay||st.noCost)return '<span style="color:#10B981">FREE</span>'+btn;
+  if(amt>0){var x='$'+amt.toLocaleString('en-US');
+    if(paid)x+=' paid'+(pl&&pl!==amt?' <span style="color:#aaa">(planned $'+pl.toLocaleString('en-US')+')</span>':'');else x+=' planned';
+    if(c.kind==='lodging'&&c.nights)x+=' <span style="color:#aaa">· whole stay, '+c.nights+(c.nights===1?' night':' nights')+'</span>';
+    return x+btn;}
+  if(c.repeat&&c.how)return '<span style="color:#aaa">'+t69Esc(c.how)+'</span>'+btn;
+  if(c.zero)return '<span style="color:#F59E0B">not filled in yet</span>'+btn;
+  return '<span style="color:#10B981">FREE</span>'+btn;};
+window.t69BudgetFor=function(loc,plain){var base=(loc.budget===0?(plain?'FREE':'<span style="color:#10B981">FREE</span>'):'$'+loc.budget+t69PriceUnit(loc));
+  try{var h=t69StopOf(loc);if(h){var r=t69StopBudgetHtml(h.seg,h.si,h.i,h.st);if(r)return r;}}catch(e){}return base;};
 window.t69RouteStopRow=function(loc){var h=t69StopOf(loc);if(!h)return '';var n=t69Posts(h.st).length,v=h.st.visitedDate;
   return '<div class="d-row" style="flex-direction:column;align-items:stretch;gap:4px"><strong>On your route \u00b7 stop '+t69StopNo(h.seg,h.i)+'</strong>'
-    +'<button class="t69t-btn" style="align-self:flex-start" onclick="t69StopSheet('+h.si+','+h.i+')">'+(v?'\u2705 Visited '+t69ShortD(v):'\u2B1C Not visited yet')+' \u00b7 \uD83D\uDD17 Posts'+(n?' ('+n+')':'')+'</button></div>';};
+    +'<button class="t69t-btn" style="align-self:flex-start" onclick="t69StopSheet('+h.si+','+h.i+')">'+(v?'\u2705 Visited '+t69ShortD(v):'\u2B1C Not visited yet')+(n?' \u00b7 \uD83D\uDD17 '+n:'')+'</button></div>';};
 function t69SsSnap(box){return [].slice.call(box.querySelectorAll('input,select,textarea')).filter(function(el){return el.id!=='t69SsUrl'&&el.id!=='t69SsLbl';}).map(function(el){return el.type==='checkbox'||el.type==='radio'?(el.checked?1:0):el.value;}).join('|');}
 window.t69StopSheet=function(si,i){
   var sg=routeSegments[si],st=sg&&sg.stops[i];if(!st)return;
@@ -5639,7 +5652,7 @@ window.t69StopSheet=function(si,i){
     +'<label style="display:block;cursor:pointer;margin:2px 0"><input type="radio" name="t69SsPub" value="hide"'+(hidden?' checked':'')+'> \uD83D\uDE48 Never show this stop</label></div>'
     +'<div style="font-weight:700;margin-bottom:6px">🔗 Posts <span id="t69SsN" style="color:var(--muted);font-weight:400"></span></div>'
     +'<div id="t69SsList"></div>'
-    +'<div style="border:1px dashed var(--border);border-radius:9px;padding:8px;margin-top:8px;display:flex;flex-direction:column;gap:6px">'
+    +'<div style="border:1px dashed var(--border);border-radius:9px;padding:8px;margin-top:8px;display:none;flex-direction:column;gap:6px">'
     +'<textarea id="t69SsUrl" rows="3" placeholder="Paste one or more post links (Instagram, TikTok, YouTube, Facebook) \u2014 all at once is fine" style="resize:vertical;'+inp+'"></textarea>'
     +'<input id="t69SsLbl" placeholder="Label (optional \u2014 filled in from YouTube/TikTok/Facebook when it can)" style="'+inp+'">'
     +'<button class="t69t-btn" id="t69SsAdd" style="align-self:flex-start">\uFF0B Add post(s)</button>'
@@ -5648,7 +5661,7 @@ window.t69StopSheet=function(si,i){
     +'<button class="t69t-btn" id="t69SsSave" style="background:var(--accent);color:#0D1B2E;font-weight:700">Save</button></div>';
   ov.appendChild(box);document.body.appendChild(ov);
   function draw(){var L=box.querySelector('#t69SsList');box.querySelector('#t69SsN').textContent=posts.length?('('+posts.length+')'):'';
-    L.innerHTML=posts.length?'':'<div style="color:var(--muted);font-size:12px">No posts yet.</div>';
+    L.innerHTML=posts.length?'':'<div style="color:var(--muted);font-size:12px">No posts linked yet \u2014 they are added from our social media.</div>';
     posts.forEach(function(p,k){var r=document.createElement('div');
       r.style.cssText='display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06)';
       r.innerHTML='<span style="flex:1;min-width:0"><a href="'+t69Esc(p.u)+'" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">'+T69_PLAT[t69Plat(p.u)]+'</a> '
@@ -8015,7 +8028,7 @@ function t69StopPopup(seg,si,st,i){
     +'<div class="pu-row" style="color:#aaa;font-size:10px">\uD83D\uDDFA '+t69StopNo(seg,i)+' \u00b7 '+t69Esc(segName)+(st.state?(' \u00b7 '+t69Esc(st.state)):'')+'</div>';
   if(L){
     var b=parseFloat(L.budget);
-    h+='<div class="pu-row"><strong>Budget:</strong> '+(!b?'<span style="color:#10B981">FREE</span>':('$'+b+t69PriceUnit(L||{category:st&&st.category})))+'</div>';
+    h+='<div class="pu-row"><strong>Budget:</strong> '+(t69StopBudgetHtml(seg,si,i,st)||(!b?'<span style="color:#10B981">FREE</span>':('$'+b+t69PriceUnit(L||{category:st&&st.category}))))+'</div>';
     try{var v=[];Object.keys(L.ratings||{}).forEach(function(k){var x=parseFloat(L.ratings[k]);if(!isNaN(x)&&x>0)v.push(x);});
       if(v.length)h+='<div class="pu-row"><strong>Rating:</strong> \u2605 '+(Math.round(v.reduce(function(a,c){return a+c;},0)/v.length*10)/10).toFixed(1)+' <span style="color:#aaa;font-size:11px">('+ratingsInline(L)+')</span></div>';}catch(e){}
     if(typeof t69GStr==='function'&&t69GStr(L))h+='<div class="pu-row"><strong>Google:</strong> \u2605 '+t69GStr(L)+'</div>';
@@ -8027,7 +8040,7 @@ function t69StopPopup(seg,si,st,i){
   if(L&&L.website&&L.website!=='N/A')h+='<a class="pu-link" href="'+L.website+'" target="_blank">\uD83D\uDD17 '+L.website.replace(/https?:\/\/(www\.)?/,'').split('/')[0]+'</a>';
   var _np=t69Posts(st).length;
   h+='<div class="pu-actions">'
-    +'<button class="pu-btn" onclick="t69StopSheetById(\''+seg.id+'\',\''+st.id+'\')">'+(st.visitedDate?'\u2705':'\u2B1C')+' Visited &amp; \uD83D\uDD17 posts'+(_np?' ('+_np+')':'')+'</button>'
+    +'<button class="pu-btn" onclick="t69StopSheetById(\''+seg.id+'\',\''+st.id+'\')">'+(st.visitedDate?'\u2705':'\u2B1C')+' Visited'+(_np?' \u00b7 \uD83D\uDD17 '+_np:'')+'</button>'
 
     +'<button class="pu-btn" onclick="t69AddStopAgain('+si+','+i+')" title="Add this place to the route once more, e.g. Home again at the end of a round trip">\u2795 Add again</button>'
     +'<button class="pu-btn" onclick="t69StopDetails('+(st.lat||0)+','+(st.lng||0)+',\''+String(st.state||st.sourceSheet||'').replace(/'/g,"\\'")+'\')">\uD83D\uDCCB Details</button>'
