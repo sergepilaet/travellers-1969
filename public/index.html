@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v287  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v288  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -2015,12 +2015,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v287</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v288</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v287</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v288</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2487,7 +2487,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v287</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v288</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -3176,7 +3176,7 @@ function mkCrossStatePopup(loc,cspIdx){_puLoc=loc;
   var key=loc.lat+','+loc.lng;
   var h='<div class="pu"><div class="pu-cat" style="color:'+c+'">'+loc.category+'</div><div class="pu-name">'+loc.name+'</div>'
   +'<div class="pu-row" style="color:#aaa;font-size:10px">📌 '+loc.state+'</div>'
-  +'<div class="pu-row"><strong>Budget:</strong> '+t69BudgetFor(loc)+'</div>'
+  +'<div class="pu-row"><strong>Budget:</strong> '+t69BudgetFor(loc)+'</div>'+t69ContactLines(loc)
   +(avgStr?'<div class="pu-row"><strong>Rating:</strong> ★ '+avgStr+' <span style="color:#aaa;font-size:11px">('+ratingsInline(loc)+')</span></div>':'')
   +(t69GStr(loc)?'<div class="pu-row"><strong>Google:</strong> ★ '+t69GStr(loc)+'</div>':'')
   +(loc.reservation==='Yes'?'<div class="pu-row" style="color:#E67E22">⚠️ Reservation required</div>':'')
@@ -3218,7 +3218,7 @@ window.t69DetailOfLoc=function(idx){var loc=T69_PL[idx];if(!loc)return;
 window.t69RouteOfLoc=function(idx){var loc=T69_PL[idx];if(loc)openSegPicker(loc);};
 function mkPopup(loc,idx){_puLoc=loc;T69_PL[idx]=loc;var c=catColor(loc.category),avg=getAvg(loc),avgStr=avg?avg.toFixed(1):null;var notes=(loc.notes||'').replace(/\\n/g,'\n').split('\n').slice(0,3).join('<br>');var pinKey=(loc.lat||'')+','+(loc.lng||'');var isPinned=!!individualPins[pinKey];
 var h='<div class="pu"><div class="pu-cat" style="color:'+c+'">'+loc.category+'</div><div class="pu-name">'+loc.name+'</div>'
-+'<div class="pu-row"><strong>Budget:</strong> '+t69BudgetFor(loc)+'</div>'
++'<div class="pu-row"><strong>Budget:</strong> '+t69BudgetFor(loc)+'</div>'+t69ContactLines(loc)
 +(avgStr?'<div class="pu-row"><strong>Rating:</strong> ★ '+avgStr+' <span style="color:#aaa;font-size:10px">('+ratingsInline(loc)+')</span></div>':'')
 +(t69GStr(loc)?'<div class="pu-row"><strong>Google:</strong> ★ '+t69GStr(loc)+'</div>':'')
 +(loc.reservation==='Yes'?'<div class="pu-row" style="color:#E67E22">⚠️ Reservation required</div>':'')
@@ -3402,7 +3402,7 @@ function openDetail(idx){
   document.getElementById('dcCat').textContent=loc.category;document.getElementById('dcCat').style.color=c;
   document.getElementById('dcName').textContent=loc.name;
   var html='<div id="dcPhotoWrap" style="display:none"><img id="dcPhoto" class="dc-photo" src="" onerror="document.getElementById(\'dcPhotoWrap\').style.display=\'none\'"></div>';
-  html+='<div class="d-row"><strong>Budget</strong><span class="d-val">'+t69BudgetFor(loc,true)+'</span></div>';
+  html+='<div class="d-row"><strong>Budget</strong><span class="d-val">'+t69BudgetFor(loc,true)+'</span></div>'+t69ContactLines(loc,'d');
   html+='<div class="d-row"><strong>Season</strong><span class="d-val">'+(loc.season||'—')+'</span></div>';
   if(avgStr){html+='<div class="d-row"><strong>Rating</strong><div><span style="color:var(--accent);letter-spacing:-1px;font-size:13px">'+stars+'</span> <span style="color:var(--accent);font-weight:700;font-size:11px">'+avgStr+'</span>';if(ratingsInline(loc))html+='<br><span style="font-size:10px;color:var(--muted)">'+ratingsInline(loc)+'</span>';html+='</div></div>';}
   if(t69GStr(loc))html+='<div class="d-row"><strong>Google</strong><span class="d-val">★ '+t69GStr(loc)+'</span></div>';
@@ -3457,7 +3457,7 @@ function openCrossStateDetail(loc){
   document.getElementById('dcCat').textContent=loc.category+' · 📌 '+loc.state;
   document.getElementById('dcCat').style.color=c;
   document.getElementById('dcName').textContent=loc.name;
-  var html='<div class="d-row"><strong>Budget</strong><span class="d-val">'+t69BudgetFor(loc,true)+'</span></div>';
+  var html='<div class="d-row"><strong>Budget</strong><span class="d-val">'+t69BudgetFor(loc,true)+'</span></div>'+t69ContactLines(loc,'d');
   html+='<div class="d-row"><strong>Season</strong><span class="d-val">'+(loc.season||'—')+'</span></div>';
   if(avgStr){html+='<div class="d-row"><strong>Rating</strong><div><span style="color:var(--accent);letter-spacing:-1px;font-size:13px">'+stars+'</span> <span style="color:var(--accent);font-weight:700;font-size:11px">'+avgStr+'</span>';if(ratingsInline(loc))html+='<br><span style="font-size:10px;color:var(--muted)">'+ratingsInline(loc)+'</span>';html+='</div></div>';}
   html+=t69RateRowHtml(loc,'x');
@@ -5381,7 +5381,7 @@ function renderRoutePanel(){
         +'<div class="seg-stop-info" onclick="t69StopSheetById(\''+seg.id+'\',\''+stop.id+'\')" style="cursor:pointer" title="Tap: visited date, posts, cost, day trips">'
           +'<div class="seg-stop-name">'+(_side&&_bi>=0&&stops[_bi]?'<span class="t69sideUp" style="float:right" onclick="event.stopPropagation();t69ToggleKids(\''+seg.id+'|'+stops[_bi].id+'\')" title="Close the side trips of '+t69Esc(stops[_bi].name||'')+'">\u25B4 close</span>':'')+(t69IsFly(seg,i)?(t69IsCruiseSt(stop)?'⛴ ':'✈ '):'')+stop.name+(function(){if(_side)return '';var n=0;stops.forEach(function(x,j){if(j>i&&t69IsSideAt(seg,j)&&t69BaseIx(seg,j)===i)n++;});if(!n)return '';var ck=seg.id+'|'+stop.id,cl=t69KidsColl()[ck];
           return '<span class="t69sideT" onclick="event.stopPropagation();t69ToggleKids(\''+ck+'\')" title="Open / close the side trips of this stop">'+(cl?'\u25B8':'\u25BE')+' '+n+' side trip'+(n>1?'s':'')+'</span>';})()+'</div>'
-          +'<div class="seg-stop-sub">'+(stop.state||'')+(stop.plannedDate?' · '+stop.plannedDate:'')+(visited?' · <span style="color:#10B981">✓ visited '+t69ShortD(stop.visitedDate)+'</span>':'')+(t69Posts(stop).length?' · 🔗'+t69Posts(stop).length:'')+(stop.hidePublic?' · 🙈':(stop.showPublic?' · 👁':''))+t69BookedTag(seg,stop)+(_side?(' · <span style="color:#F59E0B">'+(stop.sideKind==='hotel'?'🏨 hotel':'↳ side trip')+'</span><span id="side-'+seg.id+'-'+i+'"></span>'):'')+'</div>'
+          +'<div class="seg-stop-sub">'+(stop.state||'')+(stop.plannedDate?' · '+stop.plannedDate:'')+(visited?' · <span style="color:#10B981">✓ visited '+t69ShortD(stop.visitedDate)+'</span>':'')+(t69Posts(stop).length?' · 🔗'+t69Posts(stop).length:'')+(stop.hidePublic?' · 🙈':(stop.showPublic?' · 👁':''))+t69BookedTag(seg,stop)+t69ContactTag(stop)+(_side?(' · <span style="color:#F59E0B">'+(stop.sideKind==='hotel'?'🏨 hotel':'↳ side trip')+'</span><span id="side-'+seg.id+'-'+i+'"></span>'):'')+'</div>'
         +'</div>'
         +'<button class="seg-stop-vis'+(visited?' done':'')+'" title="'+(visited?'Mark unvisited':'Mark visited')+'" '
           +'onclick="toggleVisited(\''+seg.id+'\',\''+stop.id+'\','+si+','+i+')">'+(visited?'✅':'⬜')+'</button>'
@@ -5602,6 +5602,79 @@ window.t69StopBudgetHtml=function(seg,si,i,st){var c;try{c=t69StopCost(seg,st,nu
   return '<span style="color:#10B981">FREE</span>'+btn;};
 window.t69BudgetFor=function(loc,plain){var base=(loc.budget===0?(plain?'FREE':'<span style="color:#10B981">FREE</span>'):'$'+loc.budget+t69PriceUnit(loc));
   try{var h=t69StopOf(loc);if(h){var r=t69StopBudgetHtml(h.seg,h.si,h.i,h.st);if(r)return r;}}catch(e){}return base;};
+/* ===== v288: contacts = people who gave us tips / want to meet (collection contacts, private, never published) ===== */
+window.T69C={list:[],idx:null,loaded:false,loading:null};
+var T69C_STAT=[['todo','To contact','#F59E0B'],['sent','Messaged','#5BC8F5'],['answered','Answered','#9B59FF'],['met','Met','#10B981']];
+function t69cFsVal(v){if(v==null)return null;if(v.stringValue!==undefined)return v.stringValue;if(v.integerValue!==undefined)return parseInt(v.integerValue,10);if(v.doubleValue!==undefined)return parseFloat(v.doubleValue);
+  if(v.booleanValue!==undefined)return v.booleanValue;if(v.arrayValue!==undefined)return (v.arrayValue.values||[]).map(t69cFsVal);
+  if(v.mapValue!==undefined){var o={},f=v.mapValue.fields||{};Object.keys(f).forEach(function(k){o[k]=t69cFsVal(f[k]);});return o;}return null;}
+function t69cDoc(d){var o={},f=d.fields||{};Object.keys(f).forEach(function(k){o[k]=t69cFsVal(f[k]);});o.id=String(d.name||'').split('/').pop();
+  if(!Array.isArray(o.roles))o.roles=['tip'];if(!Array.isArray(o.places))o.places=[];return o;}
+window.t69LoadContacts=function(force){if(T69C.loading)return T69C.loading;if(T69C.loaded&&!force)return Promise.resolve(T69C.list);
+  T69C.loading=fsHeaders().then(function(h){function page(tok,acc){var u=FS.base()+'/contacts?pageSize=300'+(tok?'&pageToken='+encodeURIComponent(tok):'');
+      return fetch(u,{headers:h}).then(function(r){if(r.status===403||r.status===401)return {documents:[]};if(!r.ok)throw new Error('contacts '+r.status);return r.json();})
+        .then(function(j){acc=acc.concat((j.documents||[]).map(t69cDoc));return j.nextPageToken?page(j.nextPageToken,acc):acc;});}
+    return page(null,[]);}).then(function(l){T69C.list=l;T69C.loaded=true;T69C.idx=null;T69C.loading=null;try{if(typeof renderRoutePanel==='function')renderRoutePanel();}catch(e){}return l;})
+    .catch(function(e){T69C.loading=null;console.warn('contacts',e);return [];});return T69C.loading;};
+function t69cKey(lat,lng){return (Math.round(lat*1e4)/1e4).toFixed(4)+','+(Math.round(lng*1e4)/1e4).toFixed(4);}
+function t69cIndex(){if(T69C.idx)return T69C.idx;var ix=T69C.idx=[];T69C.list.forEach(function(c){(c.places||[]).forEach(function(p){if(p&&p.lat!=null&&p.lng!=null)ix.push([+p.lat,+p.lng,c]);});});return ix;}
+window.t69ContactsFor=function(loc){if(!loc||loc.lat==null||loc.lng==null||!T69C.list.length)return [];var out=[],seen={};
+  t69cIndex().forEach(function(e){if(Math.abs(e[0]-loc.lat)<1e-4&&Math.abs(e[1]-loc.lng)<1e-4&&!seen[e[2].id]){seen[e[2].id]=1;out.push(e[2]);}});return out;};
+function t69cNeeds(c){return (c.roles||[]).some(function(r){return r==='meet'||r==='guide'||r==='stay';})&&c.status!=='met';}
+function t69cRoleText(c){var r=c.roles||[],t=[];if(r.indexOf('meet')>=0)t.push('wants to meet us');if(r.indexOf('guide')>=0)t.push('offers a tour');if(r.indexOf('stay')>=0)t.push('offers a place to stay');
+  if(r.indexOf('tip')>=0)t.unshift('gave us a tip');return t.join(' · ');}
+function t69cStat(c){var s=c.status||'todo';return T69C_STAT.filter(function(x){return x[0]===s;})[0]||T69C_STAT[0];}
+function t69cLine(c,withBtn){var st=t69cStat(c),need=t69cNeeds(c),fb=/^https:\/\//.test(c.fb||'')?c.fb:'';
+  var nm=fb?'<a href="'+t69Esc(fb)+'" target="_blank" rel="noopener" style="color:#5BC8F5;text-decoration:none">'+t69Esc(c.name)+'</a>':t69Esc(c.name);
+  var h='<div class="t69c-line" style="margin:3px 0;line-height:1.4"><span style="color:'+(need?'#F59E0B':'#9fb3c8')+'">👤</span> <b>'+nm+'</b> <span style="color:#aaa">'+t69Esc(t69cRoleText(c))+'</span>';
+  if(c.home)h+=' <span style="color:#aaa">· '+t69Esc(c.home)+'</span>';
+  if(c.note)h+='<div style="color:#aaa;font-size:11px">'+t69Esc(c.note)+'</div>';
+  var more=[];if(c.phone)more.push('📞 '+t69Esc(c.phone));if(c.other)more.push(t69Esc(c.other));if(more.length)h+='<div style="color:#aaa;font-size:11px">'+more.join(' · ')+'</div>';
+  if(withBtn!==false)h+='<div style="margin-top:2px"><button type="button" class="t69t-btn" style="padding:2px 8px;font-size:11px;color:'+st[2]+';border-color:'+st[2]+'" onclick="t69cCycle(\''+c.id+'\');return false" title="Tap to change: To contact → Messaged → Answered → Met">'+st[1]+' ▸</button></div>';
+  return h+'</div>';}
+/* lines for popups and detail panels: empty when nobody is linked */
+window.t69ContactLines=function(loc,kind){var cs=t69ContactsFor(loc);if(!cs.length)return '';var h=cs.map(function(c){return t69cLine(c,true);}).join('');
+  return kind==='d'?'<div class="d-row" style="flex-direction:column;align-items:stretch;gap:2px;color:var(--text)">'+h+'</div>':'<div class="pu-row">'+h+'</div>';};
+window.t69ContactSheetHtml=function(st){var cs=t69ContactsFor(st);if(!cs.length)return '';
+  return '<div style="border:1px solid #F59E0B55;border-radius:10px;padding:8px 10px;margin-bottom:12px;background:rgba(245,158,11,.06)"><div style="font-weight:700;margin-bottom:4px">👤 People for this place</div>'+cs.map(function(c){return t69cLine(c,true);}).join('')+'</div>';};
+window.t69ContactTag=function(st){try{var cs=t69ContactsFor(st).filter(t69cNeeds);if(!cs.length)return '';
+  return ' · <span style="color:#F59E0B" title="'+t69Esc(cs.map(function(c){return c.name+' ('+t69cStat(c)[1]+')';}).join(', '))+'">👤 '+(cs.length>1?cs.length+' ':'')+'contact</span>';}catch(e){return '';}};
+window.t69cCycle=function(id){var c=T69C.list.filter(function(x){return x.id===id;})[0];if(!c)return;var o=T69C_STAT.map(function(x){return x[0];}),n=o[(o.indexOf(c.status||'todo')+1)%o.length];
+  c.status=n;fsPatch('contacts/'+id,{status:n,updated:new Date().toISOString()},true).catch(function(e){toast('⚠️ Could not save the status');console.error(e);});
+  try{renderRoutePanel();}catch(e){}try{map.closePopup();}catch(e){}
+  var ov=document.getElementById('t69cOv');if(ov&&ov._draw)ov._draw();
+  document.querySelectorAll('.t69c-line').forEach(function(el){});toast('👤 '+c.name+': '+t69cStat(c)[1]);};
+window.t69cEdit=function(id){var c=T69C.list.filter(function(x){return x.id===id;})[0];if(!c)return;
+  var p=prompt('Phone for '+c.name+' (empty = none):',c.phone||'');if(p===null)return;var o=prompt('E-mail / other contact for '+c.name+':',c.other||'');if(o===null)return;
+  c.phone=p.trim();c.other=o.trim();fsPatch('contacts/'+id,{phone:c.phone,other:c.other,updated:new Date().toISOString()},true).catch(function(e){toast('⚠️ Could not save');});
+  var ov=document.getElementById('t69cOv');if(ov&&ov._draw)ov._draw();};
+window.t69ContactsDlg=function(){t69LoadContacts().then(function(){
+  var old=document.getElementById('t69cOv');if(old)old.remove();
+  var ov=document.createElement('div');ov.id='t69cOv';ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99990;display:flex;align-items:center;justify-content:center;padding:12px';
+  var box=document.createElement('div');box.style.cssText='background:var(--bg2,#12233D);color:var(--text,#E2E8F0);border:1px solid var(--border,#24405f);border-radius:14px;max-width:760px;width:100%;max-height:92vh;display:flex;flex-direction:column;font-size:13px';
+  var inp='background:#0D1B2E;color:#E2E8F0;border:1px solid #24405f;border-radius:8px;padding:6px 8px;font:inherit';
+  box.innerHTML='<div style="display:flex;align-items:center;gap:8px;padding:12px 14px 6px"><b style="font-size:16px;flex:1">👤 Contacts <span id="t69cN" style="color:#9fb3c8;font-weight:400"></span></b><button class="t69t-btn" id="t69cX">✕</button></div>'
+   +'<div style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 14px 8px"><input id="t69cQ" placeholder="Search name, town, note…" style="flex:1;min-width:150px;'+inp+'">'
+   +'<select id="t69cR" style="'+inp+'"><option value="">All roles</option><option value="meet">Wants to meet</option><option value="guide">Offers a tour</option><option value="stay">Offers a stay</option><option value="tip">Tips</option></select>'
+   +'<select id="t69cS" style="'+inp+'"><option value="">All statuses</option><option value="open">Still to do (not met)</option>'+T69C_STAT.map(function(s){return '<option value="'+s[0]+'">'+s[1]+'</option>';}).join('')+'</select></div>'
+   +'<div id="t69cL" style="overflow:auto;padding:0 14px 14px"></div>';
+  ov.appendChild(box);document.body.appendChild(ov);
+  function close(){ov.remove();}box.querySelector('#t69cX').onclick=close;ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
+  function draw(){var q=box.querySelector('#t69cQ').value.toLowerCase().trim(),r=box.querySelector('#t69cR').value,s=box.querySelector('#t69cS').value;
+    var l=T69C.list.filter(function(c){if(r&&(c.roles||[]).indexOf(r)<0)return false;if(s==='open'){if(c.status==='met')return false;}else if(s&&(c.status||'todo')!==s)return false;
+      if(q&&(c.name+' '+c.home+' '+c.note+' '+c.other+' '+(c.places||[]).map(function(p){return p.n;}).join(' ')).toLowerCase().indexOf(q)<0)return false;return true;});
+    l.sort(function(a,b){return (t69cNeeds(b)-t69cNeeds(a))||a.name.localeCompare(b.name);});
+    box.querySelector('#t69cN').textContent='('+l.length+' of '+T69C.list.length+')';
+    box.querySelector('#t69cL').innerHTML=l.length?l.map(function(c){var pl=(c.places||[]);
+      return '<div style="border-bottom:1px solid #24405f;padding:8px 0">'+t69cLine(c,true).replace('</div></div>','</div></div>')
+        +(pl.length?'<div style="margin:2px 0 0 22px;font-size:11px;color:#9fb3c8">📍 '+pl.map(function(p,k){return '<a href="#" data-c="'+c.id+'" data-k="'+k+'" style="color:#5BC8F5;text-decoration:none">'+t69Esc(p.n)+'</a>';}).join(' · ')+'</div>':'')
+        +'<div style="margin:2px 0 0 22px"><a href="#" data-e="'+c.id+'" style="color:#9fb3c8;font-size:11px;text-decoration:none">✏️ phone / e-mail</a></div></div>';}).join(''):'<div style="color:#9fb3c8;padding:16px 0">Nobody matches.</div>';
+    box.querySelectorAll('[data-c]').forEach(function(a){a.onclick=function(e){e.preventDefault();var c=T69C.list.filter(function(x){return x.id===a.getAttribute('data-c');})[0],p=c&&c.places[+a.getAttribute('data-k')];if(p){close();try{map.setView([p.lat,p.lng],12);}catch(x){}}};});
+    box.querySelectorAll('[data-e]').forEach(function(a){a.onclick=function(e){e.preventDefault();t69cEdit(a.getAttribute('data-e'));};});}
+  ov._draw=draw;['t69cQ','t69cR','t69cS'].forEach(function(i){box.querySelector('#'+i).oninput=draw;box.querySelector('#'+i).onchange=draw;});draw();});};
+(function(){function go(){try{firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(function(){t69LoadContacts(true);},1500);});}catch(e){setTimeout(go,1500);}}
+  if(document.readyState==='complete')go();else window.addEventListener('load',go);})();
+/* ===== end contacts ===== */
 window.t69RouteStopRow=function(loc){var h=t69StopOf(loc);if(!h)return '';var n=t69Posts(h.st).length,v=h.st.visitedDate;
   return '<div class="d-row" style="flex-direction:column;align-items:stretch;gap:4px"><strong>On your route \u00b7 stop '+t69StopNo(h.seg,h.i)+'</strong>'
     +'<button class="t69t-btn" style="align-self:flex-start" onclick="t69StopSheet('+h.si+','+h.i+')">'+(v?'\u2705 Visited '+t69ShortD(v):'\u2B1C Not visited yet')+(n?' \u00b7 \uD83D\uDD17 '+n:'')+'</button></div>';};
@@ -5642,6 +5715,7 @@ window.t69StopSheet=function(si,i){
         +(k==='trip'?'<button class="t69t-btn" id="t69SsMoveBase" style="margin-top:6px;margin-right:6px" title="This side trip hangs under the wrong stay? Pick the right one — dates, price and extras go along">\u21AA Move to another stay\u2026</button>':'')
         +(k==='trip'&&fr?'<button class="t69t-btn" id="t69SsDir" style="margin-top:6px" data-u="https://www.google.com/maps/dir/'+encodeURIComponent(fr.lat+','+fr.lng)+'/'+encodeURIComponent(st.lat+','+st.lng)+'">🗺 Directions from '+t69Esc(fr.name||'')+'</button>':'')
         +'</div>';})()
+    +t69ContactSheetHtml(st)
     +t69StopCostHtml(sg,st,inp)
     +t69XHtml(sg,st)
     +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700"><input type="checkbox" id="t69SsVis"'+(st.visitedDate?' checked':'')+' style="width:18px;height:18px"> \u2705 Visited</label>'
@@ -6043,6 +6117,8 @@ window.t69MoreMenu=function(){
   var groups=[
     ['Share & social',[
       ['📢','Share with followers','Public map, preview, story image, links','t69FollowDlg()']]],
+    ['People',[
+      ['\uD83D\uDC64','Contacts','People who gave us tips or want to meet us, with their Facebook','t69ContactsDlg()']]],
     ['Videos & media',[
       ['📱','Zoom clip 9:16','For TikTok, Reels and Shorts',"exportMap('916')"],
       ['🖥️','Zoom clip 16:9','For YouTube',"exportMap('169')"],
@@ -8033,6 +8109,7 @@ function t69StopPopup(seg,si,st,i){
       if(v.length)h+='<div class="pu-row"><strong>Rating:</strong> \u2605 '+(Math.round(v.reduce(function(a,c){return a+c;},0)/v.length*10)/10).toFixed(1)+' <span style="color:#aaa;font-size:11px">('+ratingsInline(L)+')</span></div>';}catch(e){}
     if(typeof t69GStr==='function'&&t69GStr(L))h+='<div class="pu-row"><strong>Google:</strong> \u2605 '+t69GStr(L)+'</div>';
     if(L.reservation==='Yes')h+='<div class="pu-row" style="color:#E67E22">\u26A0\uFE0F Reservation required</div>';}
+  h+=t69ContactLines({lat:st.lat,lng:st.lng});
   var dt=(typeof t69StopDate==='function')?t69StopDate(seg,st):'';
   if(dt)h+='<div class="pu-row"><strong>Date:</strong> '+t69Esc(dt)+'</div>';
   var notes=String((L&&L.notes)||'').replace(/\\n/g,'\n').split('\n').slice(0,3).join('<br>');

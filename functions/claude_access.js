@@ -1,5 +1,5 @@
 'use strict';
-/* Travellers 1969 — private access for Claude (v5, 23 Nov 2026)
+/* Travellers 1969 — private access for Claude (v6, 26 Nov 2026)
    One HTTPS function, protected by a long secret key (functions/.env → CLAUDE_KEY=…, never in GitHub).
    Read: only trips, locations, the public follower pages, stop codes, hotel notes and its own log
    (not the followers' email addresses, not the settings/keys in config).
@@ -8,13 +8,14 @@
    — the full place is kept there, nothing is lost.
    v4: one person's score can be removed from places of one region (op clearScore, only that score, other scores stay, old scores written to claudeLog) and put back (op setScores).
    v5: op setEpisodes writes the list of long YouTube episodes of ONE trip into the public document public/episodes (the follower site shows them). Only that document, only https YouTube links.
+   v6: collection contacts (people who gave us tips / want to meet): readable, and op setContacts creates or updates contacts (merge by id, only known fields, never deletes).
    Before the first change (and then at most every 30 minutes) a backup of the whole trip is saved in
    trips/<trip>/backups — the planner shows it under ⋯ More → Backups. Every change is written to claudeLog. */
 const functions = require('firebase-functions/v1');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 
-const READ_OK = /^(trips|locations|locationsTrash|public|socialCodes|hotelNotes|claudeLog)(\/|$)/;
+const READ_OK = /^(trips|locations|locationsTrash|public|socialCodes|hotelNotes|contacts|claudeLog)(\/|$)/;
 const WRITE_OK = /^trips\/[^/]+(\/segments\/[^/]+(\/stops\/[^/]+)?)?$/;
 const DMY = /^(\d{2}\/\d{2}\/\d{4})?$/, HM = /^(\d{1,2}:\d{2})?$/;
 
@@ -82,7 +83,7 @@ async function log(db, entry) {
 async function handle(db, b) {
   const op = String(b.op || '');
   switch (op) {
-    case 'ping': return { ok: true, time: new Date().toISOString(), v: 5 };
+    case 'ping': return { ok: true, time: new Date().toISOString(), v: 6 };
     case 'trips': {
       const docs = (await db.collection('trips').get()).docs;
       return { trips: docs.map(d => { const x = d.data() || {}; return { id: d.id, name: x.name || '', code: x.code || '', archived: !!x.archived, publicOn: !!x.publicOn, publicSlug: x.publicSlug || '' }; }) };
@@ -218,12 +219,37 @@ async function handle(db, b) {
       await log(db, { op, slug, before: JSON.stringify(before).slice(0, 4000), after: JSON.stringify(eps).slice(0, 4000) });
       return { ok: true, slug, episodes: eps.length };
     }
+    case 'setContacts': {   /* {contacts:[{id?,name,fb,roles,home,note,phone,other,group,post,status,statusNote,places:[{n,lat,lng}],homeLat,homeLng,added}]} — merge by id, never deletes */
+      const arr = Array.isArray(b.contacts) ? b.contacts : null;
+      if (!arr || !arr.length || arr.length > 120) throw new Error('contacts: a list of 1 to 120');
+      const ROLES = ['meet', 'guide', 'stay', 'tip'], STAT = ['todo', 'sent', 'answered', 'met'];
+      const txt = (v, n) => String(v == null ? '' : v).slice(0, n);
+      const slug = s => String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+      const batch = db.batch ? db.batch() : null, done = [];
+      for (const [k, c] of arr.entries()) {
+        if (!c || typeof c !== 'object') throw new Error('contact ' + (k + 1) + ': not an object');
+        const id = slug(c.id || c.name); if (!id) throw new Error('contact ' + (k + 1) + ': name or id missing');
+        const o = {};
+        ['name', 'home', 'note', 'phone', 'other', 'group', 'statusNote', 'added'].forEach(f => { if (f in c) o[f] = txt(c[f], f === 'note' ? 600 : 200); });
+        ['fb', 'post'].forEach(f => { if (f in c) { const u = txt(c[f], 300); if (u && !/^https:\/\//.test(u)) throw new Error('contact ' + id + ': ' + f + ' must be an https link'); o[f] = u; } });
+        if ('roles' in c) { if (!Array.isArray(c.roles) || c.roles.some(r => ROLES.indexOf(r) < 0)) throw new Error('contact ' + id + ': roles must be from ' + ROLES.join(', ')); o.roles = c.roles; }
+        if ('status' in c) { if (STAT.indexOf(c.status) < 0) throw new Error('contact ' + id + ': status must be one of ' + STAT.join(', ')); o.status = c.status; }
+        if ('places' in c) { if (!Array.isArray(c.places) || c.places.length > 40) throw new Error('contact ' + id + ': places must be a list (max 40)');
+          o.places = c.places.map(p => { const la = Number(p.lat), lo = Number(p.lng); if (!isFinite(la) || !isFinite(lo) || Math.abs(la) > 90 || Math.abs(lo) > 180) throw new Error('contact ' + id + ': place without coordinates: ' + txt(p.n, 40)); return { n: txt(p.n, 120), lat: la, lng: lo }; }); }
+        ['homeLat', 'homeLng'].forEach(f => { if (f in c && c[f] !== null && c[f] !== '') { const v = Number(c[f]); if (!isFinite(v)) throw new Error('contact ' + id + ': ' + f + ' must be a number'); o[f] = v; } });
+        o.updated = new Date().toISOString();
+        done.push([id, o]);
+      }
+      for (const [id, o] of done) await db.doc('contacts/' + id).set(o, { merge: true });
+      await log(db, { op, n: done.length, ids: done.map(d => d[0]).join(',').slice(0, 1500) });
+      return { ok: true, saved: done.length };
+    }
     case 'log': {
       const lim = Math.min(Math.max(parseInt(b.limit, 10) || 30, 1), 200);
       const q = await db.collection('claudeLog').orderBy('at', 'desc').limit(lim).get();
       return { log: q.docs.map(d => plain(d.data())) };
     }
-    default: throw new Error('unknown op: ' + op + ' (ping, trips, dump, get, list, backup, patch, setDates, trashLocs, restoreLocs, clearScore, setScores, setEpisodes, log)');
+    default: throw new Error('unknown op: ' + op + ' (ping, trips, dump, get, list, backup, patch, setDates, trashLocs, restoreLocs, clearScore, setScores, setEpisodes, setContacts, log)');
   }
 }
 
