@@ -2,7 +2,7 @@
 <!-- ============================================================
      TRAVELLERS 1969 — Roadtrip Planner
      File    : Index.html  (always keep this name in GAS)
-     Version : v288  (Add-location: Firestore-native, editable region, coords + Google rating + ratings)
+     Version : v289  (Contacts: near-route people, radius, map layer, add to route)
      Date    : 2026-06-21
      Changes : + BUGFIX statusColor missing (caused startup crash)
                + Near Me / GPS radius filter
@@ -2015,12 +2015,12 @@ function signIn(){
 </script>
 </head>
 <body>
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v288</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
+<div id="loginScreen" style="display:none;position:fixed;inset:0;background:#0D1B2E;z-index:99999;align-items:center;justify-content:center;flex-direction:column"><div style="font-family:Dancing Script,cursive;font-size:60px;color:#fff">Travellers <span style="color:#5BC8F5">1969</span></div><div style="color:#7EAAC8;letter-spacing:.1em">SERGE &amp; ELS</div><div style="color:#4A6A88;font-size:11px;margin-bottom:30px;margin-top:4px;letter-spacing:.15em">v289</div><button onclick="signIn()" style="background:#5BC8F5;color:#0D1B2E;border:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">Sign in with Google</button><p id="loginErr" style="color:#E74C3C;margin-top:12px;font-size:13px"></p></div>
 <body>
 
 <div id="splash">
   <div class="splash-logo">Travellers <span>1969</span></div>
-  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v288</div>
+  <img src="/pin-travellers.png" style="width:84px;height:84px;margin:6px auto 2px;display:block" alt=""><div class="splash-tagline">Serge &amp; Els</div><div style="font-size:10px;color:#4A6A88;letter-spacing:.15em;margin-top:4px">v289</div>
   <div class="splash-bar"><div class="splash-progress" id="splashProg"></div></div>
   <div class="splash-status" id="splashStatus">Connecting to Google Sheets...</div>
 </div>
@@ -2220,6 +2220,7 @@ function signIn(){
         <input type="checkbox" id="alwaysShowPinned" onchange="applyFilters()"> 📌 Always
       </label>
       <button class="mt-btn" id="btnChains" onclick="t69HToggle()" title="Hilton · Marriott · Hyatt · IHG hotels on the map">🏨<span class="mt-t"> Chains</span></button>
+      <button class="mt-btn" id="btnPeople" onclick="t69pMapToggle()" title="People who want to meet us or gave tips (town points)">👤<span class="mt-t"> People</span></button>
       <button class="mt-btn" id="btnCarwash" onclick="t69CToggle()" title="Car wash chains on the map (Mister Car Wash)">🚗<span class="mt-t"> Car wash</span></button>
     </div>
     <div class="route-strip hidden" id="routeStrip">
@@ -2487,7 +2488,7 @@ function signIn(){
       <div class="settings-section-title" style="cursor:pointer" onclick="var b=document.getElementById('t69InfoBody');var a=document.getElementById('t69InfoArrow');var o=b.style.display!=='none';b.style.display=o?'none':'block';a.textContent=o?'\u25B8':'\u25BE';">ℹ️ App info <span id="t69InfoArrow">▸</span></div><div id="t69InfoBody" style="display:none">
       <div class="settings-toggle-row">
         <div class="settings-toggle-label">Version</div>
-        <div style="font-size:11px;color:var(--accent);font-weight:700">v288</div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700">v289</div>
       </div>
       <div class="settings-toggle-row">
                 <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace" id="settingsStateCount">—</div>
@@ -5602,29 +5603,41 @@ window.t69StopBudgetHtml=function(seg,si,i,st){var c;try{c=t69StopCost(seg,st,nu
   return '<span style="color:#10B981">FREE</span>'+btn;};
 window.t69BudgetFor=function(loc,plain){var base=(loc.budget===0?(plain?'FREE':'<span style="color:#10B981">FREE</span>'):'$'+loc.budget+t69PriceUnit(loc));
   try{var h=t69StopOf(loc);if(h){var r=t69StopBudgetHtml(h.seg,h.si,h.i,h.st);if(r)return r;}}catch(e){}return base;};
-/* ===== v288: contacts = people who gave us tips / want to meet (collection contacts, private, never published) ===== */
-window.T69C={list:[],idx:null,loaded:false,loading:null};
-var T69C_STAT=[['todo','To contact','#F59E0B'],['sent','Messaged','#5BC8F5'],['answered','Answered','#9B59FF'],['met','Met','#10B981']];
+/* ===== v289: contacts = people who gave us tips / want to meet (collection contacts, private, never published) ===== */
+window.T69P={list:[],idx:null,loaded:false,loading:null,ver:0};
+var T69P_STAT=[['todo','To contact','#F59E0B'],['sent','Messaged','#5BC8F5'],['answered','Answered','#9B59FF'],['met','Met','#10B981']];
 function t69cFsVal(v){if(v==null)return null;if(v.stringValue!==undefined)return v.stringValue;if(v.integerValue!==undefined)return parseInt(v.integerValue,10);if(v.doubleValue!==undefined)return parseFloat(v.doubleValue);
   if(v.booleanValue!==undefined)return v.booleanValue;if(v.arrayValue!==undefined)return (v.arrayValue.values||[]).map(t69cFsVal);
   if(v.mapValue!==undefined){var o={},f=v.mapValue.fields||{};Object.keys(f).forEach(function(k){o[k]=t69cFsVal(f[k]);});return o;}return null;}
 function t69cDoc(d){var o={},f=d.fields||{};Object.keys(f).forEach(function(k){o[k]=t69cFsVal(f[k]);});o.id=String(d.name||'').split('/').pop();
   if(!Array.isArray(o.roles))o.roles=['tip'];if(!Array.isArray(o.places))o.places=[];return o;}
-window.t69LoadContacts=function(force){if(T69C.loading)return T69C.loading;if(T69C.loaded&&!force)return Promise.resolve(T69C.list);
-  T69C.loading=fsHeaders().then(function(h){function page(tok,acc){var u=FS.base()+'/contacts?pageSize=300'+(tok?'&pageToken='+encodeURIComponent(tok):'');
+window.t69LoadContacts=function(force){if(T69P.loading)return T69P.loading;if(T69P.loaded&&!force)return Promise.resolve(T69P.list);
+  T69P.loading=fsHeaders().then(function(h){function page(tok,acc){var u=FS.base()+'/contacts?pageSize=300'+(tok?'&pageToken='+encodeURIComponent(tok):'');
       return fetch(u,{headers:h}).then(function(r){if(r.status===403||r.status===401)return {documents:[]};if(!r.ok)throw new Error('contacts '+r.status);return r.json();})
         .then(function(j){acc=acc.concat((j.documents||[]).map(t69cDoc));return j.nextPageToken?page(j.nextPageToken,acc):acc;});}
-    return page(null,[]);}).then(function(l){T69C.list=l;T69C.loaded=true;T69C.idx=null;T69C.loading=null;try{if(typeof renderRoutePanel==='function')renderRoutePanel();}catch(e){}return l;})
-    .catch(function(e){T69C.loading=null;console.warn('contacts',e);return [];});return T69C.loading;};
+    return page(null,[]);}).then(function(l){T69P.list=l;T69P.loaded=true;T69P.idx=null;T69P.ver=(T69P.ver||0)+1;T69P.loading=null;try{if(typeof renderRoutePanel==='function')renderRoutePanel();}catch(e){}return l;})
+    .catch(function(e){T69P.loading=null;console.warn('contacts',e);return [];});return T69P.loading;};
 function t69cKey(lat,lng){return (Math.round(lat*1e4)/1e4).toFixed(4)+','+(Math.round(lng*1e4)/1e4).toFixed(4);}
-function t69cIndex(){if(T69C.idx)return T69C.idx;var ix=T69C.idx=[];T69C.list.forEach(function(c){(c.places||[]).forEach(function(p){if(p&&p.lat!=null&&p.lng!=null)ix.push([+p.lat,+p.lng,c]);});});return ix;}
-window.t69ContactsFor=function(loc){if(!loc||loc.lat==null||loc.lng==null||!T69C.list.length)return [];var out=[],seen={};
+function t69cIndex(){if(T69P.idx)return T69P.idx;var ix=T69P.idx=[];T69P.list.forEach(function(c){(c.places||[]).forEach(function(p){if(p&&p.lat!=null&&p.lng!=null)ix.push([+p.lat,+p.lng,c]);});});return ix;}
+
+window.t69pRadius=function(){var v=NaN;try{v=parseFloat(localStorage.getItem('t69_pradius'));}catch(e){}return isFinite(v)&&v>0?v:75;};
+window.t69pSetRadius=function(v){v=parseFloat(v);if(!isFinite(v)||v<=0)return;try{localStorage.setItem('t69_pradius',String(v));}catch(e){}T69P.nearKey='';try{renderRoutePanel();}catch(e){}};
+function t69pStops(){var o=[];(routeSegments||[]).forEach(function(sg,si){(sg.stops||[]).forEach(function(st,i){if(st.lat!=null&&st.lng!=null)o.push({seg:sg,si:si,i:i,st:st});});});return o;}
+window.t69pNearest=function(c,stops){if(c.homeLat==null||c.homeLng==null)return null;stops=stops||t69pStops();var best=null;
+  stops.forEach(function(e){var d=haversineKm(c.homeLat,c.homeLng,e.st.lat,e.st.lng);if(!best||d<best.km)best={e:e,km:d};});return best;};
+/* map: stop key -> people who live within the radius of that stop and are nearest to it (each person is shown at ONE stop) */
+function t69pNearMap(){var stops=t69pStops(),sig=T69P.list.length+'|'+stops.length+'|'+t69pRadius()+'|'+T69P.ver+'|'+(T69P.list.map(function(c){return c.status+(c.homeLat||'');}).join(''));
+  if(T69P.nearKey===sig&&T69P.nearMap)return T69P.nearMap;var m={},R=t69pRadius();
+  T69P.list.forEach(function(c){if(!t69cNeeds(c))return;var n=t69pNearest(c,stops);if(n&&n.km<=R){var k=t69cKey(n.e.st.lat,n.e.st.lng);(m[k]=m[k]||[]).push({c:c,km:n.km});}});
+  T69P.nearKey=sig;T69P.nearMap=m;return m;}
+function t69pNearFor(loc){if(!loc||loc.lat==null||!T69P.list.length)return [];return (t69pNearMap()[t69cKey(loc.lat,loc.lng)]||[]).slice().sort(function(a,b){return a.km-b.km;});}
+window.t69ContactsFor=function(loc){if(!loc||loc.lat==null||loc.lng==null||!T69P.list.length)return [];var out=[],seen={};
   t69cIndex().forEach(function(e){if(Math.abs(e[0]-loc.lat)<1e-4&&Math.abs(e[1]-loc.lng)<1e-4&&!seen[e[2].id]){seen[e[2].id]=1;out.push(e[2]);}});return out;};
 function t69cNeeds(c){return (c.roles||[]).some(function(r){return r==='meet'||r==='guide'||r==='stay';})&&c.status!=='met';}
 function t69cRoleText(c){var r=c.roles||[],t=[];if(r.indexOf('meet')>=0)t.push('wants to meet us');if(r.indexOf('guide')>=0)t.push('offers a tour');if(r.indexOf('stay')>=0)t.push('offers a place to stay');
   if(r.indexOf('tip')>=0)t.unshift('gave us a tip');return t.join(' · ');}
-function t69cStat(c){var s=c.status||'todo';return T69C_STAT.filter(function(x){return x[0]===s;})[0]||T69C_STAT[0];}
-function t69cLine(c,withBtn){var st=t69cStat(c),need=t69cNeeds(c),fb=/^https:\/\//.test(c.fb||'')?c.fb:'';
+function t69cStat(c){var s=c.status||'todo';return T69P_STAT.filter(function(x){return x[0]===s;})[0]||T69P_STAT[0];}
+function t69cLine(c,withBtn,extra){var st=t69cStat(c),need=t69cNeeds(c),fb=/^https:\/\//.test(c.fb||'')?c.fb:'';
   var nm=fb?'<a href="'+t69Esc(fb)+'" target="_blank" rel="noopener" style="color:#5BC8F5;text-decoration:none">'+t69Esc(c.name)+'</a>':t69Esc(c.name);
   var h='<div class="t69c-line" style="margin:3px 0;line-height:1.4"><span style="color:'+(need?'#F59E0B':'#9fb3c8')+'">👤</span> <b>'+nm+'</b> <span style="color:#aaa">'+t69Esc(t69cRoleText(c))+'</span>';
   if(c.home)h+=' <span style="color:#aaa">· '+t69Esc(c.home)+'</span>';
@@ -5633,45 +5646,73 @@ function t69cLine(c,withBtn){var st=t69cStat(c),need=t69cNeeds(c),fb=/^https:\/\
   if(withBtn!==false)h+='<div style="margin-top:2px"><button type="button" class="t69t-btn" style="padding:2px 8px;font-size:11px;color:'+st[2]+';border-color:'+st[2]+'" onclick="t69cCycle(\''+c.id+'\');return false" title="Tap to change: To contact → Messaged → Answered → Met">'+st[1]+' ▸</button></div>';
   return h+'</div>';}
 /* lines for popups and detail panels: empty when nobody is linked */
-window.t69ContactLines=function(loc,kind){var cs=t69ContactsFor(loc);if(!cs.length)return '';var h=cs.map(function(c){return t69cLine(c,true);}).join('');
+function t69pAll(loc,fn){var cs=t69ContactsFor(loc),seen={},h='';cs.forEach(function(c){seen[c.id]=1;h+=fn(c,null);});t69pNearFor(loc).forEach(function(x){if(!seen[x.c.id])h+=fn(x.c,'lives ~'+Math.round(x.km)+' km from here');});return h;}
+window.t69ContactLines=function(loc,kind){var h=t69pAll(loc,function(c,ex){return t69cLine(c,true,ex);});if(!h)return '';
   return kind==='d'?'<div class="d-row" style="flex-direction:column;align-items:stretch;gap:2px;color:var(--text)">'+h+'</div>':'<div class="pu-row">'+h+'</div>';};
-window.t69ContactSheetHtml=function(st){var cs=t69ContactsFor(st);if(!cs.length)return '';
-  return '<div style="border:1px solid #F59E0B55;border-radius:10px;padding:8px 10px;margin-bottom:12px;background:rgba(245,158,11,.06)"><div style="font-weight:700;margin-bottom:4px">👤 People for this place</div>'+cs.map(function(c){return t69cLine(c,true);}).join('')+'</div>';};
-window.t69ContactTag=function(st){try{var cs=t69ContactsFor(st).filter(t69cNeeds);if(!cs.length)return '';
+window.t69ContactSheetHtml=function(st){var h=t69pAll(st,function(c,ex){return t69cLine(c,true,ex);});if(!h)return '';
+  return '<div style="border:1px solid #F59E0B55;border-radius:10px;padding:8px 10px;margin-bottom:12px;background:rgba(245,158,11,.06)"><div style="font-weight:700;margin-bottom:4px">\uD83D\uDC64 People for this place</div>'+h+'</div>';};
+window.t69ContactTag=function(st){try{var cs=t69ContactsFor(st).filter(t69cNeeds),seen={};cs.forEach(function(c){seen[c.id]=1;});t69pNearFor(st).forEach(function(x){if(!seen[x.c.id]){seen[x.c.id]=1;cs.push(x.c);}});if(!cs.length)return '';
   return ' · <span style="color:#F59E0B" title="'+t69Esc(cs.map(function(c){return c.name+' ('+t69cStat(c)[1]+')';}).join(', '))+'">👤 '+(cs.length>1?cs.length+' ':'')+'contact</span>';}catch(e){return '';}};
-window.t69cCycle=function(id){var c=T69C.list.filter(function(x){return x.id===id;})[0];if(!c)return;var o=T69C_STAT.map(function(x){return x[0];}),n=o[(o.indexOf(c.status||'todo')+1)%o.length];
-  c.status=n;fsPatch('contacts/'+id,{status:n,updated:new Date().toISOString()},true).catch(function(e){toast('⚠️ Could not save the status');console.error(e);});
+window.t69cCycle=function(id){var c=T69P.list.filter(function(x){return x.id===id;})[0];if(!c)return;var o=T69P_STAT.map(function(x){return x[0];}),n=o[(o.indexOf(c.status||'todo')+1)%o.length];
+  c.status=n;T69P.ver++;fsPatch('contacts/'+id,{status:n,updated:new Date().toISOString()},true).catch(function(e){toast('⚠️ Could not save the status');console.error(e);});
   try{renderRoutePanel();}catch(e){}try{map.closePopup();}catch(e){}
   var ov=document.getElementById('t69cOv');if(ov&&ov._draw)ov._draw();
   document.querySelectorAll('.t69c-line').forEach(function(el){});toast('👤 '+c.name+': '+t69cStat(c)[1]);};
-window.t69cEdit=function(id){var c=T69C.list.filter(function(x){return x.id===id;})[0];if(!c)return;
+window.t69cEdit=function(id){var c=T69P.list.filter(function(x){return x.id===id;})[0];if(!c)return;
   var p=prompt('Phone for '+c.name+' (empty = none):',c.phone||'');if(p===null)return;var o=prompt('E-mail / other contact for '+c.name+':',c.other||'');if(o===null)return;
   c.phone=p.trim();c.other=o.trim();fsPatch('contacts/'+id,{phone:c.phone,other:c.other,updated:new Date().toISOString()},true).catch(function(e){toast('⚠️ Could not save');});
   var ov=document.getElementById('t69cOv');if(ov&&ov._draw)ov._draw();};
+window.t69cAddRoute=function(id){var c=T69P.list.filter(function(x){return x.id===id;})[0];if(!c||c.homeLat==null)return;
+  var ov=document.getElementById('t69cOv');if(ov)ov.remove();
+  openSegPicker({name:'Meet '+c.name+(c.home?' ('+c.home+')':''),state:'',lat:c.homeLat,lng:c.homeLng,category:'',rowIndex:0});};
+function t69pNearTxt(c){var n=t69pNearest(c);if(!n)return '';var ok=n.km<=t69pRadius(),e=n.e,lab=(e.si+1)+'.'+(e.i+1)+' '+(e.st.name||'');
+  return '<div style="margin:2px 0 0 22px;font-size:11px;color:'+(ok?'#10B981':'#9fb3c8')+'">📍 nearest route stop: <b>'+t69Esc(lab)+'</b> · '+Math.round(n.km)+' km'+(ok?'':' (outside the radius)')+'</div>';}
 window.t69ContactsDlg=function(){t69LoadContacts().then(function(){
   var old=document.getElementById('t69cOv');if(old)old.remove();
   var ov=document.createElement('div');ov.id='t69cOv';ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99990;display:flex;align-items:center;justify-content:center;padding:12px';
   var box=document.createElement('div');box.style.cssText='background:var(--bg2,#12233D);color:var(--text,#E2E8F0);border:1px solid var(--border,#24405f);border-radius:14px;max-width:760px;width:100%;max-height:92vh;display:flex;flex-direction:column;font-size:13px';
   var inp='background:#0D1B2E;color:#E2E8F0;border:1px solid #24405f;border-radius:8px;padding:6px 8px;font:inherit';
   box.innerHTML='<div style="display:flex;align-items:center;gap:8px;padding:12px 14px 6px"><b style="font-size:16px;flex:1">👤 Contacts <span id="t69cN" style="color:#9fb3c8;font-weight:400"></span></b><button class="t69t-btn" id="t69cX">✕</button></div>'
-   +'<div style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 14px 8px"><input id="t69cQ" placeholder="Search name, town, note…" style="flex:1;min-width:150px;'+inp+'">'
+   +'<div style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 14px 4px"><input id="t69cQ" placeholder="Search name, town, note…" style="flex:1;min-width:150px;'+inp+'">'
    +'<select id="t69cR" style="'+inp+'"><option value="">All roles</option><option value="meet">Wants to meet</option><option value="guide">Offers a tour</option><option value="stay">Offers a stay</option><option value="tip">Tips</option></select>'
-   +'<select id="t69cS" style="'+inp+'"><option value="">All statuses</option><option value="open">Still to do (not met)</option>'+T69C_STAT.map(function(s){return '<option value="'+s[0]+'">'+s[1]+'</option>';}).join('')+'</select></div>'
+   +'<select id="t69cS" style="'+inp+'"><option value="">All statuses</option><option value="open">Still to do (not met)</option>'+T69P_STAT.map(function(s){return '<option value="'+s[0]+'">'+s[1]+'</option>';}).join('')+'</select></div>'
+   +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:0 14px 8px;color:#9fb3c8;font-size:12px"><label>Sort <select id="t69cO" style="'+inp+'"><option value="need">To contact first</option><option value="near">Closest to route</option><option value="name">Name</option></select></label>'
+   +'<label>Near route = within <input id="t69cK" type="number" min="5" max="500" step="5" value="'+t69pRadius()+'" style="width:64px;'+inp+'"> km</label></div>'
    +'<div id="t69cL" style="overflow:auto;padding:0 14px 14px"></div>';
   ov.appendChild(box);document.body.appendChild(ov);
   function close(){ov.remove();}box.querySelector('#t69cX').onclick=close;ov.addEventListener('mousedown',function(e){if(e.target===ov)close();});
-  function draw(){var q=box.querySelector('#t69cQ').value.toLowerCase().trim(),r=box.querySelector('#t69cR').value,s=box.querySelector('#t69cS').value;
-    var l=T69C.list.filter(function(c){if(r&&(c.roles||[]).indexOf(r)<0)return false;if(s==='open'){if(c.status==='met')return false;}else if(s&&(c.status||'todo')!==s)return false;
+  function row(c){var pl=(c.places||[]),btn='';
+    if(c.homeLat!=null)btn='<a href="#" data-a="'+c.id+'" style="color:#10B981;font-size:11px;text-decoration:none;margin-left:10px">➕ Add to route</a>';
+    return '<div style="border-bottom:1px solid #24405f;padding:8px 0">'+t69cLine(c,true)+(c.homeLat!=null?t69pNearTxt(c):'')
+      +(pl.length?'<div style="margin:2px 0 0 22px;font-size:11px;color:#9fb3c8">📍 '+pl.map(function(p,k){return '<a href="#" data-c="'+c.id+'" data-k="'+k+'" style="color:#5BC8F5;text-decoration:none">'+t69Esc(p.n)+'</a>';}).join(' · ')+'</div>':'')
+      +'<div style="margin:2px 0 0 22px"><a href="#" data-e="'+c.id+'" style="color:#9fb3c8;font-size:11px;text-decoration:none">✏️ phone / e-mail</a>'+btn+'</div></div>';}
+  function draw(){var q=box.querySelector('#t69cQ').value.toLowerCase().trim(),r=box.querySelector('#t69cR').value,s=box.querySelector('#t69cS').value,o=box.querySelector('#t69cO').value;
+    var stops=t69pStops(),dist={};
+    var l=T69P.list.filter(function(c){if(r&&(c.roles||[]).indexOf(r)<0)return false;if(s==='open'){if(c.status==='met')return false;}else if(s&&(c.status||'todo')!==s)return false;
       if(q&&(c.name+' '+c.home+' '+c.note+' '+c.other+' '+(c.places||[]).map(function(p){return p.n;}).join(' ')).toLowerCase().indexOf(q)<0)return false;return true;});
-    l.sort(function(a,b){return (t69cNeeds(b)-t69cNeeds(a))||a.name.localeCompare(b.name);});
-    box.querySelector('#t69cN').textContent='('+l.length+' of '+T69C.list.length+')';
-    box.querySelector('#t69cL').innerHTML=l.length?l.map(function(c){var pl=(c.places||[]);
-      return '<div style="border-bottom:1px solid #24405f;padding:8px 0">'+t69cLine(c,true).replace('</div></div>','</div></div>')
-        +(pl.length?'<div style="margin:2px 0 0 22px;font-size:11px;color:#9fb3c8">📍 '+pl.map(function(p,k){return '<a href="#" data-c="'+c.id+'" data-k="'+k+'" style="color:#5BC8F5;text-decoration:none">'+t69Esc(p.n)+'</a>';}).join(' · ')+'</div>':'')
-        +'<div style="margin:2px 0 0 22px"><a href="#" data-e="'+c.id+'" style="color:#9fb3c8;font-size:11px;text-decoration:none">✏️ phone / e-mail</a></div></div>';}).join(''):'<div style="color:#9fb3c8;padding:16px 0">Nobody matches.</div>';
-    box.querySelectorAll('[data-c]').forEach(function(a){a.onclick=function(e){e.preventDefault();var c=T69C.list.filter(function(x){return x.id===a.getAttribute('data-c');})[0],p=c&&c.places[+a.getAttribute('data-k')];if(p){close();try{map.setView([p.lat,p.lng],12);}catch(x){}}};});
+    l.forEach(function(c){var n=t69pNearest(c,stops);dist[c.id]=n?n.km:1e9;});
+    l.sort(function(a,b){if(o==='near')return (dist[a.id]-dist[b.id])||a.name.localeCompare(b.name);if(o==='name')return a.name.localeCompare(b.name);return (t69cNeeds(b)-t69cNeeds(a))||a.name.localeCompare(b.name);});
+    /* "Alleen een regio": needs contact, but no town point (not used for the distance search) */
+    var reg=l.filter(function(c){return c.homeLat==null&&t69cNeeds(c)&&!(c.places||[]).length;}),main=l.filter(function(c){return reg.indexOf(c)<0;});
+    box.querySelector('#t69cN').textContent='('+l.length+' of '+T69P.list.length+')';
+    var h=main.length?main.map(row).join(''):(reg.length?'':'<div style="color:#9fb3c8;padding:16px 0">Nobody matches.</div>');
+    if(reg.length)h+='<div style="margin:14px 0 4px;font-weight:700;color:#F59E0B">🌍 Alleen een regio <span style="color:#9fb3c8;font-weight:400;font-size:11px">— no town known, not in the distance search</span></div>'+reg.map(row).join('');
+    box.querySelector('#t69cL').innerHTML=h;
+    box.querySelectorAll('[data-c]').forEach(function(a){a.onclick=function(e){e.preventDefault();var c=T69P.list.filter(function(x){return x.id===a.getAttribute('data-c');})[0],p=c&&c.places[+a.getAttribute('data-k')];if(p){close();try{map.setView([p.lat,p.lng],12);}catch(x){}}};});
+    box.querySelectorAll('[data-a]').forEach(function(a){a.onclick=function(e){e.preventDefault();t69cAddRoute(a.getAttribute('data-a'));};});
     box.querySelectorAll('[data-e]').forEach(function(a){a.onclick=function(e){e.preventDefault();t69cEdit(a.getAttribute('data-e'));};});}
-  ov._draw=draw;['t69cQ','t69cR','t69cS'].forEach(function(i){box.querySelector('#'+i).oninput=draw;box.querySelector('#'+i).onchange=draw;});draw();});};
+  ov._draw=draw;['t69cQ','t69cR','t69cS','t69cO'].forEach(function(i){box.querySelector('#'+i).oninput=draw;box.querySelector('#'+i).onchange=draw;});
+  box.querySelector('#t69cK').onchange=function(){t69pSetRadius(this.value);draw();};draw();});};
+/* map layer: people with a town point (orange = still to contact, grey = done) */
+window.t69pMapToggle=function(){var btn=document.getElementById('btnPeople');
+  if(T69P.on){T69P.on=false;if(T69P.grp){try{map.removeLayer(T69P.grp);}catch(e){}T69P.grp=null;}if(btn)btn.classList.remove('active');return;}
+  T69P.on=true;if(btn)btn.classList.add('active');
+  t69LoadContacts().then(function(l){if(!T69P.on)return;var g=L.layerGroup();
+    l.forEach(function(c){if(c.homeLat==null)return;var need=t69cNeeds(c);var m=L.circleMarker([c.homeLat,c.homeLng],{radius:8,color:'#fff',weight:2,fillColor:need?'#F59E0B':'#9fb3c8',fillOpacity:.95});
+      m.bindPopup(function(){var n=t69pNearest(c);return '<div style="min-width:180px">'+t69cLine(c,true)+(n?'<div style="font-size:11px;color:#aaa">📍 '+Math.round(n.km)+' km from stop '+(n.e.si+1)+'.'+(n.e.i+1)+' '+t69Esc(n.e.st.name||'')+'</div>':'')
+        +(c.homeLat!=null?'<div style="margin-top:4px"><a href="#" onclick="t69cAddRoute(\''+c.id+'\');return false" style="color:#10B981">➕ Add to route</a></div>':'')+'</div>';});
+      m.bindTooltip(t69Esc(c.name+(c.home?' — '+c.home:'')),{direction:'top'});g.addLayer(m);});
+    g.addTo(map);T69P.grp=g;if(!l.some(function(c){return c.homeLat!=null;}))toast('No town points yet');});};
 (function(){function go(){try{firebase.auth().onAuthStateChanged(function(u){if(u)setTimeout(function(){t69LoadContacts(true);},1500);});}catch(e){setTimeout(go,1500);}}
   if(document.readyState==='complete')go();else window.addEventListener('load',go);})();
 /* ===== end contacts ===== */
